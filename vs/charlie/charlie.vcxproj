@@ -19,11 +19,26 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\charlie\common\io.cc" />
+    <ClCompile Include="..\..\src\charlie\common\logginComponent.cc" />
     <ClCompile Include="..\..\src\charlie\compiler.cc" />
+    <ClCompile Include="..\..\src\charlie\scanner.cc" />
+    <ClCompile Include="..\..\src\charlie\token\base.cc" />
+    <ClCompile Include="..\..\src\charlie\token\functionDec.cc" />
+    <ClCompile Include="..\..\src\charlie\token\functionDef.cc" />
+    <ClCompile Include="..\..\src\charlie\token\variableDec.cc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\charlie\common\exportDefs.h" />
+    <ClInclude Include="..\..\src\charlie\common\io.h" />
+    <ClInclude Include="..\..\src\charlie\common\logginComponent.h" />
+    <ClInclude Include="..\..\src\charlie\common\tieTree.h" />
     <ClInclude Include="..\..\src\charlie\compiler.h" />
-    <ClInclude Include="..\..\src\charlie\exportDefs.h" />
+    <ClInclude Include="..\..\src\charlie\scanner.h" />
+    <ClInclude Include="..\..\src\charlie\token\base.h" />
+    <ClInclude Include="..\..\src\charlie\token\functionDec.h" />
+    <ClInclude Include="..\..\src\charlie\token\functionDef.h" />
+    <ClInclude Include="..\..\src\charlie\token\variableDec.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{F9B0A582-A9CD-444A-A11A-196CFC0B8B9D}</ProjectGuid>

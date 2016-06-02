@@ -13,18 +13,69 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{bea4e46a-31d2-4df4-9586-b67f88ab3b3d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="token">
+      <UniqueIdentifier>{0c273041-cdb5-47b5-9df6-c57f76e54651}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\charlie\compiler.cc">
       <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\charlie\common\io.cc">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\charlie\scanner.cc">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\charlie\common\logginComponent.cc">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\charlie\token\base.cc">
+      <Filter>token</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\charlie\token\functionDec.cc">
+      <Filter>token</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\charlie\token\functionDef.cc">
+      <Filter>token</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\charlie\token\variableDec.cc">
+      <Filter>token</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\charlie\compiler.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\charlie\exportDefs.h">
+    <ClInclude Include="..\..\src\charlie\common\io.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\charlie\common\exportDefs.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\charlie\scanner.h">
       <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\charlie\common\logginComponent.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\charlie\token\base.h">
+      <Filter>token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\charlie\common\tieTree.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\charlie\token\functionDec.h">
+      <Filter>token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\charlie\token\functionDef.h">
+      <Filter>token</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\charlie\token\variableDec.h">
+      <Filter>token</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -30,22 +30,22 @@
 
 #include <string>
 #include <functional>
-#include "exportDefs.h"
+#include "common\exportDefs.h"
+#include "common\logginComponent.h"
 
-using namespace std;
 
 namespace charlie {
 
-	class Compiler {
+	class Compiler : public common::LogginComponent {
 	public:
 		xprt Compiler();
-		xprt Compiler(function<void(string const &message)> messageDelegate);
-		xprt void Compile(string const &filename);
+		xprt Compiler(std::function<void(std::string const &message)> messageDelegate);
+		/// Compiles the speciefed file
+		xprt bool Build(std::string const &filename);
 
-	private:
-		function<void(string const &message)> _messageDelegate;
-
-		void log(string const &message);
+		xprt void AddExternalFunction(std::string funcName, std::function<void(void)> funcPointer);
+		xprt void AddExternalFunction(std::string funcName, std::function<void(const char*)> funcPointer);
+		xprt void AddExternalFunction(std::string funcName, std::function<void(int)> funcPointer);
 	};
 
 }

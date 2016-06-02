@@ -27,27 +27,57 @@
 
 #include "compiler.h"
 
+#include <sstream>
+
+#include "common\io.h"
+#include "scanner.h"
+
+
 namespace charlie {
 
-	Compiler::Compiler() {
-		_messageDelegate = NULL;
-	}
+	using namespace common;
+	using namespace std;
 
-	Compiler::Compiler(function<void(string const&message)> messageDelegate)
+	Compiler::Compiler() : LogginComponent()
 	{
-		_messageDelegate = messageDelegate;
+
 	}
 
-	void Compiler::Compile(string const &filename)
+	Compiler::Compiler(function<void(string const&message)> messageDelegate) : LogginComponent(messageDelegate)
 	{
-		log("Finised Compiling");
 	}
-
-	void Compiler::log(string const & message)
+	
+	bool Compiler::Build(string const &filename)
 	{
-		if (_messageDelegate != NULL)
-			_messageDelegate(message);
+		string code;
+		if (!ascii2string(filename, code)) {
+			std::stringstream str;
+			str << "Can not open file \"" << filename << "\"";
+			log(str.str());
+			return false;
+		}
+
+		Scanner scanner = Scanner(_messageDelegate);
+
+		if(!scanner.Scan(code)) {
+			log("Building failed!");
+			return false;
+		}
+
+		log("Building succeded!");
+		return true;
 	}
 
-
+	void Compiler::AddExternalFunction(std::string funcName, std::function<void(void)> funcPointer) 
+	{
+		// TODO
+	}	
+	void Compiler::AddExternalFunction(std::string funcName, std::function<void(const char* )> funcPointer) 
+	{
+		// TODO
+	}
+	void Compiler::AddExternalFunction(std::string funcName, std::function<void(int)> funcPointer)
+	{
+		// TODO
+	}
 }

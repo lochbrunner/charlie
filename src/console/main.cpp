@@ -34,12 +34,52 @@ using namespace charlie;
 
 int main(int argn, char** argv)
 {
+	char* command = NULL;
+	char* entry = NULL;
 
-	Compiler compiler = Compiler([](string const &message) {
-		cout << message << endl;
-	});
+#ifdef _DEBUG
+	if (argn > 2) {
+		command = argv[1];
+		entry = argv[argn-1];
+	}
+#else
+	if (argn > 1) {
+		command = argv[0];
+		entry = argv[argn - 1];
+}
+#endif // _DEBUG
 
-	compiler.Compile("");
+	if (command == NULL) {
+		cout << "Please specify command";
+		return -1;
+	}
+
+	if (entry == NULL) {
+		cout << "Please specify entry point";
+		return -1;
+	}
+
+	if (strcmp(command, "build") == 0) {
+		Compiler compiler = Compiler([](string const &message) {
+			cout << message << endl;
+		});
+
+		compiler.AddExternalFunction("print", [](const char* message) {
+			cout << message;
+		});
+		compiler.AddExternalFunction("println", [](const char* message) {
+			cout << message << endl;
+		});
+		compiler.AddExternalFunction("println", [](int number) {
+			cout << number << endl;
+		});
+		compiler.AddExternalFunction("print", [](int number) {
+			cout << number;
+		});
+
+		compiler.Build(entry);
+	}
+
     return 0;
 }
 
