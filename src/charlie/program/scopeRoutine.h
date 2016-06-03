@@ -25,52 +25,22 @@
 * SUCH DAMAGE.
 */
 
-#include "base.h"
+#ifndef CHARLIE_PROGRAM_SCOPEROUTINE
+#define CHARLIE_PROGRAM_SCOPEROUTINE
+
+#include <list>
+#include <map>
+#include "../program/variableDec.h"
 
 namespace charlie {
-	namespace token {
-
-		using namespace std;
-
-		Base::Base(TokenType type) : Type(type){}
-
-		Bracket::Bracket(KindEnum kind, DirectionEnum direction) : Base(TokenType::Bracket), Kind(kind), Direction(direction) {}
-		std::string Bracket::ToString() {
-			return string();
-		}
-
-		Constant::Constant(KindEnum kind, void* pointer) : Base(TokenType::Constant), Kind(kind), Pointer(pointer){}
-		Constant::~Constant() {
-			if (Pointer != 0) {
-				delete Pointer;
-			}
-		}
-		std::string Constant::ToString() {
-			return string();
-		}
-
-		Operator::Operator(KindEnum kind) : Base(TokenType::Operator), Kind(kind) {}
-		std::string Operator::ToString() {
-			return string();
-		}
-		Declarer::Declarer(program::VariableDec::TypeEnum kind) : Base(TokenType::TypeDeclarer), Kind(kind) {}
-		std::string Declarer::ToString() {
-			return string();
-		}
-		Label::Label(string *labelString) : Base(TokenType::TypeDeclarer), LabelString(labelString) {}
-		Label::~Label() {
-			if (LabelString != 0) {
-				delete LabelString;
-			}
-		}
-		std::string Label::ToString() {
-			return string();
-		}
-		ControlFlow::ControlFlow(KindEnum kind) : Base(TokenType::ControlFlow), Kind(kind) {}
-		std::string ControlFlow::ToString() {
-			return string();
-		}
+	namespace program {
+		class Scope {
+		public:
+			std::list<int> Instructions;
+			std::map<int, program::VariableDec> VariableDecs;
+			Scope();
+		};
 	}
 }
 
-
+#endif // !CHARLIE_PROGRAM_SCOPEROUTINE

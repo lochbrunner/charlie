@@ -28,12 +28,15 @@
 
 #include "scanner.h"
 #include <sstream>
+#include "program\UnresolvedProgram.h"
+#include "program\instruction.h"
 
 
 namespace charlie {
 
 	using namespace std;
 	using namespace token;
+	using namespace program;
 
 	struct cmp_str
 	{
@@ -44,27 +47,53 @@ namespace charlie {
 	};
 
 	struct TypeDict {
-		static map<const char*, Declarer::KindEnum, cmp_str> create() {
-			map<const char*, Declarer::KindEnum, cmp_str> types;
-			types["int"] = Declarer::Int;
-			types["long"] = Declarer::Long;
-			types["float"] = Declarer::Float;
-			types["double"] = Declarer::Double;
-			types["bool"] = Declarer::Boolean;
-			types["char"] = Declarer::Char;
+		static map<const char*, VariableDec::TypeEnum, cmp_str> create() {
+			map<const char*, VariableDec::TypeEnum, cmp_str> types;
+			types["int"] = VariableDec::Int;
+			types["long"] = VariableDec::Long;
+			types["float"] = VariableDec::Float;
+			types["double"] = VariableDec::Double;
+			types["bool"] = VariableDec::Boolean;
+			types["char"] = VariableDec::Char;
+			types["void"] = VariableDec::Void;
 			return types;
 		}
-		static const map<const char*, Declarer::KindEnum, cmp_str> Types;
+		static const map<const char*, VariableDec::TypeEnum, cmp_str> Types;
 		static bool Contains(const char* name) {
 			return TypeDict::Types.count(name) > 0;
 		}
-		static Declarer::KindEnum Get(const char* name) {
+		static VariableDec::TypeEnum Get(const char* name) {
 			auto it = TypeDict::Types.find(name);
 			return it->second;
 		}
 	};
 
-	const map<const char*, Declarer::KindEnum, cmp_str> TypeDict::Types = TypeDict::create();
+	struct ControlFlowDict {
+		static map<const char*, ControlFlow::KindEnum, cmp_str> create() {
+			map<const char*, ControlFlow::KindEnum, cmp_str> types;
+			types["while"] = ControlFlow::While;
+			types["for"] = ControlFlow::For;
+			types["do"] = ControlFlow::Do;
+			types["if"] = ControlFlow::If;
+			types["else"] = ControlFlow::Else;
+			types["continue"] = ControlFlow::Continue;
+			types["break"] = ControlFlow::Break;
+			types["return"] = ControlFlow::Return;
+			types["goto"] = ControlFlow::Goto;
+			return types;
+		}
+		static const map<const char*, ControlFlow::KindEnum, cmp_str> Controls;
+		static bool Contains(const char* name) {
+			return ControlFlowDict::Controls.count(name) > 0;
+		}
+		static ControlFlow::KindEnum Get(const char* name) {
+			auto it = ControlFlowDict::Controls.find(name);
+			return it->second;
+		}
+	};
+
+	const map<const char*, VariableDec::TypeEnum, cmp_str> TypeDict::Types = TypeDict::create();
+	const map<const char*, ControlFlow::KindEnum, cmp_str> ControlFlowDict::Controls = ControlFlowDict::create();
 
 
 	enum TokenKind
@@ -73,15 +102,15 @@ namespace charlie {
 		BracketClosingRound
 	};
 
-	Scanner::Scanner() : LogginComponent() 
+	Scanner::Scanner() : 
+		LogginComponent(), _funcDecs(), _variableDecs()
 	{
 		
 	};
 
-	Scanner::Scanner(function<void(string const&message)> messageDelegate) : LogginComponent(messageDelegate)
+	Scanner::Scanner(function<void(string const&message)> messageDelegate) : 
+		LogginComponent(messageDelegate), _funcDecs(), _variableDecs()
 	{
-		_funcDecs = std::list<token::FunctionDec>();
-		_variableDecs = std::list<token::VariableDec>();
 	};
 
 	bool Scanner::Scan(string const &code) 
@@ -90,14 +119,14 @@ namespace charlie {
 		_variableDecs.clear();
 
 		// Search declarations
-		int lenght = static_cast<int>(code.length());
+		int length = static_cast<int>(code.length());
 		int pos = 0;
 		WordType wordType;
 		string word;
 
-		while (pos != -1 && pos < lenght)
+		while (pos != -1 && pos < length)
 		{
-			getNextWord(code, lenght, pos, word, wordType);
+			getNextWord(code, length, pos, word, wordType);
 			// A single simikolon does not make sense but it is still valid
 			if (wordType == WordType::Semikolon)
 				continue;
@@ -114,7 +143,7 @@ namespace charlie {
 			if (TypeDict::Contains(typeName)) {
 				auto type = TypeDict::Get(typeName);
 
-				getNextWord(code, lenght, pos, word, wordType);
+				getNextWord(code, length, pos, word, wordType);
 				if (wordType != WordType::Name) {
 					stringstream st;
 					st << "Unexpected word \"" << word << "\" after type found!";
@@ -123,15 +152,15 @@ namespace charlie {
 				}
 				auto variableName = word;
 
-				getNextWord(code, lenght, pos, word, wordType);
+				getNextWord(code, length, pos, word, wordType);
 				if (code[pos] == '('){
 					++pos;
 					list<VariableDec> args = list<VariableDec>();
-					pos = getFunctionDecArguments(code, pos, lenght, args);
+					pos = getFunctionDecArguments(code, pos, length, args);
 					if (pos == -1)
 						return false;
 					// is there a function definition following?
-					getNextWord(code, lenght, pos, word, wordType);
+					getNextWord(code, length, pos, word, wordType);
 					if (wordType == WordType::Semikolon) {
 						++pos;
 						_funcDecs.push_back(FunctionDec(variableName, type, args));
@@ -141,7 +170,7 @@ namespace charlie {
 						++pos;
 						auto dec = FunctionDec(variableName, type, args);
 						FunctionDefinition def = FunctionDefinition();
-						pos = getFunctionDefinition(code, lenght, pos, def);
+						pos = getFunctionDefinition(code, length, pos, def);
 						if (pos == -1)
 							return false;
 					}
@@ -175,12 +204,7 @@ namespace charlie {
 	}
 
 	void Scanner::PrintState() {
-	//	for (list<Base*>::const_iterator it = _tokens.begin(); it != _tokens.end(); ++it)
-	//	{
-	//		if ((*it) != 0) {
-	//			(*it)->ToString();
-	//		}
-	//	}
+
 	}
 
 	bool Scanner::isLabelBeginning(char c) {
@@ -220,21 +244,21 @@ namespace charlie {
 		return c <= '9' && c >= '0';
 	}
 
-	int Scanner::endOfLineComments(std::string const &code, int lenght, int pos) {
+	int Scanner::endOfLineComments(std::string const &code, int length, int pos) {
 		int end = code.find("\n", pos);
 		return end;
 	}
 
-	int Scanner::endOfBlockComments(std::string const &code, int lenght, int pos) {
+	int Scanner::endOfBlockComments(std::string const &code, int length, int pos) {
 		int end = code.find("*/", pos);
 		return end+1;
 	}
 
-	void Scanner::getNextWord(std::string const &code, int lenght, int &pos, std::string &word, WordType &type) {
+	void Scanner::getNextWord(std::string const &code, int length, int &pos, std::string &word, WordType &type) {
 		int oldStart = pos;
 		int begin = pos;
 		type = WordType::None;
-		for (; pos < lenght; ++pos) {
+		for (; pos < length; ++pos) {
 			char c = code[pos];
 			if (c == ' ' || c == '\n' || c == '\t') {
 				if (type == WordType::None)
@@ -319,10 +343,10 @@ namespace charlie {
 				}
 			}
 			else if (isOperator(c)) {
-				if (c == '/' && lenght > pos + 1) {
+				if (c == '/' && length > pos + 1) {
 					if (code[pos + 1] == '/')
 					{
-						pos = endOfLineComments(code, lenght, pos);
+						pos = endOfLineComments(code, length, pos);
 						if (pos == -1)
 						{
 							return;
@@ -334,7 +358,7 @@ namespace charlie {
 					}
 					else if (code[pos + 1] == '*')
 					{
-						pos = endOfBlockComments(code, lenght, pos);
+						pos = endOfBlockComments(code, length, pos);
 						if (pos == -1)
 						{
 							log("Could not find end of block comment!");
@@ -377,10 +401,10 @@ namespace charlie {
 			else if (c == '\'') {
 				if (oldStart < pos && code[pos - 1] == '\\' && type == WordType::String)
 					continue;
-				if (pos > lenght - 2) {
+				if (pos > length - 2) {
 					if (code[pos + 1] == '\\')
 					{
-						if (pos > lenght - 3) {
+						if (pos > length - 3) {
 							if (code[pos + 3] == '\'')
 							{
 								begin = pos + 1;
@@ -471,13 +495,13 @@ namespace charlie {
 			word = "";
 	}
 	// Call this after opening bracket: i.e "int main ("
-	int Scanner::getFunctionDecArguments(string const &code, int pos, int lenght, std::list<VariableDec> &args) {
+	int Scanner::getFunctionDecArguments(string const &code, int pos, int length, std::list<VariableDec> &args) {
 		string word;
 		WordType wordtype;
 		bool first = true;
-		while (pos<lenght)
+		while (pos<length)
 		{
-			getNextWord(code, lenght, pos, word, wordtype);
+			getNextWord(code, length, pos, word, wordtype);
 			
 			if(wordtype == WordType::Bracket && code[pos] == ')')
 			{
@@ -494,7 +518,7 @@ namespace charlie {
 				if (TypeDict::Contains(typeBuf)) {
 					auto varType = TypeDict::Get(typeBuf);
 
-					getNextWord(code, lenght, pos, word, wordtype);
+					getNextWord(code, length, pos, word, wordtype);
 					if (wordtype == WordType::Comma)
 					{
 						++pos;
@@ -509,7 +533,7 @@ namespace charlie {
 					else if (wordtype == WordType::Name) {
 						args.push_back(VariableDec(word, varType));
 						
-						getNextWord(code, lenght, pos, word, wordtype);
+						getNextWord(code, length, pos, word, wordtype);
 						if (wordtype == WordType::Comma)
 						{
 							++pos;
@@ -547,7 +571,8 @@ namespace charlie {
 		return pos;
 	}
 
-	void Scanner::proceessControlSequences(std::string &text) {
+	void Scanner::proceessControlSequences(std::string &text) 
+	{
 		text.replace(text.begin(), text.end(), "\\\\", "\\");
 		text.replace(text.begin(), text.end(), "\\n", "\n");
 		text.replace(text.begin(), text.end(), "\\t", "\t");
@@ -555,20 +580,115 @@ namespace charlie {
 		text.replace(text.begin(), text.end(), "\\\'", "\'");
 	}
 
-	int Scanner::getFunctionDefinition(string const &code, int lenght, int pos, FunctionDefinition &definition) {
-		// Declarations, statements or loops/ifs?
+	int Scanner::getFunctionDefinition(string const &code, int length, int pos, FunctionDefinition &definition) {
 		WordType wordType;
 		string word;
+		const char* wordBuffer;
 
-		while (pos < lenght && pos != -1)
+		while (pos < length && pos != -1)
 		{
-			getNextWord(code, lenght, pos, word, wordType);
+			getNextWord(code, length, pos, word, wordType);
+			// Declarations, statements or loops/ifs?
+			if (wordType == WordType::Bracket && code[pos] == '}')
+			{
+				++pos;
+				break;
+			}
+			if (wordType == WordType::Semikolon)
+			{
+				++pos;
+				continue;
+			}
+			else if (wordType == WordType::Operator) 
+			{
+				// TODO: prefix operators i.e. ++i;
+			}
+			else if (wordType != WordType::Name) 
+			{
+				log("Unexpected symbol in function definition");
+				return -1;
+			}
+			wordBuffer = word.c_str();
+			if (TypeDict::Contains(wordBuffer))
+			{
+				auto type = TypeDict::Get(wordBuffer);
+				return -1;
+
+			}
+			else if (ControlFlowDict::Contains(wordBuffer))
+			{
+				return -1;
+			}
+			else {
+				if (!getStatement(code, length, pos, definition.main, word)) 
+				{
+					return -1;
+				}
+
+			}
 
 			return -1;
 		}
 
 
 		return pos;
+	}
+
+	bool Scanner::getStatement(std::string const &code, int length, int &pos, program::Scope & prog, string &word)
+	{
+		string initWord = word;
+		WordType wordType;
+
+		getNextWord(code, length, pos, word, wordType);
+		if (wordType == WordType::Bracket && code[pos] == '(') 
+		{
+			++pos;
+			getNextWord(code, length, pos, word, wordType);
+			if (wordType == WordType::Number)
+			{
+				int i = atoi(word.c_str());
+				prog.Instructions.push_back(InstructionEnums::PushConst);
+				prog.Instructions.push_back(i);
+
+				getNextWord(code, length, pos, word, wordType);
+				if (wordType == WordType::Bracket && code[pos] == ')') {
+					++pos;
+					prog.Instructions.push_back(InstructionEnums::Call);
+
+
+				}
+
+
+
+			}
+
+			//getBracket(code, length, pos, prog);
+
+		}
+		
+
+		return false;
+	}
+	// Call this after opening bracket
+	bool Scanner::getBracket(std::string const &code, int length, int &pos, program::Scope &prog)
+	{
+		list<token::Base*> tokens = list<token::Base*>();
+		string word;
+		WordType wordType;
+
+		while (pos != -1 && pos < length)
+		{
+			getNextWord(code, length, pos, word, wordType);
+			if (wordType == WordType::Bracket && code[pos] == ')') {
+				++pos;
+				break;
+			}
+			
+
+		}
+
+
+		return false;
 	}
 }
 

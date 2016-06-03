@@ -25,52 +25,49 @@
 * SUCH DAMAGE.
 */
 
-#include "base.h"
+#ifndef  CHARLIE_TOKEN_VARIABLEDEC_H
+#define CHARLIE_TOKEN_VARIABLEDEC_H
+
+#include <string>
 
 namespace charlie {
-	namespace token {
 
-		using namespace std;
+	namespace program {
 
-		Base::Base(TokenType type) : Type(type){}
+		class VariableDec {
+		public:
+			enum TypeEnum {
+				Int,
+				Long,
+				Float,
+				Double,
+				Boolean,
+				Char,
+				Void
+			};
 
-		Bracket::Bracket(KindEnum kind, DirectionEnum direction) : Base(TokenType::Bracket), Kind(kind), Direction(direction) {}
-		std::string Bracket::ToString() {
-			return string();
-		}
 
-		Constant::Constant(KindEnum kind, void* pointer) : Base(TokenType::Constant), Kind(kind), Pointer(pointer){}
-		Constant::~Constant() {
-			if (Pointer != 0) {
-				delete Pointer;
+			std::string Name;
+			TypeEnum ImageType;
+
+			VariableDec(TypeEnum imageType);
+			VariableDec(std::string name, TypeEnum imageType);
+		};
+
+		struct variablenDec_comparer {
+			bool operator()(VariableDec &a, VariableDec &b) {
+				if (a.ImageType != b.ImageType)
+					return false;
+				return std::strcmp(a.Name.c_str(), b.Name.c_str()) < 0;
 			}
-		}
-		std::string Constant::ToString() {
-			return string();
-		}
+		};
 
-		Operator::Operator(KindEnum kind) : Base(TokenType::Operator), Kind(kind) {}
-		std::string Operator::ToString() {
-			return string();
-		}
-		Declarer::Declarer(program::VariableDec::TypeEnum kind) : Base(TokenType::TypeDeclarer), Kind(kind) {}
-		std::string Declarer::ToString() {
-			return string();
-		}
-		Label::Label(string *labelString) : Base(TokenType::TypeDeclarer), LabelString(labelString) {}
-		Label::~Label() {
-			if (LabelString != 0) {
-				delete LabelString;
+		struct variablenDec_comparer_only_type {
+			bool operator()(VariableDec &a, VariableDec &b) {
+				return a.ImageType == b.ImageType;
 			}
-		}
-		std::string Label::ToString() {
-			return string();
-		}
-		ControlFlow::ControlFlow(KindEnum kind) : Base(TokenType::ControlFlow), Kind(kind) {}
-		std::string ControlFlow::ToString() {
-			return string();
-		}
+		};
 	}
 }
 
-
+#endif // ! CHARLIE_TOKEN_VARIABLEDEC_H

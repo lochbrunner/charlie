@@ -64,16 +64,16 @@ int main(int argn, char** argv)
 			cout << message << endl;
 		});
 
-		compiler.AddExternalFunction("print", [](const char* message) {
+		compiler.ExternalFunctionManager.AddFunction("print", [](const char* message) {
 			cout << message;
 		});
-		compiler.AddExternalFunction("println", [](const char* message) {
+		compiler.ExternalFunctionManager.AddFunction("println", [](const char* message) {
 			cout << message << endl;
 		});
-		compiler.AddExternalFunction("println", [](int number) {
+		compiler.ExternalFunctionManager.AddFunction("println", [](int number) {
 			cout << number << endl;
 		});
-		compiler.AddExternalFunction("print", [](int number) {
+		compiler.ExternalFunctionManager.AddFunction("print", [](int number) {
 			cout << number;
 		});
 

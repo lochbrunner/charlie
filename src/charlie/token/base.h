@@ -31,6 +31,8 @@
 
 #include <string>
 
+#include "../program/variableDec.h"
+
 namespace charlie {
 	namespace token {
 
@@ -40,7 +42,8 @@ namespace charlie {
 			Constant,				// "Hello", 12, ...
 			Operator,				// +, -, +=, ...
 			TypeDeclarer,			// int, bool, ...
-			Label
+			Label,
+			ControlFlow				// for, while
 		};
 
 		class Base
@@ -130,20 +133,32 @@ namespace charlie {
 			virtual std::string ToString();
 		};
 
+		class ControlFlow : Base {
+		public:
+			enum KindEnum {
+				While,
+				For,
+				Do,
+				If,
+				Else,
+				Continue,
+				Break,
+				Return,
+				Goto
+			};
+
+			ControlFlow(KindEnum kind);
+
+			KindEnum Kind;
+
+			virtual std::string ToString();
+		};
+
 		class Declarer : Base 
 		{
 		public:
-			enum KindEnum {
-				Int,
-				Long,
-				Float,
-				Double,
-				Boolean,
-				Char
-			};
-
-			Declarer(KindEnum kind);
-			KindEnum Kind;
+			Declarer(program::VariableDec::TypeEnum kind);
+			program::VariableDec::TypeEnum Kind;
 
 			virtual std::string ToString();
 		};

@@ -35,15 +35,17 @@
 
 namespace charlie {
 
-	using namespace common;
 	using namespace std;
+	using namespace common;
+	using namespace program;
+	using namespace token;
 
-	Compiler::Compiler() : LogginComponent()
+	Compiler::Compiler() : LogginComponent(), ExternalFunctionManager()
 	{
-
 	}
 
-	Compiler::Compiler(function<void(string const&message)> messageDelegate) : LogginComponent(messageDelegate)
+	Compiler::Compiler(function<void(string const&message)> messageDelegate) : 
+		LogginComponent(messageDelegate), ExternalFunctionManager()
 	{
 	}
 	
@@ -66,18 +68,5 @@ namespace charlie {
 
 		log("Building succeded!");
 		return true;
-	}
-
-	void Compiler::AddExternalFunction(std::string funcName, std::function<void(void)> funcPointer) 
-	{
-		// TODO
-	}	
-	void Compiler::AddExternalFunction(std::string funcName, std::function<void(const char* )> funcPointer) 
-	{
-		// TODO
-	}
-	void Compiler::AddExternalFunction(std::string funcName, std::function<void(int)> funcPointer)
-	{
-		// TODO
 	}
 }

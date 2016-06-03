@@ -25,11 +25,31 @@
 * SUCH DAMAGE.
 */
 
-#include "functionDef.h"
+#include "instruction.h"
 
 namespace charlie {
+	namespace program {
+		std::array<functionType, InstructionEnums::Length> InstructionManager::Create() {
+			std::array<functionType, InstructionEnums::Length> types = std::array<functionType, InstructionEnums::Length>();
+			types[InstructionEnums::Call] = [](std::stack<int>& st) {
 
-	namespace token {
+			};
+			types[InstructionEnums::IntAdd] = [](std::stack<int>& st) {
+				int a = st.top();
+				st.pop();
+				int b = st.top();
+				st.pop();
+				st.push(a+b);
+			};
 
+			
+
+			return types;
+		}
+
+		functionType InstructionManager::Get(InstructionEnums bc) {
+			return InstructionManager::Instructions[bc];
+		}
+		const std::array<functionType, InstructionEnums::Length> InstructionManager::Instructions = InstructionManager::Create();
 	}
 }

@@ -25,39 +25,40 @@
 * SUCH DAMAGE.
 */
 
-#ifndef  CHARLIE_TOKEN_VARIABLEDEC_H
-#define CHARLIE_TOKEN_VARIABLEDEC_H
+#ifndef CHARLIE_API_EXTERNALFUNCTION_H
+#define CHARLIE_API_EXTERNALFUNCTION_H
 
+#include <map>
 #include <string>
-#include "base.h"
+#include <functional>
+
+#include "../program\functionDec.h"
+#include "../common/exportDefs.h"
 
 namespace charlie {
-
-	namespace token {
-
-		class VariableDec {
+	namespace api {
+		class ExternalFunctionManager {
 		public:
-			std::string Name;
-			Declarer::KindEnum ImageType;
+			ExternalFunctionManager();
 
-			VariableDec(Declarer::KindEnum imageType);
-			VariableDec(std::string name, Declarer::KindEnum imageType);
-		};
+			xprt void AddFunction(std::string funcName, std::function<void(void)> funcPointer);
+			xprt void AddFunction(std::string funcName, std::function<void(int)> funcPointer);
+			xprt void AddFunction(std::string funcName, std::function<void(const char*)> funcPointer);
 
-		struct variablenDec_comparer {
-			bool operator()(VariableDec &a, VariableDec &b) {
-				if (a.ImageType != b.ImageType)
-					return false;
-				return std::strcmp(a.Name.c_str(), b.Name.c_str()) < 0;
-			}
-		};
+			bool Contains_V_V();
+			bool Contains_V_I();
+			bool Contains_V_CCP();
 
-		struct variablenDec_comparer_only_type {
-			bool operator()(VariableDec &a, VariableDec &b) {
-				return a.ImageType == b.ImageType;
-			}
+			std::function<void(void)> GetV_V();
+			std::function<void(void)> GetV_I();
+			std::function<void(void)> GetV_CCP();
+
+		private:
+			std::map<program::FunctionDec, std::function<void(void)>, program::FunctionDec::comparer> _v_v_external;
+			std::map<program::FunctionDec, std::function<void(int)>, program::FunctionDec::comparer> _v_i_external;
+			std::map<program::FunctionDec, std::function<void(const char*)>, program::FunctionDec::comparer> _v_ccp_external;
 		};
 	}
 }
 
-#endif // ! CHARLIE_TOKEN_VARIABLEDEC_H
+#endif // !CHARLIE_API_EXTERNALFUNCTION_H

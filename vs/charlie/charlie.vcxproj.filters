@@ -19,6 +19,12 @@
     <Filter Include="token">
       <UniqueIdentifier>{0c273041-cdb5-47b5-9df6-c57f76e54651}</UniqueIdentifier>
     </Filter>
+    <Filter Include="program">
+      <UniqueIdentifier>{6110e915-b6a9-4a82-aa71-cd1e6cf644c5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api">
+      <UniqueIdentifier>{9116429e-83e7-4797-a728-daf9c8d67904}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\charlie\compiler.cc">
@@ -36,14 +42,26 @@
     <ClCompile Include="..\..\src\charlie\token\base.cc">
       <Filter>token</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\charlie\token\functionDec.cc">
-      <Filter>token</Filter>
+    <ClCompile Include="..\..\src\charlie\program\unresolvedProgram.cc">
+      <Filter>program</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\charlie\token\functionDef.cc">
-      <Filter>token</Filter>
+    <ClCompile Include="..\..\src\charlie\program\instruction.cc">
+      <Filter>program</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\charlie\token\variableDec.cc">
-      <Filter>token</Filter>
+    <ClCompile Include="..\..\src\charlie\program\functionDec.cc">
+      <Filter>program</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\charlie\program\scopeRoutine.cc">
+      <Filter>program</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\charlie\api\externalFunctionManager.cc">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\charlie\program\variableDec.cc">
+      <Filter>program</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\charlie\program\functionDef.cc">
+      <Filter>program</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -68,14 +86,26 @@
     <ClInclude Include="..\..\src\charlie\common\tieTree.h">
       <Filter>common</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\charlie\token\functionDec.h">
-      <Filter>token</Filter>
+    <ClInclude Include="..\..\src\charlie\program\unresolvedProgram.h">
+      <Filter>program</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\charlie\token\functionDef.h">
-      <Filter>token</Filter>
+    <ClInclude Include="..\..\src\charlie\program\instruction.h">
+      <Filter>program</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\charlie\token\variableDec.h">
-      <Filter>token</Filter>
+    <ClInclude Include="..\..\src\charlie\program\functionDec.h">
+      <Filter>program</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\charlie\program\scopeRoutine.h">
+      <Filter>program</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\charlie\api\externalFunctionManager.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\charlie\program\variableDec.h">
+      <Filter>program</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\charlie\program\functionDef.h">
+      <Filter>program</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

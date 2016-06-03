@@ -25,15 +25,13 @@
 * SUCH DAMAGE.
 */
 
-#include "variableDec.h"
+#include "functionDef.h"
 
 namespace charlie {
 
-	namespace token {
-		VariableDec::VariableDec(Declarer::KindEnum imageType) : ImageType(imageType) {
-			Name = "";
+	namespace program {
+		FunctionDefinition::FunctionDefinition() : main()
+		{
 		}
-		VariableDec::VariableDec(std::string name, Declarer::KindEnum imageType)
-			: Name(name), ImageType(imageType) {}
 	}
 }

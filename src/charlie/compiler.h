@@ -28,10 +28,14 @@
 #ifndef  CHARLIE_COMPILER_H
 #define CHARLIE_COMPILER_H
 
+#include <map>
 #include <string>
 #include <functional>
 #include "common\exportDefs.h"
 #include "common\logginComponent.h"
+
+#include "program\functionDec.h"
+#include "api\externalFunctionManager.h"
 
 
 namespace charlie {
@@ -42,10 +46,10 @@ namespace charlie {
 		xprt Compiler(std::function<void(std::string const &message)> messageDelegate);
 		/// Compiles the speciefed file
 		xprt bool Build(std::string const &filename);
+		api::ExternalFunctionManager ExternalFunctionManager;
 
-		xprt void AddExternalFunction(std::string funcName, std::function<void(void)> funcPointer);
-		xprt void AddExternalFunction(std::string funcName, std::function<void(const char*)> funcPointer);
-		xprt void AddExternalFunction(std::string funcName, std::function<void(int)> funcPointer);
+	private:
+
 	};
 
 }

@@ -25,19 +25,46 @@
 * SUCH DAMAGE.
 */
 
-#include "functionDec.h"
+#ifndef CHARLIE_TOKEN_FUNCTIONDEC_H
+#define CHARLIE_TOKEN_FUNCTIONDEC_H
+
+#include <list>
+#include <string>
+
+#include "variableDec.h"
+#include "functionDef.h"
+
+#include "../token/base.h"
 
 
 namespace charlie {
 
-	namespace token {
+	namespace program {
 
-		FunctionDec::FunctionDec(std::string label, Declarer::KindEnum imageType, std::list<VariableDec> argumentType)
-			: Label(label), ImageType(imageType), ArgumentType(argumentType){}
-		FunctionDec::FunctionDec(std::string label, Declarer::KindEnum imageType)
-			: Label(label), ImageType(imageType) 
-		{
-			ArgumentType = std::list<VariableDec>();
-		}
+
+
+		class FunctionDec {
+		public:
+			VariableDec::TypeEnum ImageType;
+			std::list<program::VariableDec> ArgumentType;
+			std::string Label;
+
+			FunctionDec(std::string label, VariableDec::TypeEnum imageType, std::list<VariableDec> argumentType);
+			FunctionDec(std::string label, VariableDec::TypeEnum imageType);
+
+			FunctionDefinition Definition;
+
+			struct comparer {
+				bool operator()(const FunctionDec &a, const FunctionDec &b)
+				{
+
+
+					return false;
+				}
+			};
+		};
 	}
 }
+
+
+#endif // !CHARLIE_TOKEN_FUNCTIONDEC_H

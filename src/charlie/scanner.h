@@ -32,13 +32,15 @@
 #include <list>
 #include <set>
 #include <map>
+
 #include "common\logginComponent.h"
 
 #include "token\base.h"
-#include "common\tieTree.h"
-#include "token\variableDec.h"
-#include "token\functionDec.h"
-#include "token\functionDef.h"
+
+#include "program\functionDef.h"
+#include "program\variableDec.h"
+#include "program\functionDec.h"
+#include "program\scopeRoutine.h"
 
 namespace charlie {
 
@@ -65,11 +67,15 @@ namespace charlie {
 			Bracket
 		};
 
-		std::list<token::FunctionDec> _funcDecs;
-		std::list<token::VariableDec> _variableDecs;
+		//std::map<program::FunctionDec> _externalFuncDecs;
+		std::list<program::FunctionDec> _funcDecs;
+		std::list<program::VariableDec> _variableDecs;
 
-		int getFunctionDecArguments(std::string const &code, int begin, int lenght, std::list<token::VariableDec> &args);
-		int getFunctionDefinition(std::string const &code, int lenght, int pos, token::FunctionDefinition &definition);
+		int getFunctionDecArguments(std::string const &code, int begin, int length, std::list<program::VariableDec> &args);
+		int getFunctionDefinition(std::string const &code, int length, int pos, program::FunctionDefinition &definition);
+
+		bool getStatement(std::string const &code, int length, int &pos, program::Scope &prog, std::string &word);
+		bool getBracket(std::string const &code, int length, int &pos, program::Scope &prog);
 
 		inline bool isLabelBeginning(char c);
 		inline bool isAlphaNumeric(char c);
@@ -79,9 +85,9 @@ namespace charlie {
 		void proceessControlSequences(std::string &text);
 
 		// updates word only if the result is longer than 1 char. If not use code[pos++] instead
-		void getNextWord(std::string const &code, int lenght, int &pos, std::string &word, WordType &type);
-		int endOfLineComments(std::string const &code, int lenght, int pos);
-		int endOfBlockComments(std::string const &code, int lenght, int pos);
+		void getNextWord(std::string const &code, int length, int &pos, std::string &word, WordType &type);
+		int endOfLineComments(std::string const &code, int length, int pos);
+		int endOfBlockComments(std::string const &code, int length, int pos);
 	};
 }
 

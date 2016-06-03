@@ -28,11 +28,17 @@
 #ifndef CHARLIE_TOKEN_FUNCTIONDEF_H
 #define CHARLIE_TOKEN_FUNCTIONDEF_H
 
+
+#include "scopeRoutine.h"
+
 namespace charlie {
 
-	namespace token {
+	namespace program {
 		class FunctionDefinition {
+		public:
+			program::Scope main;
 
+			FunctionDefinition();
 		};
 	}
 }

@@ -25,35 +25,26 @@
 * SUCH DAMAGE.
 */
 
-#ifndef CHARLIE_TOKEN_FUNCTIONDEC_H
-#define CHARLIE_TOKEN_FUNCTIONDEC_H
+#ifndef CHARLIE_PROGRAM_UNRESOLVEDPROGRAM_H
+#define CHARLIE_PROGRAM_UNRESOLVEDPROGRAM_H
 
 #include <list>
-#include <string>
+#include <map>
+//#include "functionDec.h"
+#include "functionDec.h"
 #include "variableDec.h"
-#include "functionDef.h"
 
 namespace charlie {
-
-	namespace token {
-
-		struct functionDec_comparer {
-
-		};
-
-		class FunctionDec {
+	namespace program {
+		class UnresolvedProgram {
 		public:
-			Declarer::KindEnum ImageType;
-			std::list<VariableDec> ArgumentType;
-			std::string Label;
-
-			FunctionDec(std::string label, Declarer::KindEnum imageType, std::list<VariableDec> argumentType);
-			FunctionDec(std::string label, Declarer::KindEnum imageType);
-
-			FunctionDefinition Definition;
+			std::list<int> Instructions;
+			std::map<int, FunctionDec> FunctionDecs;
+			std::map<int, VariableDec> VariableDecs;
+			UnresolvedProgram();
 		};
 	}
 }
 
 
-#endif // !CHARLIE_TOKEN_FUNCTIONDEC_H
+#endif // !CHARLIE_PROGRAM_UNRESOLVEDPROGRAM_H
