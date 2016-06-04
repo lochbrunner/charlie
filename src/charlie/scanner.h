@@ -40,6 +40,7 @@
 #include "program\variableDec.h"
 #include "program\functionDec.h"
 #include "program\scopeRoutine.h"
+#include "program\unresolvedProgram.h"
 
 #include "api\externalFunctionManager.h"
 
@@ -47,8 +48,8 @@ namespace charlie {
 
 	class Scanner : public common::LogginComponent{
 	public:
-		Scanner(api::ExternalFunctionManager *pExternalFunctionManager);
-		Scanner(api::ExternalFunctionManager *pExternalFunctionManager, std::function<void(std::string const &message)> messageDelegate);
+		Scanner(program::UnresolvedProgram *pProgram, api::ExternalFunctionManager *pExternalFunctionManager);
+		Scanner(program::UnresolvedProgram *pProgram, api::ExternalFunctionManager *pExternalFunctionManager, std::function<void(std::string const &message)> messageDelegate);
 
 		bool Scan(std::string const &code);
 
@@ -68,8 +69,7 @@ namespace charlie {
 			Bracket
 		};
 
-		std::list<program::FunctionDec> _funcDecs;
-		std::list<program::VariableDec> _variableDecs;
+		program::UnresolvedProgram *_pProgram;
 
 		int getFunctionDecArguments(std::string const &code, int begin, int length, std::list<program::VariableDec> &args);
 		int getFunctionDefinition(std::string const &code, int length, int pos, program::FunctionDefinition &definition);

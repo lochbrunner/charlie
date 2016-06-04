@@ -39,9 +39,13 @@ namespace charlie {
 		class UnresolvedProgram {
 		public:
 			std::list<int> Instructions;
-			std::map<int, FunctionDec> FunctionDecs;
-			std::map<int, VariableDec> VariableDecs;
+			//std::map<int, FunctionDec> FunctionDecs;
+			//std::map<int, VariableDec> VariableDecs;
+			std::list<FunctionDec> FunctionDecs;
+			std::list<VariableDec> VariableDecs;
+
 			UnresolvedProgram();
+			void Clear();
 		};
 	}
 }

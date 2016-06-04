@@ -34,9 +34,9 @@
 #include <stack>
 #include <functional>
 
-#include "../common/exportDefs.h"
+#include "..\common\exportDefs.h"
 
-#include "../program\functionDec.h"
+#include "..\program\functionDec.h"
 
 namespace charlie {
 	namespace api {

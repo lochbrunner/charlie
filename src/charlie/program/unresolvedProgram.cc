@@ -37,5 +37,11 @@ namespace charlie {
 			Instructions(), FunctionDecs(), VariableDecs()
 		{
 		}
+		void UnresolvedProgram::Clear()
+		{
+			Instructions.clear();
+			FunctionDecs.clear();
+			VariableDecs.clear();
+		}
 	}
 }

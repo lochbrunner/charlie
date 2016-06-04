@@ -44,6 +44,7 @@ namespace charlie {
 			VariableDec::TypeEnum ImageType;
 			std::list<program::VariableDec> ArgumentType;
 			std::string Label;
+			bool HasDefinition;
 
 			FunctionDec(std::string &label, VariableDec::TypeEnum imageType, std::list<VariableDec> &argumentType);
 			FunctionDec(std::string &label, VariableDec::TypeEnum imageType);
@@ -54,7 +55,7 @@ namespace charlie {
 				bool operator()(const FunctionDec &a, const FunctionDec &b);
 			};
 
-			std::stringstream& operator<<(std::stringstream &stream);
+			friend std::ostream& operator<<(std::ostream &stream, const FunctionDec &dec);
 		};
 	}
 }

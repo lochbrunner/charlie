@@ -29,8 +29,12 @@
 
 #include <sstream>
 
-#include "common\io.h"
 #include "scanner.h"
+
+#include "common\io.h"
+#include "common\definitions.h"
+
+#include "program\instruction.h"
 
 
 namespace charlie {
@@ -40,17 +44,19 @@ namespace charlie {
 	using namespace program;
 	using namespace token;
 
-	Compiler::Compiler() : LogginComponent(), ExternalFunctionManager()
+	Compiler::Compiler() : 
+		LogginComponent(), ExternalFunctionManager(), _program() 
 	{
 	}
 
 	Compiler::Compiler(function<void(string const&message)> messageDelegate) : 
-		LogginComponent(messageDelegate), ExternalFunctionManager()
+		LogginComponent(messageDelegate), ExternalFunctionManager(), _program()
 	{
 	}
 	
 	bool Compiler::Build(string const &filename)
 	{
+		_program.Clear();
 		string code;
 		if (!ascii2string(filename, code)) {
 			std::stringstream str;
@@ -59,14 +65,58 @@ namespace charlie {
 			return false;
 		}
 
-		Scanner scanner = Scanner(&ExternalFunctionManager, _messageDelegate);
+		Scanner scanner = Scanner(&_program, &ExternalFunctionManager, _messageDelegate);
 
 		if(!scanner.Scan(code)) {
-			log("Building failed!");
+			log("Scanning failed!");
+			return false;
+		}
+		if (!compile()) {
+			log("Compiling failed!");
 			return false;
 		}
 
 		log("Building succeded!");
+		return true;
+	}
+
+	bool Compiler::compile() {
+		_program.Instructions.push_back(BYTECODE_VERSION);
+		_program.Instructions.push_back(InstructionEnums::Jump);
+		// Junp address will be inserted at the end
+		int count = 3;
+
+		auto funcPositions = std::map<FunctionDec, int, FunctionDec::comparer>();
+
+		for (auto itF = _program.FunctionDecs.begin(); itF != _program.FunctionDecs.end(); ++itF) {
+			if (!itF->HasDefinition) {
+				stringstream st;
+				st << "Missing defintion for function: " << (*itF);
+				log(st.str());
+				return false;
+			}
+			funcPositions.insert(make_pair((*itF), count));
+			for (auto itI = itF->Definition.main.Instructions.begin(); itI != itF->Definition.main.Instructions.end(); ++itI) {
+				_program.Instructions.push_back(*itI);
+				++count;
+			}
+		}
+		// Find entryPoint
+		auto args = list<VariableDec>();
+		args.push_back(VariableDec::Int);
+		args.push_back(VariableDec::Char);
+		auto main = funcPositions.find(FunctionDec(string("main"), VariableDec::Int, args));
+		if (main == funcPositions.end())
+		{
+			log("Can not find entry point");
+			return false;
+		}
+
+
+		auto third = _program.Instructions.begin();
+		++third;
+		++third;
+		_program.Instructions.insert(third, main->second);
 		return true;
 	}
 }

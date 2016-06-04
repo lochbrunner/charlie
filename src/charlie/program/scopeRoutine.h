@@ -36,9 +36,10 @@ namespace charlie {
 	namespace program {
 		class Scope {
 		public:
+			Scope();
+
 			std::list<int> Instructions;
 			std::map<int, program::VariableDec> VariableDecs;
-			Scope();
 		};
 	}
 }

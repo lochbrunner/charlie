@@ -107,5 +107,8 @@
     <ClInclude Include="..\..\src\charlie\program\functionDef.h">
       <Filter>program</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\charlie\common\definitions.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

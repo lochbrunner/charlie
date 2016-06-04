@@ -35,6 +35,8 @@
 #include "common\logginComponent.h"
 
 #include "program\functionDec.h"
+#include "program\unresolvedProgram.h"
+
 #include "api\externalFunctionManager.h"
 
 
@@ -49,7 +51,9 @@ namespace charlie {
 		api::ExternalFunctionManager ExternalFunctionManager;
 
 	private:
-
+		bool compile();
+		
+		program::UnresolvedProgram _program;
 	};
 
 }

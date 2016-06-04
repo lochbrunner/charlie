@@ -36,18 +36,18 @@ namespace charlie {
 		using namespace std;
 
 		FunctionDec::FunctionDec(std::string &label, VariableDec::TypeEnum imageType, std::list<VariableDec> &argumentType)
-			: Label(label), ImageType(imageType), ArgumentType(argumentType){}
+			: Label(label), ImageType(imageType), ArgumentType(argumentType), HasDefinition(false){}
 		FunctionDec::FunctionDec(std::string &label, VariableDec::TypeEnum imageType)
-			: Label(label), ImageType(imageType) 
+			: Label(label), ImageType(imageType), HasDefinition(false)
 		{
 			ArgumentType = std::list<VariableDec>();
 		}
-		std::stringstream& FunctionDec::operator<<(std::stringstream & stream)
+		std::ostream& operator<<(std::ostream & stream, const FunctionDec &dec)
 		{
 			// See: http://stackoverflow.com/questions/476272/how-to-properly-overload-the-operator-for-an-ostream
-			stream << VariableDec::TypeString(ImageType) << '@' << Label << '(';
+			stream << VariableDec::TypeString(dec.ImageType) << '@' << dec.Label << '(';
 			bool first = true;
-			for (list<VariableDec>::const_iterator it = ArgumentType.begin(); it != ArgumentType.end(); ++it) {
+			for (list<VariableDec>::const_iterator it = dec.ArgumentType.begin(); it != dec.ArgumentType.end(); ++it) {
 				if (!first)
 					stream << '@';
 				else

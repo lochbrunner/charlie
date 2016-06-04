@@ -43,6 +43,7 @@ namespace charlie {
 			Pop,
 			Call,
 			CallEx,
+			Jump,
 			IntAdd,
 			IntSubstract,
 			IntMultiply,

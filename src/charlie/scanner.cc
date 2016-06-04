@@ -33,7 +33,6 @@
 #include "program\UnresolvedProgram.h"
 #include "program\instruction.h"
 
-
 namespace charlie {
 
 	using namespace std;
@@ -99,21 +98,20 @@ namespace charlie {
 	const map<const char*, ControlFlow::KindEnum, cmp_str> ControlFlowDict::Controls = ControlFlowDict::create();
 
 
-	Scanner::Scanner(api::ExternalFunctionManager *pExternalFunctionManager) :
-		LogginComponent(), _pExternalFunctionManager(pExternalFunctionManager), _funcDecs(), _variableDecs()
+	Scanner::Scanner(program::UnresolvedProgram *pProgram, api::ExternalFunctionManager *pExternalFunctionManager) :
+		LogginComponent(), _pProgram(pProgram), _pExternalFunctionManager(pExternalFunctionManager)
 	{
 		
 	};
 
-	Scanner::Scanner(api::ExternalFunctionManager *pExternalFunctionManager, function<void(string const&message)> messageDelegate) :
-		LogginComponent(messageDelegate), _pExternalFunctionManager(pExternalFunctionManager), _funcDecs(), _variableDecs()
+	Scanner::Scanner(program::UnresolvedProgram *pProgram, api::ExternalFunctionManager *pExternalFunctionManager, function<void(string const&message)> messageDelegate) :
+		LogginComponent(messageDelegate), _pProgram(pProgram), _pExternalFunctionManager(pExternalFunctionManager)
 	{
 	};
 
 	bool Scanner::Scan(string const &code) 
 	{
-		_funcDecs.clear();
-		_variableDecs.clear();
+		_pProgram->Clear();
 
 		// Search declarations
 		int length = static_cast<int>(code.length());
@@ -160,16 +158,19 @@ namespace charlie {
 					getNextWord(code, length, pos, word, wordType);
 					if (wordType == WordType::Semikolon) {
 						++pos;
-						_funcDecs.push_back(FunctionDec(variableName, type, args));
+						_pProgram->FunctionDecs.push_back(FunctionDec(variableName, type, args));
 						continue;
 					}
 					else if(wordType == WordType::Bracket && code[pos] == '{') {
 						++pos;
 						auto dec = FunctionDec(variableName, type, args);
-						FunctionDefinition def = FunctionDefinition();
-						pos = getFunctionDefinition(code, length, pos, def);
+						// TODO: copy arguments into variables
+						pos = getFunctionDefinition(code, length, pos, dec.Definition);
+						dec.HasDefinition = true;
+						_pProgram->FunctionDecs.push_back(dec);
 						if (pos == -1)
 							return false;
+
 					}
 					else {
 						log("Unexpected symbol after function declaration");
@@ -180,7 +181,7 @@ namespace charlie {
 				else if (code[pos] == ';') {
 					++pos;
 					VariableDec dec = VariableDec(variableName, type);
-					_variableDecs.push_back(dec);
+					_pProgram->VariableDecs.push_back(dec);
 				}
 				else {
 					stringstream st;
@@ -635,9 +636,15 @@ namespace charlie {
 				if (wordType == WordType::Bracket && code[pos] == ')') {
 					++pos;
 
+					getNextWord(code, length, pos, word, wordType);
+					if (wordType != WordType::Semikolon) {
+						log("Missing semikolon after function call!");
+						return false;
+					}
+					++pos;
+
 					auto funcDec = FunctionDec(initWord, VariableDec::Length, args);
 
-					// TODO: Use iterator instead to avoid double searching
 					int id = _pExternalFunctionManager->GetId(funcDec);
 					if (id != -1) {
 						prog.Instructions.push_back(InstructionEnums::CallEx);
@@ -671,10 +678,8 @@ namespace charlie {
 				++pos;
 				break;
 			}
-			
 
 		}
-
 
 		return false;
 	}
