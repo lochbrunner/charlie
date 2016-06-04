@@ -43,29 +43,26 @@ namespace charlie {
 				Double,
 				Boolean,
 				Char,
-				Void
+				ConstCharPointer,
+				Void,
+				Length
 			};
 
+			struct comparer {
+				bool operator()(VariableDec &a, VariableDec &b);
+			};
+
+			struct comparer_only_type {
+				bool operator()(VariableDec &a, VariableDec &b);
+			};
 
 			std::string Name;
 			TypeEnum ImageType;
 
 			VariableDec(TypeEnum imageType);
 			VariableDec(std::string name, TypeEnum imageType);
-		};
 
-		struct variablenDec_comparer {
-			bool operator()(VariableDec &a, VariableDec &b) {
-				if (a.ImageType != b.ImageType)
-					return false;
-				return std::strcmp(a.Name.c_str(), b.Name.c_str()) < 0;
-			}
-		};
-
-		struct variablenDec_comparer_only_type {
-			bool operator()(VariableDec &a, VariableDec &b) {
-				return a.ImageType == b.ImageType;
-			}
+			static const char* TypeString(TypeEnum type);
 		};
 	}
 }

@@ -30,18 +30,14 @@
 
 #include <list>
 #include <string>
+#include <sstream>
 
 #include "variableDec.h"
 #include "functionDef.h"
 
-#include "../token/base.h"
-
-
 namespace charlie {
 
 	namespace program {
-
-
 
 		class FunctionDec {
 		public:
@@ -49,19 +45,16 @@ namespace charlie {
 			std::list<program::VariableDec> ArgumentType;
 			std::string Label;
 
-			FunctionDec(std::string label, VariableDec::TypeEnum imageType, std::list<VariableDec> argumentType);
-			FunctionDec(std::string label, VariableDec::TypeEnum imageType);
+			FunctionDec(std::string &label, VariableDec::TypeEnum imageType, std::list<VariableDec> &argumentType);
+			FunctionDec(std::string &label, VariableDec::TypeEnum imageType);
 
 			FunctionDefinition Definition;
 
 			struct comparer {
-				bool operator()(const FunctionDec &a, const FunctionDec &b)
-				{
-
-
-					return false;
-				}
+				bool operator()(const FunctionDec &a, const FunctionDec &b);
 			};
+
+			std::stringstream& operator<<(std::stringstream &stream);
 		};
 	}
 }

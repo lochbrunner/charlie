@@ -28,10 +28,9 @@
 #ifndef CHARLIE_SCANNER_H
 #define CHARLIE_SCANNER_H
 
-#include <string>
+
 #include <list>
-#include <set>
-#include <map>
+#include <string>
 
 #include "common\logginComponent.h"
 
@@ -42,18 +41,20 @@
 #include "program\functionDec.h"
 #include "program\scopeRoutine.h"
 
+#include "api\externalFunctionManager.h"
+
 namespace charlie {
 
 	class Scanner : public common::LogginComponent{
 	public:
-		Scanner();
-		Scanner(std::function<void(std::string const &message)> messageDelegate);
+		Scanner(api::ExternalFunctionManager *pExternalFunctionManager);
+		Scanner(api::ExternalFunctionManager *pExternalFunctionManager, std::function<void(std::string const &message)> messageDelegate);
 
 		bool Scan(std::string const &code);
 
-		void PrintState();
-
 	private:
+
+		api::ExternalFunctionManager *_pExternalFunctionManager;
 
 		enum WordType {
 			None,
@@ -67,7 +68,6 @@ namespace charlie {
 			Bracket
 		};
 
-		//std::map<program::FunctionDec> _externalFuncDecs;
 		std::list<program::FunctionDec> _funcDecs;
 		std::list<program::VariableDec> _variableDecs;
 
@@ -78,7 +78,6 @@ namespace charlie {
 		bool getBracket(std::string const &code, int length, int &pos, program::Scope &prog);
 
 		inline bool isLabelBeginning(char c);
-		inline bool isAlphaNumeric(char c);
 		inline bool isOperator(char c);
 		inline bool isNumerical(char c);
 		inline bool isBracket(char c);

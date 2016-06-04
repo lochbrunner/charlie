@@ -27,6 +27,7 @@
 
 #include "variableDec.h"
 
+
 namespace charlie {
 
 	namespace program {
@@ -35,5 +36,32 @@ namespace charlie {
 		}
 		VariableDec::VariableDec(std::string name, TypeEnum imageType)
 			: Name(name), ImageType(imageType) {}
+
+		
+		const char* typeStringArray[VariableDec::TypeEnum::Length] = {
+			"Int",
+			"Long",
+			"Float",
+			"Double",
+			"Boolean",
+			"Char",
+			"ConstCharPointer",
+			"Void"
+		};
+
+		const char * VariableDec::TypeString(TypeEnum type)
+		{
+			return typeStringArray[type];
+		}
+
+		bool VariableDec::comparer::operator()(VariableDec &a, VariableDec &b) {
+			if (a.ImageType == b.ImageType)
+				return std::strcmp(a.Name.c_str(), b.Name.c_str()) < 0;
+			return  a.ImageType < b.ImageType;
+		}
+		bool VariableDec::comparer_only_type::operator()(VariableDec & a, VariableDec & b)
+		{
+			return a.ImageType < b.ImageType;
+		}
 	}
 }

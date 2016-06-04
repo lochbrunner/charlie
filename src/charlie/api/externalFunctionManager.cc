@@ -26,15 +26,19 @@
 */
 
 #include "externalFunctionManager.h"
+#include <sstream>
+#include <utility>
 
 namespace charlie {
 	namespace api {
 		using namespace std;
-		using namespace token;
 		using namespace program;
 
+
 		ExternalFunctionManager::ExternalFunctionManager() : 
-			_v_v_external(), _v_i_external(), _v_ccp_external()
+			_curId(0),
+			_pointers_v_v(), _pointers_v_i(), _pointers_v_ccp(), 
+			_decs()
 		{
 		}
 		void ExternalFunctionManager::AddFunction(string funcName, function<void(void)> funcPointer)
@@ -42,47 +46,84 @@ namespace charlie {
 			list<VariableDec> args = list<VariableDec>();
 			FunctionDec dec = FunctionDec(funcName, VariableDec::Void, args);
 
-			_v_v_external[dec] = funcPointer;
+			int id = _curId++;
+			_decs[dec] = id;
+			_pointers_v_v.insert(make_pair(id, FunctionInfo<void(void)>(funcPointer, dec)));
 		}
 		void ExternalFunctionManager::AddFunction(string funcName, function<void(int)> funcPointer)
-		{
-			list<VariableDec> args = list<VariableDec>();
-			args.push_back(VariableDec(VariableDec::Char));
-			FunctionDec dec = FunctionDec(funcName, VariableDec::Void, args);
-
-			_v_i_external[dec] = funcPointer;
-		}
-		void ExternalFunctionManager::AddFunction(string funcName, function<void(const char*)> funcPointer)
 		{
 			list<VariableDec> args = list<VariableDec>();
 			args.push_back(VariableDec(VariableDec::Int));
 			FunctionDec dec = FunctionDec(funcName, VariableDec::Void, args);
 
-			_v_ccp_external[dec] = funcPointer;
+			int id = _curId++;
+			_decs[dec] = id;
+			_pointers_v_i.insert(make_pair(id, FunctionInfo<void(int)>(funcPointer, dec)));
 		}
-		bool ExternalFunctionManager::Contains_V_V()
+		void ExternalFunctionManager::AddFunction(string funcName, function<void(const char*)> funcPointer)
 		{
-			return false;
+			list<VariableDec> args = list<VariableDec>();
+			args.push_back(VariableDec(VariableDec::ConstCharPointer));
+			FunctionDec dec = FunctionDec(funcName, VariableDec::Void, args);
+
+			int id = _curId++;
+			_decs[dec] = id;
+			_pointers_v_ccp.insert(make_pair(id, FunctionInfo<void(const char*)>(funcPointer, dec)));
 		}
-		bool ExternalFunctionManager::Contains_V_I()
+
+		int ExternalFunctionManager::GetId(FunctionDec &dec)
 		{
-			return false;
+			auto it = _decs.find(dec);
+			if (it == _decs.end())
+				return -1;
+			return it->second;
 		}
-		bool ExternalFunctionManager::Contains_V_CCP()
+
+		void ExternalFunctionManager::Invoke(int id, std::stack<int>& callStack)
 		{
-			return false;
+			auto it_v_v = _pointers_v_v.find(id);
+			if (it_v_v != _pointers_v_v.end()) {
+				it_v_v->second.Pointer();
+				return;
+			}
+			auto it_v_i = _pointers_v_i.find(id);
+			if (it_v_i != _pointers_v_i.end()) {
+				int i = callStack.top();
+				callStack.pop();
+				it_v_i->second.Pointer(i);
+				return;
+			}
+			auto it_v_cpp = _pointers_v_ccp.find(id);
+			if (it_v_cpp != _pointers_v_ccp.end()) {
+				int i = callStack.top();
+				callStack.pop();
+				it_v_cpp->second.Pointer(reinterpret_cast<const char*>(i));
+				return;
+			}
 		}
-		std::function<void(void)> ExternalFunctionManager::GetV_V()
+
+		void ExternalFunctionManager::Invoke(int id)
 		{
-			return std::function<void(void)>();
+			auto it = _pointers_v_v.find(id);
+			if (it == _pointers_v_v.end())
+				return;
+			it->second.Pointer();
 		}
-		std::function<void(void)> ExternalFunctionManager::GetV_I()
+
+		void ExternalFunctionManager::Invoke(int id, int arg1)
 		{
-			return std::function<void(void)>();
+			auto it = _pointers_v_i.find(id);
+			if (it == _pointers_v_i.end())
+				return;
+			it->second.Pointer(arg1);
 		}
-		std::function<void(void)> ExternalFunctionManager::GetV_CCP()
+
+		void ExternalFunctionManager::Invoke(int id, const char * arg1)
 		{
-			return std::function<void(void)>();
+			auto it = _pointers_v_ccp.find(id);
+			if (it == _pointers_v_ccp.end())
+				return;
+			it->second.Pointer(arg1);
 		}
 	}
 }

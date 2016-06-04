@@ -27,19 +27,58 @@
 
 #include "functionDec.h"
 
+#include <list>
 
 namespace charlie {
 
 	namespace program {
 
-		using namespace token;
+		using namespace std;
 
-		FunctionDec::FunctionDec(std::string label, VariableDec::TypeEnum imageType, std::list<VariableDec> argumentType)
+		FunctionDec::FunctionDec(std::string &label, VariableDec::TypeEnum imageType, std::list<VariableDec> &argumentType)
 			: Label(label), ImageType(imageType), ArgumentType(argumentType){}
-		FunctionDec::FunctionDec(std::string label, VariableDec::TypeEnum imageType)
+		FunctionDec::FunctionDec(std::string &label, VariableDec::TypeEnum imageType)
 			: Label(label), ImageType(imageType) 
 		{
 			ArgumentType = std::list<VariableDec>();
+		}
+		std::stringstream& FunctionDec::operator<<(std::stringstream & stream)
+		{
+			// See: http://stackoverflow.com/questions/476272/how-to-properly-overload-the-operator-for-an-ostream
+			stream << VariableDec::TypeString(ImageType) << '@' << Label << '(';
+			bool first = true;
+			for (list<VariableDec>::const_iterator it = ArgumentType.begin(); it != ArgumentType.end(); ++it) {
+				if (!first)
+					stream << '@';
+				else
+					first = false;
+				stream << VariableDec::TypeString(it->ImageType);
+				return stream;
+			}
+			stream << ')';
+			return stream;
+		}
+		// Is a "smaller" than b
+		bool FunctionDec::comparer::operator()(const FunctionDec & a, const FunctionDec & b)
+		{
+			// See: http://stackoverflow.com/questions/5733254/create-an-own-comparator-for-map
+			int name = strcmp(a.Label.c_str(), b.Label.c_str());
+			if (name != 0)
+				return name < 0;
+
+			list<VariableDec>::const_iterator itA = a.ArgumentType.begin();
+			list<VariableDec>::const_iterator itB = b.ArgumentType.begin();
+			while (itA != a.ArgumentType.end() && itB != b.ArgumentType.end())
+			{
+				if (itA->ImageType != itB->ImageType)
+					return itA->ImageType - itB->ImageType < 0;
+				++itA;
+				++itB;
+			}
+			if (itB != b.ArgumentType.end())
+				return true;
+
+			return false;
 		}
 	}
 }

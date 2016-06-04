@@ -59,7 +59,7 @@ namespace charlie {
 			return false;
 		}
 
-		Scanner scanner = Scanner(_messageDelegate);
+		Scanner scanner = Scanner(&ExternalFunctionManager, _messageDelegate);
 
 		if(!scanner.Scan(code)) {
 			log("Building failed!");

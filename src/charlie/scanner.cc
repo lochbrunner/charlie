@@ -25,9 +25,11 @@
 * SUCH DAMAGE.
 */
 
+#include <map>
+#include <set>
+#include <sstream>
 
 #include "scanner.h"
-#include <sstream>
 #include "program\UnresolvedProgram.h"
 #include "program\instruction.h"
 
@@ -37,6 +39,7 @@ namespace charlie {
 	using namespace std;
 	using namespace token;
 	using namespace program;
+	using namespace api;
 
 	struct cmp_str
 	{
@@ -96,20 +99,14 @@ namespace charlie {
 	const map<const char*, ControlFlow::KindEnum, cmp_str> ControlFlowDict::Controls = ControlFlowDict::create();
 
 
-	enum TokenKind
-	{
-		BracketOpeningRound,
-		BracketClosingRound
-	};
-
-	Scanner::Scanner() : 
-		LogginComponent(), _funcDecs(), _variableDecs()
+	Scanner::Scanner(api::ExternalFunctionManager *pExternalFunctionManager) :
+		LogginComponent(), _pExternalFunctionManager(pExternalFunctionManager), _funcDecs(), _variableDecs()
 	{
 		
 	};
 
-	Scanner::Scanner(function<void(string const&message)> messageDelegate) : 
-		LogginComponent(messageDelegate), _funcDecs(), _variableDecs()
+	Scanner::Scanner(api::ExternalFunctionManager *pExternalFunctionManager, function<void(string const&message)> messageDelegate) :
+		LogginComponent(messageDelegate), _pExternalFunctionManager(pExternalFunctionManager), _funcDecs(), _variableDecs()
 	{
 	};
 
@@ -203,26 +200,10 @@ namespace charlie {
 		return true;
 	}
 
-	void Scanner::PrintState() {
-
-	}
-
 	bool Scanner::isLabelBeginning(char c) {
 		if (c <= 'z' &&  c >= 'a')
 			return true;
 		if (c <= 'Z' &&  c >= 'A')
-			return true;
-		if (c == '_')
-			return true;
-		return false;
-	}
-
-	bool Scanner::isAlphaNumeric(char c) {
-		if (c <= 'z' &&  c >= 'a')
-			return true;
-		if (c <= 'Z' &&  c >= 'A')
-			return true;
-		if (c <= '9' &&  c >= '0')
 			return true;
 		if (c == '_')
 			return true;
@@ -624,12 +605,8 @@ namespace charlie {
 				{
 					return -1;
 				}
-
 			}
-
-			return -1;
 		}
-
 
 		return pos;
 	}
@@ -642,6 +619,8 @@ namespace charlie {
 		getNextWord(code, length, pos, word, wordType);
 		if (wordType == WordType::Bracket && code[pos] == '(') 
 		{
+			auto args = list<VariableDec>();
+
 			++pos;
 			getNextWord(code, length, pos, word, wordType);
 			if (wordType == WordType::Number)
@@ -650,16 +629,25 @@ namespace charlie {
 				prog.Instructions.push_back(InstructionEnums::PushConst);
 				prog.Instructions.push_back(i);
 
+				args.push_back(VariableDec(VariableDec::Int));
+
 				getNextWord(code, length, pos, word, wordType);
 				if (wordType == WordType::Bracket && code[pos] == ')') {
 					++pos;
-					prog.Instructions.push_back(InstructionEnums::Call);
 
+					auto funcDec = FunctionDec(initWord, VariableDec::Length, args);
+
+					// TODO: Use iterator instead to avoid double searching
+					int id = _pExternalFunctionManager->GetId(funcDec);
+					if (id != -1) {
+						prog.Instructions.push_back(InstructionEnums::CallEx);
+						prog.Instructions.push_back(id);
+					}
+					else {
+						return false;
+					}
 
 				}
-
-
-
 			}
 
 			//getBracket(code, length, pos, prog);
@@ -667,7 +655,7 @@ namespace charlie {
 		}
 		
 
-		return false;
+		return true;
 	}
 	// Call this after opening bracket
 	bool Scanner::getBracket(std::string const &code, int length, int &pos, program::Scope &prog)

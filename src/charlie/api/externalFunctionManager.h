@@ -29,14 +29,18 @@
 #define CHARLIE_API_EXTERNALFUNCTION_H
 
 #include <map>
+#include <set>
 #include <string>
+#include <stack>
 #include <functional>
 
-#include "../program\functionDec.h"
 #include "../common/exportDefs.h"
+
+#include "../program\functionDec.h"
 
 namespace charlie {
 	namespace api {
+
 		class ExternalFunctionManager {
 		public:
 			ExternalFunctionManager();
@@ -45,18 +49,30 @@ namespace charlie {
 			xprt void AddFunction(std::string funcName, std::function<void(int)> funcPointer);
 			xprt void AddFunction(std::string funcName, std::function<void(const char*)> funcPointer);
 
-			bool Contains_V_V();
-			bool Contains_V_I();
-			bool Contains_V_CCP();
+			int GetId(program::FunctionDec &dec);
 
-			std::function<void(void)> GetV_V();
-			std::function<void(void)> GetV_I();
-			std::function<void(void)> GetV_CCP();
+			void Invoke(int id, std::stack<int> &callStack);
+
+			void Invoke(int id);
+			void Invoke(int id, int arg1);
+			void Invoke(int id, const char* arg1);
 
 		private:
-			std::map<program::FunctionDec, std::function<void(void)>, program::FunctionDec::comparer> _v_v_external;
-			std::map<program::FunctionDec, std::function<void(int)>, program::FunctionDec::comparer> _v_i_external;
-			std::map<program::FunctionDec, std::function<void(const char*)>, program::FunctionDec::comparer> _v_ccp_external;
+			template<class _Fty>
+			struct FunctionInfo {
+				FunctionInfo(std::function<_Fty> &pointer, program::FunctionDec &declaration) :
+					Pointer(pointer), Declaration(declaration){}
+				std::function<_Fty> Pointer;
+				program::FunctionDec Declaration;
+			};
+
+			std::map<int, FunctionInfo<void(void)>> _pointers_v_v;
+			std::map<int, FunctionInfo<void(int)>> _pointers_v_i;
+			std::map<int, FunctionInfo<void(const char*)>> _pointers_v_ccp;
+			
+			std::map<program::FunctionDec, int, program::FunctionDec::comparer> _decs;
+
+			int _curId;
 		};
 	}
 }
