@@ -19,12 +19,18 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\console\command.cc" />
+    <ClCompile Include="..\..\src\console\flag.cc" />
     <ClCompile Include="..\..\src\console\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\charlie\charlie.vcxproj">
       <Project>{f9b0a582-a9cd-444a-a11a-196cfc0b8b9d}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\console\command.h" />
+    <ClInclude Include="..\..\src\console\flag.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{C28DE3C5-93B8-4518-9E39-4B2557520E27}</ProjectGuid>

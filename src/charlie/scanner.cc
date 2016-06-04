@@ -33,24 +33,19 @@
 #include "program\UnresolvedProgram.h"
 #include "program\instruction.h"
 
+#include "common\comparer_string.h"
+
 namespace charlie {
 
 	using namespace std;
 	using namespace token;
 	using namespace program;
 	using namespace api;
-
-	struct cmp_str
-	{
-		bool operator()(char const *a, char const *b)
-		{
-			return std::strcmp(a, b) < 0;
-		}
-	};
+	using namespace common;
 
 	struct TypeDict {
-		static map<const char*, VariableDec::TypeEnum, cmp_str> create() {
-			map<const char*, VariableDec::TypeEnum, cmp_str> types;
+		static map<const char*, VariableDec::TypeEnum, comparer_string> create() {
+			map<const char*, VariableDec::TypeEnum, comparer_string> types;
 			types["int"] = VariableDec::Int;
 			types["long"] = VariableDec::Long;
 			types["float"] = VariableDec::Float;
@@ -60,7 +55,7 @@ namespace charlie {
 			types["void"] = VariableDec::Void;
 			return types;
 		}
-		static const map<const char*, VariableDec::TypeEnum, cmp_str> Types;
+		static const map<const char*, VariableDec::TypeEnum, comparer_string> Types;
 		static bool Contains(const char* name) {
 			return TypeDict::Types.count(name) > 0;
 		}
@@ -71,8 +66,8 @@ namespace charlie {
 	};
 
 	struct ControlFlowDict {
-		static map<const char*, ControlFlow::KindEnum, cmp_str> create() {
-			map<const char*, ControlFlow::KindEnum, cmp_str> types;
+		static map<const char*, ControlFlow::KindEnum, comparer_string> create() {
+			map<const char*, ControlFlow::KindEnum, comparer_string> types;
 			types["while"] = ControlFlow::While;
 			types["for"] = ControlFlow::For;
 			types["do"] = ControlFlow::Do;
@@ -84,7 +79,7 @@ namespace charlie {
 			types["goto"] = ControlFlow::Goto;
 			return types;
 		}
-		static const map<const char*, ControlFlow::KindEnum, cmp_str> Controls;
+		static const map<const char*, ControlFlow::KindEnum, comparer_string> Controls;
 		static bool Contains(const char* name) {
 			return ControlFlowDict::Controls.count(name) > 0;
 		}
@@ -94,8 +89,8 @@ namespace charlie {
 		}
 	};
 
-	const map<const char*, VariableDec::TypeEnum, cmp_str> TypeDict::Types = TypeDict::create();
-	const map<const char*, ControlFlow::KindEnum, cmp_str> ControlFlowDict::Controls = ControlFlowDict::create();
+	const map<const char*, VariableDec::TypeEnum, comparer_string> TypeDict::Types = TypeDict::create();
+	const map<const char*, ControlFlow::KindEnum, comparer_string> ControlFlowDict::Controls = ControlFlowDict::create();
 
 
 	Scanner::Scanner(program::UnresolvedProgram *pProgram, api::ExternalFunctionManager *pExternalFunctionManager) :

@@ -29,23 +29,75 @@
 #include "io.h"
 #include <fstream>
 #include <sstream>
+#include <list>
+#include <queue>
+
+#include "../program/instruction.h"
 
 using namespace std;
 
 namespace charlie {
 	namespace common {
-		bool ascii2string(std::string const &filename, std::string &result) {
-			ifstream file(filename);
-			if (!file.is_open()) {
-				return false;
+		namespace io {
+			bool ascii2string(std::string const &filename, std::string &result) {
+				std::string fullfilename = filename;
+				fullfilename.append(".cc");
+				ifstream file(fullfilename);
+				if (!file.is_open()) {
+					return false;
+				}
+
+				std::stringstream buffer;
+				buffer << file.rdbuf();
+				file.close();
+				result = buffer.str();
+
+				return true;
 			}
+			bool saveProgramAscii(std::string const &filename, program::UnresolvedProgram & program)
+			{
+				std::string fullfilename = filename;
+				fullfilename.append(".bc.txt");
+				ofstream file(fullfilename);
+				if (!file.is_open()) {
+					return false;
+				}
+				list<int>::const_iterator it = program.Instructions.begin();
+				file << (*it) << "\t// Version\n";
+				auto comments = queue<const char*>();
+				for (++it; it != program.Instructions.end(); ++it) {
+					if (comments.empty())
+						program::InstructionManager::GetLegend((*it), comments);
+					file << (*it);
+					if (!comments.empty()) {
+						file << "\t// " << comments.front();
+						comments.pop();
+					}
+					file << "\n";
 
-			std::stringstream buffer;
-			buffer << file.rdbuf();
-			file.close();
-			result = buffer.str();
+					
+				}
 
-			return true;
+
+				file.close();
+				return true;
+			}
+			bool saveProgramBinary(std::string const & filename, program::UnresolvedProgram & program)
+			{
+				std::string fullfilename = filename;
+				fullfilename.append(".bc");
+				ofstream file(fullfilename, ios::binary | ios::out | ios::trunc);
+				if (!file.is_open()) {
+					return false;
+				}
+				list<int>::const_iterator it = program.Instructions.begin();
+				for (; it != program.Instructions.end(); ++it) {
+					file << (*it);
+				}
+
+				file.close();
+				return true;
+			}
 		}
 	}
 }

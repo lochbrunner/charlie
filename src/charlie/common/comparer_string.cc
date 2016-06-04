@@ -24,23 +24,16 @@
 * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 * SUCH DAMAGE.
 */
-#ifndef CHARLIE_COMMON_IO_H
-#define CHARLIE_COMMON_IO_H
 
-#include <string>
-#include "..\program\unresolvedProgram.h"
+#include "comparer_string.h"
+
+#include <cstring>
 
 namespace charlie {
 	namespace common {
-		namespace io {
-			bool ascii2string(std::string const &filename, std::string &result);
-
-			bool saveProgramAscii(std::string const &filename, program::UnresolvedProgram &program);
-
-			bool saveProgramBinary(std::string const &filename, program::UnresolvedProgram &program);
+		bool comparer_string::operator()(char const *a, char const *b)
+		{
+			return std::strcmp(a, b) < 0;
 		}
 	}
 }
-
-
-#endif // !CHARLIE_COMMON_IO_H

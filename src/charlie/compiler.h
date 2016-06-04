@@ -48,6 +48,8 @@ namespace charlie {
 		xprt Compiler(std::function<void(std::string const &message)> messageDelegate);
 		/// Compiles the speciefed file
 		xprt bool Build(std::string const &filename);
+		xprt void SaveProgram(std::string const &filename, bool binary = true);
+
 		api::ExternalFunctionManager ExternalFunctionManager;
 
 	private:

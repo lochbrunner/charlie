@@ -63,6 +63,9 @@
     <ClCompile Include="..\..\src\charlie\program\functionDef.cc">
       <Filter>program</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\charlie\common\comparer_string.cc">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\charlie\compiler.h">
@@ -82,9 +85,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\charlie\token\base.h">
       <Filter>token</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\charlie\common\tieTree.h">
-      <Filter>common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\charlie\program\unresolvedProgram.h">
       <Filter>program</Filter>
@@ -108,6 +108,9 @@
       <Filter>program</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\charlie\common\definitions.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\charlie\common\comparer_string.h">
       <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>

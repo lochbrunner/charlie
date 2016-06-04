@@ -32,6 +32,7 @@
 
 #include <array>
 #include <stack>
+#include <queue>
 
 namespace charlie {
 	namespace program {
@@ -57,6 +58,7 @@ namespace charlie {
 			static std::array<functionType, InstructionEnums::Length> Create();
 			static const std::array<functionType, InstructionEnums::Length> Instructions;
 			static functionType Get(InstructionEnums bc);
+			static void GetLegend(int instruction, std::queue<const char*> &comments);
 		};
 	}
 }

@@ -24,23 +24,26 @@
 * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 * SUCH DAMAGE.
 */
-#ifndef CHARLIE_COMMON_IO_H
-#define CHARLIE_COMMON_IO_H
 
-#include <string>
-#include "..\program\unresolvedProgram.h"
+#ifndef CONSOLE_FLAG_H
+#define CONSOLE_FLAG_H
 
-namespace charlie {
-	namespace common {
-		namespace io {
-			bool ascii2string(std::string const &filename, std::string &result);
+#include <map>
+#include "common\comparer_string.h"
 
-			bool saveProgramAscii(std::string const &filename, program::UnresolvedProgram &program);
+class Flag {
+public:
+	enum FlagEnum {
+		None = 0,
+		Binary = 1,
+		Ascii = 2
+	};
 
-			bool saveProgramBinary(std::string const &filename, program::UnresolvedProgram &program);
-		}
-	}
-}
+	static void Create();
+	static int Get(const char* command);
 
+private:
+	static std::map<const char*, int, charlie::common::comparer_string> Dict;
+};
 
-#endif // !CHARLIE_COMMON_IO_H
+#endif // !CONSOLE_FLAG_H

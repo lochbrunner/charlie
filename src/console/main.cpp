@@ -26,58 +26,94 @@
 */
 
 #include <iostream>
+#include <map>
+
+#include "flag.h"
+#include "command.h"
 
 #include "compiler.h"
+#include "common\comparer_string.h"
 
 using namespace std;
 using namespace charlie;
 
+void addExternalFunctions(Compiler &compiler)
+{
+	compiler.ExternalFunctionManager.AddFunction("print", [](const char* message) 
+	{
+		cout << message;
+	});
+	compiler.ExternalFunctionManager.AddFunction("println", [](const char* message) 
+	{
+		cout << message << endl;
+	});
+	compiler.ExternalFunctionManager.AddFunction("println", [](int number) 
+	{
+		cout << number << endl;
+	});
+	compiler.ExternalFunctionManager.AddFunction("print", [](int number) 
+	{
+		cout << number;
+	});
+}
+
+
+
+// <command> <filename> <options>
 int main(int argn, char** argv)
 {
-	char* command = NULL;
+	Command::CommandEnum command = Command::None;
+	int flag = Flag::None;
 	char* entry = NULL;
 
+	Command::Create();
+	Flag::Create();
+
+
 #ifdef _DEBUG
-	if (argn > 2) {
-		command = argv[1];
-		entry = argv[argn-1];
+	if (argn > 2) 
+	{
+		command = Command::Get(argv[1]);
+		entry = argv[2];
+	}
+	for (int i = 3; i < argn; ++i) 
+	{
+		flag |= Flag::Get(argv[i]);
 	}
 #else
-	if (argn > 1) {
-		command = argv[0];
-		entry = argv[argn - 1];
-}
+	if (argn > 1) 
+	{
+		command = Commands::Get(argv[0]);
+		entry = argv[1];
+	}
+	for (int i = 2; i < argn; ++i)
+	{
+		flag |= Flags::Get(argv[i]);
+	}
 #endif // _DEBUG
 
-	if (command == NULL) {
-		cout << "Please specify command";
+	if (command == Command::None)
+	{
+		cout << "Please specify a command";
 		return -1;
 	}
 
-	if (entry == NULL) {
-		cout << "Please specify entry point";
+	if (entry == NULL) 
+	{
+		cout << "Please specify an entry point";
 		return -1;
 	}
 
-	if (strcmp(command, "build") == 0) {
+	if (command == Command::Build)
+	{
 		Compiler compiler = Compiler([](string const &message) {
 			cout << message << endl;
 		});
 
-		compiler.ExternalFunctionManager.AddFunction("print", [](const char* message) {
-			cout << message;
-		});
-		compiler.ExternalFunctionManager.AddFunction("println", [](const char* message) {
-			cout << message << endl;
-		});
-		compiler.ExternalFunctionManager.AddFunction("println", [](int number) {
-			cout << number << endl;
-		});
-		compiler.ExternalFunctionManager.AddFunction("print", [](int number) {
-			cout << number;
-		});
+		addExternalFunctions(compiler);
 
 		compiler.Build(entry);
+		compiler.SaveProgram(entry, false);
 	}
 
     return 0;

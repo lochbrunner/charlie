@@ -58,7 +58,7 @@ namespace charlie {
 	{
 		_program.Clear();
 		string code;
-		if (!ascii2string(filename, code)) {
+		if (!io::ascii2string(filename, code)) {
 			std::stringstream str;
 			str << "Can not open file \"" << filename << "\"";
 			log(str.str());
@@ -80,9 +80,16 @@ namespace charlie {
 		return true;
 	}
 
+	void Compiler::SaveProgram(std::string const &filename, bool binary) {
+		if(binary)
+			io::saveProgramBinary(filename, _program);
+		else
+			io::saveProgramAscii(filename, _program);
+	}
+
 	bool Compiler::compile() {
 		_program.Instructions.push_back(BYTECODE_VERSION);
-		_program.Instructions.push_back(InstructionEnums::Jump);
+		_program.Instructions.push_back(InstructionEnums::Call);
 		// Junp address will be inserted at the end
 		int count = 3;
 

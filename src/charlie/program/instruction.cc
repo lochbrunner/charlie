@@ -50,6 +50,33 @@ namespace charlie {
 		functionType InstructionManager::Get(InstructionEnums bc) {
 			return InstructionManager::Instructions[bc];
 		}
+		void InstructionManager::GetLegend(int instruction, std::queue<const char*>& comments)
+		{
+			switch (instruction)
+			{
+			case InstructionEnums::Push:
+				comments.push("Push");
+				break;
+			case InstructionEnums::CallEx:
+				comments.push("CallEx ...");
+				comments.push("... Id of function");
+				break;
+			case InstructionEnums::Call:
+				comments.push("Call ...");
+				comments.push("... Address of function");
+				break;
+			case InstructionEnums::Jump:
+				comments.push("Jump ...");
+				comments.push("... Address to jump");
+				break;
+			case InstructionEnums::PushConst:
+				comments.push("PushConst ...");
+				comments.push("... Value to push");
+				break;
+			default:
+				break;
+			}
+		}
 		const std::array<functionType, InstructionEnums::Length> InstructionManager::Instructions = InstructionManager::Create();
 	}
 }

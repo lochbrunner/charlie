@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\charlie\api\externalFunctionManager.cc" />
+    <ClCompile Include="..\..\src\charlie\common\comparer_string.cc" />
     <ClCompile Include="..\..\src\charlie\common\io.cc" />
     <ClCompile Include="..\..\src\charlie\common\logginComponent.cc" />
     <ClCompile Include="..\..\src\charlie\compiler.cc" />
@@ -34,11 +35,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\charlie\api\externalFunctionManager.h" />
+    <ClInclude Include="..\..\src\charlie\common\comparer_string.h" />
     <ClInclude Include="..\..\src\charlie\common\definitions.h" />
     <ClInclude Include="..\..\src\charlie\common\exportDefs.h" />
     <ClInclude Include="..\..\src\charlie\common\io.h" />
     <ClInclude Include="..\..\src\charlie\common\logginComponent.h" />
-    <ClInclude Include="..\..\src\charlie\common\tieTree.h" />
     <ClInclude Include="..\..\src\charlie\compiler.h" />
     <ClInclude Include="..\..\src\charlie\program\functionDec.h" />
     <ClInclude Include="..\..\src\charlie\program\functionDef.h" />
