@@ -33,9 +33,21 @@
 #include <array>
 #include <stack>
 #include <queue>
+#include <vector>
+
+#include "..\api\externalFunctionManager.h"
 
 namespace charlie {
 	namespace program {
+
+		struct State {
+			State();
+			std::stack<int> st;
+			std::vector<int> reg;
+			std::vector<int> program;
+			int pos;
+			api::ExternalFunctionManager *pExternalFunctionManager;
+		};
 
 		enum InstructionEnums
 		{
@@ -49,10 +61,12 @@ namespace charlie {
 			IntSubstract,
 			IntMultiply,
 			IntDivide,
+			Return,
+			Quit,
 			Length
 		};
 
-		typedef std::function<void(std::stack<int>&)> functionType;
+		typedef std::function<void(State&)> functionType;
 
 		struct InstructionManager {
 			static std::array<functionType, InstructionEnums::Length> Create();

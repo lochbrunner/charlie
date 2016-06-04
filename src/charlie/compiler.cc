@@ -91,7 +91,7 @@ namespace charlie {
 		_program.Instructions.push_back(BYTECODE_VERSION);
 		_program.Instructions.push_back(InstructionEnums::Call);
 		// Junp address will be inserted at the end
-		int count = 3;
+		int count = 1;
 
 		auto funcPositions = std::map<FunctionDec, int, FunctionDec::comparer>();
 
@@ -107,6 +107,8 @@ namespace charlie {
 				_program.Instructions.push_back(*itI);
 				++count;
 			}
+			_program.Instructions.push_back(InstructionEnums::Return);
+			++count;
 		}
 		// Find entryPoint
 		auto args = list<VariableDec>();
@@ -124,6 +126,30 @@ namespace charlie {
 		++third;
 		++third;
 		_program.Instructions.insert(third, main->second);
+		return true;
+	}
+
+	int Compiler::Run() {
+		auto state = State();
+		state.pExternalFunctionManager = &ExternalFunctionManager;
+
+		list<int>::const_iterator it = _program.Instructions.begin();
+		int version = (*it++);
+
+		if (version != BYTECODE_VERSION) {
+			log("Wrong bytecode version");
+			return -1;
+		}
+
+		for (;it != _program.Instructions.end();++it) {
+			state.program.push_back(*it);
+		}
+
+		while (state.pos>-1)
+		{
+			InstructionManager::Instructions[state.program[state.pos]](state);
+			++state.pos;
+		}
 		return true;
 	}
 }

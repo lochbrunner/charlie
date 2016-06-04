@@ -27,19 +27,40 @@
 
 #include "instruction.h"
 
+
 namespace charlie {
 	namespace program {
-		std::array<functionType, InstructionEnums::Length> InstructionManager::Create() {
-			std::array<functionType, InstructionEnums::Length> types = std::array<functionType, InstructionEnums::Length>();
-			types[InstructionEnums::Call] = [](std::stack<int>& st) {
+
+		using namespace std;
+
+		array<functionType, InstructionEnums::Length> InstructionManager::Create() {
+			//EnviromentStruct env = InstructionManager::Enviroment;
+
+			array<functionType, InstructionEnums::Length> types = array<functionType, InstructionEnums::Length>();
+			types[InstructionEnums::Call] = [](State& state) {
+				int address = state.program[++state.pos];
+				state.pos = address;
+			};
+			types[InstructionEnums::PushConst] = [](State& state) {
+				int i = state.program[++state.pos];
+				state.st.push(i);
+			};
+			types[InstructionEnums::Return] = [](State& state) {
+				// Only for testing
+				state.pos = -2;
+			};
+			types[InstructionEnums::CallEx] = [](State& state) {
+				int id = state.program[++state.pos];
+				if(state.pExternalFunctionManager != 0)
+					state.pExternalFunctionManager->Invoke(id, state.st);
 
 			};
-			types[InstructionEnums::IntAdd] = [](std::stack<int>& st) {
-				int a = st.top();
-				st.pop();
-				int b = st.top();
-				st.pop();
-				st.push(a+b);
+			types[InstructionEnums::IntAdd] = [](State& state) {
+				int a = state.st.top();
+				state.st.pop();
+				int b = state.st.top();
+				state.st.pop();
+				state.st.push(a+b);
 			};
 
 			
@@ -50,12 +71,15 @@ namespace charlie {
 		functionType InstructionManager::Get(InstructionEnums bc) {
 			return InstructionManager::Instructions[bc];
 		}
-		void InstructionManager::GetLegend(int instruction, std::queue<const char*>& comments)
+		void InstructionManager::GetLegend(int instruction, queue<const char*>& comments)
 		{
 			switch (instruction)
 			{
 			case InstructionEnums::Push:
 				comments.push("Push");
+				break;
+			case InstructionEnums::Return:
+				comments.push("Return");
 				break;
 			case InstructionEnums::CallEx:
 				comments.push("CallEx ...");
@@ -77,6 +101,8 @@ namespace charlie {
 				break;
 			}
 		}
-		const std::array<functionType, InstructionEnums::Length> InstructionManager::Instructions = InstructionManager::Create();
+		const array<functionType, InstructionEnums::Length> InstructionManager::Instructions = InstructionManager::Create();
+
+		State::State(): st(), reg(), program(), pos(0), pExternalFunctionManager(0){}
 	}
 }

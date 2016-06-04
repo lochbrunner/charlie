@@ -113,7 +113,9 @@ int main(int argn, char** argv)
 		addExternalFunctions(compiler);
 
 		compiler.Build(entry);
-		compiler.SaveProgram(entry, false);
+		compiler.SaveProgram(entry, flag & Flag::Binary);
+
+		compiler.Run();
 	}
 
     return 0;

@@ -50,6 +50,8 @@ namespace charlie {
 		xprt bool Build(std::string const &filename);
 		xprt void SaveProgram(std::string const &filename, bool binary = true);
 
+		xprt int Run();
+
 		api::ExternalFunctionManager ExternalFunctionManager;
 
 	private:
