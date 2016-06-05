@@ -607,60 +607,218 @@ namespace charlie {
 		return pos;
 	}
 
-	bool Scanner::getStatement(std::string const &code, int length, int &pos, program::Scope & prog, string &word)
+	bool Scanner::getStatement(string const &code, int length, int &pos, program::Scope & prog, string &word)
 	{
-		string initWord = word;
-		WordType wordType;
 
-		getNextWord(code, length, pos, word, wordType);
-		if (wordType == WordType::Bracket && code[pos] == '(') 
-		{
-			auto args = list<VariableDec>();
+		auto tokens = list<Base*>();
+		tokens.push_back(new Label(&word));
 
-			++pos;
-			getNextWord(code, length, pos, word, wordType);
-			if (wordType == WordType::Number)
-			{
-				int i = atoi(word.c_str());
-				prog.Instructions.push_back(InstructionEnums::PushConst);
-				prog.Instructions.push_back(i);
+		getStatemantTokens(code, length, pos, tokens);
 
-				args.push_back(VariableDec(VariableDec::Int));
 
-				getNextWord(code, length, pos, word, wordType);
-				if (wordType == WordType::Bracket && code[pos] == ')') {
-					++pos;
 
-					getNextWord(code, length, pos, word, wordType);
-					if (wordType != WordType::Semikolon) {
-						log("Missing semikolon after function call!");
-						return false;
-					}
-					++pos;
 
-					auto funcDec = FunctionDec(initWord, VariableDec::Length, args);
-
-					int id = _pExternalFunctionManager->GetId(funcDec);
-					if (id != -1) {
-						prog.Instructions.push_back(InstructionEnums::CallEx);
-						prog.Instructions.push_back(id);
-					}
-					else {
-						return false;
-					}
-
-				}
-			}
-
-			//getBracket(code, length, pos, prog);
-
+		for (auto it = tokens.begin(); it != tokens.end(); ++it) {
+			delete (*it);
+			(*it) = 0;
 		}
-		
 
 		return true;
 	}
+
+	void Scanner::getStatemantTokens(string const &code, int length, int &pos, list<Base*> &tokens) {
+		string  word;
+		WordType wordType;
+		int i;
+
+		int bracketStateRound = 0;
+		int bracketStateSquare = 0;
+		int bracketStateCurly = 0;
+
+		do {
+			getNextWord(code, length, pos, word, wordType);
+			switch (wordType)
+			{
+			case WordType::Bracket:
+				switch (code[pos])
+				{
+				case '(':
+					tokens.push_back(new token::Bracket(Bracket::Round, Bracket::Opening));
+					++bracketStateRound;
+					break;
+				case ')':
+					if (bracketStateRound <= 0)
+					{
+						log("There is nothing to close with a round bracket", __FILE__, __LINE__);
+						return;
+					}
+					tokens.push_back(new token::Bracket(Bracket::Round, Bracket::Closing));
+					--bracketStateRound;
+					break;
+				case '[':
+					tokens.push_back(new token::Bracket(Bracket::Square, Bracket::Opening));
+					++bracketStateSquare;
+					break;
+				case ']':
+					if (bracketStateSquare <= 0)
+					{
+						log("There is nothing to close with a square bracket", __FILE__, __LINE__);
+						return;
+					}
+					tokens.push_back(new token::Bracket(Bracket::Square, Bracket::Closing));
+					--bracketStateSquare;
+					break;
+				case '{':
+					tokens.push_back(new token::Bracket(Bracket::Curly, Bracket::Opening));
+					++bracketStateCurly;
+					break;
+				case '}':
+					if (bracketStateCurly <= 0)
+					{
+						log("There is nothing to close with a curly bracket", __FILE__, __LINE__);
+						return;
+					}
+					tokens.push_back(new token::Bracket(Bracket::Curly, Bracket::Closing));
+					--bracketStateCurly;
+					break;
+				case '<':
+					tokens.push_back(new token::Bracket(Bracket::Triangle, Bracket::Opening));
+					break;
+				case '>':
+					tokens.push_back(new token::Bracket(Bracket::Triangle, Bracket::Closing));
+					break;
+				default:
+					break;
+				}
+				++pos;
+				break;
+			case WordType::Char:
+				tokens.push_back(new token::Constant(Constant::Char, new char(code[pos])));
+				break;
+			case WordType::Comma:
+				tokens.push_back(new token::Comma());
+				++pos;
+				break;
+			case WordType::Name:
+				tokens.push_back(new token::Label(new string(word)));
+				break;
+			case WordType::Number:
+				i = atoi(word.c_str());
+				tokens.push_back(new token::ConstantInt(i));
+				break;
+			case WordType::Operator:
+				if (word.length() == 1) {
+					switch (word[0])
+					{
+					case '+':
+						tokens.push_back(new token::Operator(Operator::Add));
+						break;
+					case '-':
+						tokens.push_back(new token::Operator(Operator::Substract));
+						break;
+					case '*':
+						tokens.push_back(new token::Operator(Operator::Multipply));
+						break;
+					case '/':
+						tokens.push_back(new token::Operator(Operator::Divide));
+						break;
+					case '=':
+						tokens.push_back(new token::Operator(Operator::Copy));
+						break;
+					case '>':
+						tokens.push_back(new token::Operator(Operator::Greater));
+						break;
+					case '<':
+						tokens.push_back(new token::Operator(Operator::Less));
+						break;
+					case '|':
+						tokens.push_back(new token::Operator(Operator::BitOr));
+						break;
+					case '&':
+						tokens.push_back(new token::Operator(Operator::BitAnd));
+						break;
+					case '^':
+						tokens.push_back(new token::Operator(Operator::BitXor));
+						break;
+					default:
+						log("Unexpected operator type", __FILE__, __LINE__);
+						return;
+					}
+				}
+				else if (word.length() == 2 && word[1] == '=') {
+					switch (word[0])
+					{
+					case '=':
+						tokens.push_back(new token::Operator(Operator::Equal));
+						break;
+					case '!':
+						tokens.push_back(new token::Operator(Operator::NotEqual));
+						break;
+					case '>':
+						tokens.push_back(new token::Operator(Operator::GreaterEqual));
+						break;
+					case '<':
+						tokens.push_back(new token::Operator(Operator::LessEqual));
+						break;
+					case '+':
+						tokens.push_back(new token::Operator(Operator::AddTo));
+						break;
+					case '-':
+						tokens.push_back(new token::Operator(Operator::SubstractTo));
+						break;
+					case '*':
+						tokens.push_back(new token::Operator(Operator::MultiplyTo));
+						break;
+					case '/':
+						tokens.push_back(new token::Operator(Operator::DivideTo));
+						break;
+					case '&':
+						tokens.push_back(new token::Operator(Operator::AndTo));
+						break;
+					case '|':
+						tokens.push_back(new token::Operator(Operator::OrTo));
+						break;
+					case '^':
+						tokens.push_back(new token::Operator(Operator::XorTo));
+						break;
+					default:
+						log("Unexpected operator type", __FILE__, __LINE__);
+						return;
+					}
+				}
+				else if (word.length() == 2 && word[0] == '&' && word[1] == '&')
+					tokens.push_back(new token::Operator(Operator::LogicAnd));
+				else if(word.length() == 2 && word[0]=='|' && word[1] == '|')
+					tokens.push_back(new token::Operator(Operator::LogicOr));
+				break;
+			case WordType::Semikolon:
+				++pos;
+				break;
+			case WordType::String:
+				proceessControlSequences(word);
+				tokens.push_back(new token::Constant(Constant::String, new string(word)));
+				break;
+			default:
+				log("Unexpected word type", __FILE__, __LINE__);
+				return;
+			}
+
+
+		} while (wordType != WordType::Semikolon);
+		if (bracketStateRound != 0) {
+			log("There is still an open round bracket", __FILE__, __LINE__);
+		}
+		if (bracketStateSquare != 0) {
+			log("There is still an open square bracket", __FILE__, __LINE__);
+		}
+		if (bracketStateCurly != 0) {
+			log("There is still an open curly bracket", __FILE__, __LINE__);
+		}
+	}
+
+
 	// Call this after opening bracket
-	bool Scanner::getBracket(std::string const &code, int length, int &pos, program::Scope &prog)
+	bool Scanner::getBracket(string const &code, int length, int &pos, program::Scope &prog)
 	{
 		list<token::Base*> tokens = list<token::Base*>();
 		string word;

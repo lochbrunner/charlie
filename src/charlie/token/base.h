@@ -36,19 +36,21 @@
 namespace charlie {
 	namespace token {
 
-		enum TokenType
-		{
-			Bracket,				// (, ), {, }, ...
-			Constant,				// "Hello", 12, ...
-			Operator,				// +, -, +=, ...
-			TypeDeclarer,			// int, bool, ...
-			Label,
-			ControlFlow				// for, while
-		};
 
 		class Base
 		{
 		public:
+			enum TokenType
+			{
+				Bracket,				// (, ), {, }, ...
+				Constant,				// "Hello", 12, ...
+				ConstantInt,
+				Operator,				// +, -, +=, ...
+				TypeDeclarer,			// int, bool, ...
+				Label,
+				ControlFlow,			// for, while
+				Comma
+			};
 			Base(TokenType type);
 			TokenType Type;
 
@@ -79,11 +81,18 @@ namespace charlie {
 
 		};
 
+		class Comma : public Base {
+		public:
+			Comma();
+			virtual std::string ToString();
+		};
+
 		class Constant : public Base{
 		public:
 			enum KindEnum {
 				String,			// use std::string
-				Integer,		// int
+				//Integer,		// int
+				Char,			// char
 				Decimal,		// float
 				Boolean			// bool
 			};
@@ -96,6 +105,14 @@ namespace charlie {
 
 			virtual std::string ToString();
 
+		};
+
+		class ConstantInt : public Base {
+		public:
+			ConstantInt(int value);
+			virtual std::string ToString();
+
+			int Value;
 		};
 
 		class Operator : public Base {
@@ -133,7 +150,7 @@ namespace charlie {
 			virtual std::string ToString();
 		};
 
-		class ControlFlow : Base {
+		class ControlFlow : public Base {
 		public:
 			enum KindEnum {
 				While,
@@ -154,7 +171,7 @@ namespace charlie {
 			virtual std::string ToString();
 		};
 
-		class Declarer : Base 
+		class Declarer : public Base 
 		{
 		public:
 			Declarer(program::VariableDec::TypeEnum kind);
@@ -163,7 +180,7 @@ namespace charlie {
 			virtual std::string ToString();
 		};
 
-		class Label : Base {
+		class Label : public Base {
 		public:
 
 			Label(std::string *labelString);

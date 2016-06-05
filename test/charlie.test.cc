@@ -41,17 +41,25 @@ namespace charlie {
 		auto program = program::UnresolvedProgram();
 		auto funcManager = api::ExternalFunctionManager();
 
-		std::string const code = " a ";
+		std::string const code = " a 12 ()";
 		int length = code.length();
 		int pos = 0;
 		std::string word;
-		charlie::Scanner::WordType type;
+		Scanner::WordType type;
 
-		charlie::Scanner scanner = Scanner(&program, &funcManager);
+		Scanner scanner = Scanner(&program, &funcManager);
 
 		scanner.getNextWord(code, length, pos, word, type);
-
 		EXPECT_EQ(word, "a");
+		EXPECT_EQ(type, Scanner::Name);
+
+		scanner.getNextWord(code, length, pos, word, type);
+		EXPECT_EQ(word, "12");
+		EXPECT_EQ(type, Scanner::Number);
+
+		scanner.getNextWord(code, length, pos, word, type);
+		EXPECT_EQ(code[pos], '(');
+		EXPECT_EQ(type, Scanner::Bracket);
 	}
 
 }

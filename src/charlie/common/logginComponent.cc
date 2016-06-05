@@ -27,6 +27,9 @@
 
 #include "logginComponent.h"
 
+#include <sstream>
+#include <iomanip>
+
 namespace charlie {
 	namespace common {
 		using namespace std;
@@ -45,6 +48,13 @@ namespace charlie {
 		{
 			if (_messageDelegate != NULL)
 				_messageDelegate(message);
+		}
+		void LogginComponent::log(std::string const &message, const char* codefileName, int lineNumber) {
+			if (_messageDelegate != NULL) {
+				stringstream st;
+				st << codefileName[0] << setfill('0') << setw(4) << lineNumber << ": " << message;
+				_messageDelegate(st.str());
+			}
 		}
 	}
 }

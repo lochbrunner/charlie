@@ -51,6 +51,7 @@ namespace charlie {
 		xprt void SaveProgram(std::string const &filename, bool binary = true);
 
 		xprt int Run();
+		xprt int Run(int argn, char** argv);
 
 		api::ExternalFunctionManager ExternalFunctionManager;
 

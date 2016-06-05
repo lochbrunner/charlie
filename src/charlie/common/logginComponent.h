@@ -42,6 +42,7 @@ namespace common {
 	protected:
 		std::function<void(std::string const &message)> _messageDelegate;
 		void log(std::string const &message);
+		void log(std::string const &message, const char* codefileName, int lineNumber);
 	};
 }
 }

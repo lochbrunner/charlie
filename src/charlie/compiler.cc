@@ -103,6 +103,7 @@ namespace charlie {
 				return false;
 			}
 			funcPositions.insert(make_pair((*itF), count));
+			// Insert variable declaration and defintion of the argument list
 			for (auto itI = itF->Definition.main.Instructions.begin(); itI != itF->Definition.main.Instructions.end(); ++itI) {
 				_program.Instructions.push_back(*itI);
 				++count;
@@ -129,6 +130,23 @@ namespace charlie {
 		return true;
 	}
 
+	int Compiler::Run(int argn, char** argv) {
+		auto state = State();
+		state.pExternalFunctionManager = &ExternalFunctionManager;
+		state.aluStack.push(argn);
+		state.aluStack.push(reinterpret_cast<int>(argv));
+
+		list<int>::const_iterator it = _program.Instructions.begin();
+		int version = (*it++);
+
+		if (version != BYTECODE_VERSION) {
+			log("Wrong bytecode version");
+			return -1;
+		}
+		// TODO
+		return 0;
+	}
+
 	int Compiler::Run() {
 		auto state = State();
 		state.pExternalFunctionManager = &ExternalFunctionManager;
@@ -150,6 +168,6 @@ namespace charlie {
 			InstructionManager::Instructions[state.program[state.pos]](state);
 			++state.pos;
 		}
-		return true;
+		return 0;
 	}
 }

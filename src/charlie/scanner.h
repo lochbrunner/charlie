@@ -89,6 +89,7 @@ namespace charlie {
 		FRIEND_TEST(ScannerTest, getNextWord);
 		friend class ScannerTest_getNextWord_Test;
 		__declspec(dllexport) void getNextWord(std::string const &code, int length, int &pos, std::string &word, WordType &type);
+		void getStatemantTokens(std::string const &code, int length, int &pos, std::list<token::Base*> &list);
 		int endOfLineComments(std::string const &code, int length, int pos);
 		int endOfBlockComments(std::string const &code, int length, int pos);
 	};

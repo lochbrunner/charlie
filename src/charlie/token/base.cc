@@ -39,6 +39,11 @@ namespace charlie {
 			return string();
 		}
 
+		Comma::Comma() : Base(TokenType::Comma) {}
+		std::string Comma::ToString() {
+			return string();
+		}
+
 		Constant::Constant(KindEnum kind, void* pointer) : Base(TokenType::Constant), Kind(kind), Pointer(pointer){}
 		Constant::~Constant() {
 			if (Pointer != 0) {
@@ -46,6 +51,11 @@ namespace charlie {
 			}
 		}
 		std::string Constant::ToString() {
+			return string();
+		}
+
+		ConstantInt::ConstantInt(int value) : Base(TokenType::ConstantInt), Value(value){}
+		std::string ConstantInt::ToString() {
 			return string();
 		}
 
