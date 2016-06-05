@@ -52,17 +52,17 @@ namespace charlie {
 
 		enum InstructionEnums
 		{
-			PushConst,
 			Push,
+			PushConst,
 			Pop,
 			Call,
 			CallEx,
 			Jump,
+			Return,
 			IntAdd,
 			IntSubstract,
 			IntMultiply,
 			IntDivide,
-			Return,
 			Length
 		};
 

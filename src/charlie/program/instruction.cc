@@ -34,19 +34,41 @@ namespace charlie {
 		using namespace std;
 
 		array<functionType, InstructionEnums::Length> InstructionManager::Create() {
-			//EnviromentStruct env = InstructionManager::Enviroment;
 
 			array<functionType, InstructionEnums::Length> types = array<functionType, InstructionEnums::Length>();
-			types[InstructionEnums::Call] = [](State& state) {
+			types[InstructionEnums::Push] = [](State& state)
+			{
+				int adress = state.program[++state.pos];
+				if (static_cast<int>(state.reg.size()) > adress)
+					state.aluStack.push(state.reg[adress]);
+				else
+					state.pos = -2;
+			};
+			types[InstructionEnums::PushConst] = [](State& state) 
+			{
+				int i = state.program[++state.pos];
+				state.aluStack.push(i);
+			};
+			types[InstructionEnums::Pop] = [](State& state)
+			{
+				int adress = state.program[++state.pos];
+				if (static_cast<int>(state.reg.size()) > adress)
+				{
+					int value = state.aluStack.top();
+					state.aluStack.pop();
+					state.reg[adress] = value;
+				}
+				else
+					state.pos = -2;
+			};
+			types[InstructionEnums::Call] = [](State& state) 
+			{
 				state.callStack.push(state.pos);
 				int address = state.program[++state.pos];
 				state.pos = address;
 			};
-			types[InstructionEnums::PushConst] = [](State& state) {
-				int i = state.program[++state.pos];
-				state.aluStack.push(i);
-			};
-			types[InstructionEnums::Return] = [](State& state) {
+			types[InstructionEnums::Return] = [](State& state) 
+			{
 				// Only for testing
 				state.callStack.pop();
 				if (state.callStack.empty())
@@ -54,25 +76,44 @@ namespace charlie {
 				else
 					state.pos = state.callStack.top();
 			};
-			types[InstructionEnums::CallEx] = [](State& state) {
+			types[InstructionEnums::CallEx] = [](State& state) 
+			{
 				int id = state.program[++state.pos];
 				if(state.pExternalFunctionManager != 0)
 					state.pExternalFunctionManager->Invoke(id, state.aluStack);
 
 			};
-			types[InstructionEnums::IntAdd] = [](State& state) {
+			types[InstructionEnums::IntAdd] = [](State& state) 
+			{
 				int a = state.aluStack.top();
 				state.aluStack.pop();
 				int b = state.aluStack.top();
 				state.aluStack.pop();
 				state.aluStack.push(a+b);
 			};
-			types[InstructionEnums::IntMultiply] = [](State& state) {
+			types[InstructionEnums::IntSubstract] = [](State& state)
+			{
+				int b = state.aluStack.top();
+				state.aluStack.pop();
+				int a = state.aluStack.top();
+				state.aluStack.pop();
+				state.aluStack.push(a - b);
+			};
+			types[InstructionEnums::IntMultiply] = [](State& state) 
+			{
 				int a = state.aluStack.top();
 				state.aluStack.pop();
 				int b = state.aluStack.top();
 				state.aluStack.pop();
 				state.aluStack.push(a * b);
+			};
+			types[InstructionEnums::IntDivide] = [](State& state)
+			{
+				int b = state.aluStack.top();
+				state.aluStack.pop();
+				int a = state.aluStack.top();
+				state.aluStack.pop();
+				state.aluStack.push(a / b);
 			};
 			
 
@@ -87,22 +128,8 @@ namespace charlie {
 			switch (instruction)
 			{
 			case InstructionEnums::Push:
-				comments.push("Pushs");
-				break;
-			case InstructionEnums::Return:
-				comments.push("Returns");
-				break;
-			case InstructionEnums::CallEx:
-				comments.push("Calls external function ...");
-				comments.push("... Id of function");
-				break;
-			case InstructionEnums::Call:
-				comments.push("Calls function ...");
-				comments.push("... address of function");
-				break;
-			case InstructionEnums::Jump:
-				comments.push("Jumps ...");
-				comments.push("... address to jump");
+				comments.push("Pushs the value ...");
+				comments.push("... at adress");
 				break;
 			case InstructionEnums::PushConst:
 				comments.push("Pushs a constant ...");
@@ -111,6 +138,21 @@ namespace charlie {
 			case InstructionEnums::Pop:
 				comments.push("Pops from stack and copies to register ...");
 				comments.push("... at adress");
+				break;
+			case InstructionEnums::Call:
+				comments.push("Calls function ...");
+				comments.push("... address of function");
+				break;
+			case InstructionEnums::CallEx:
+				comments.push("Calls external function ...");
+				comments.push("... Id of function");
+				break;
+			case InstructionEnums::Jump:
+				comments.push("Jumps ...");
+				comments.push("... address to jump");
+				break;
+			case InstructionEnums::Return:
+				comments.push("Returns");
 				break;
 			case InstructionEnums::IntAdd:
 				comments.push("Adds two integers");
