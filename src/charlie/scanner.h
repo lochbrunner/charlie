@@ -33,6 +33,8 @@
 #include <string>
 
 #include "common\logginComponent.h"
+#include "common\definitions.h"
+#include "common\exportDefs.h"
 
 #include "token\base.h"
 
@@ -48,14 +50,10 @@ namespace charlie {
 
 	class Scanner : public common::LogginComponent{
 	public:
-		Scanner(program::UnresolvedProgram *pProgram, api::ExternalFunctionManager *pExternalFunctionManager);
-		Scanner(program::UnresolvedProgram *pProgram, api::ExternalFunctionManager *pExternalFunctionManager, std::function<void(std::string const &message)> messageDelegate);
+		xprt Scanner(program::UnresolvedProgram *pProgram, api::ExternalFunctionManager *pExternalFunctionManager);
+		xprt Scanner(program::UnresolvedProgram *pProgram, api::ExternalFunctionManager *pExternalFunctionManager, std::function<void(std::string const &message)> messageDelegate);
 
-		bool Scan(std::string const &code);
-
-	private:
-
-		api::ExternalFunctionManager *_pExternalFunctionManager;
+		xprt bool Scan(std::string const &code);
 
 		enum WordType {
 			None,
@@ -68,6 +66,10 @@ namespace charlie {
 			Char,
 			Bracket
 		};
+
+	private:
+
+		api::ExternalFunctionManager *_pExternalFunctionManager;
 
 		program::UnresolvedProgram *_pProgram;
 
@@ -84,7 +86,9 @@ namespace charlie {
 		void proceessControlSequences(std::string &text);
 
 		// updates word only if the result is longer than 1 char. If not use code[pos++] instead
-		void getNextWord(std::string const &code, int length, int &pos, std::string &word, WordType &type);
+		FRIEND_TEST(ScannerTest, getNextWord);
+		friend class ScannerTest_getNextWord_Test;
+		__declspec(dllexport) void getNextWord(std::string const &code, int length, int &pos, std::string &word, WordType &type);
 		int endOfLineComments(std::string const &code, int length, int pos);
 		int endOfBlockComments(std::string const &code, int length, int pos);
 	};

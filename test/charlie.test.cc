@@ -25,32 +25,33 @@
 * SUCH DAMAGE.
 */
 
-#ifndef CHARLIE_PROGRAM_UNRESOLVEDPROGRAM_H
-#define CHARLIE_PROGRAM_UNRESOLVEDPROGRAM_H
+#include "gtest\gtest.h"
+#include "compiler.h"
+#include "scanner.h"
 
-#include <list>
-#include <map>
+#include "program\unresolvedProgram.h"
 
-#include "functionDec.h"
-#include "variableDec.h"
+#include "api\externalFunctionManager.h"
 
-#include "..\common\exportDefs.h"
 
 namespace charlie {
-	namespace program {
-		class UnresolvedProgram {
-		public:
-			std::list<int> Instructions;
-			//std::map<int, FunctionDec> FunctionDecs;
-			//std::map<int, VariableDec> VariableDecs;
-			std::list<FunctionDec> FunctionDecs;
-			std::list<VariableDec> VariableDecs;
 
-			xprt UnresolvedProgram();
-			xprt void Clear();
-		};
+	TEST(ScannerTest, getNextWord)
+	{
+		auto program = program::UnresolvedProgram();
+		auto funcManager = api::ExternalFunctionManager();
+
+		std::string const code = " a ";
+		int length = code.length();
+		int pos = 0;
+		std::string word;
+		charlie::Scanner::WordType type;
+
+		charlie::Scanner scanner = Scanner(&program, &funcManager);
+
+		scanner.getNextWord(code, length, pos, word, type);
+
+		EXPECT_EQ(word, "a");
 	}
+
 }
-
-
-#endif // !CHARLIE_PROGRAM_UNRESOLVEDPROGRAM_H

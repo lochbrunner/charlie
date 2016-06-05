@@ -43,19 +43,19 @@ namespace charlie {
 
 		class ExternalFunctionManager {
 		public:
-			ExternalFunctionManager();
+			xprt ExternalFunctionManager();
 
 			xprt void AddFunction(std::string funcName, std::function<void(void)> funcPointer);
 			xprt void AddFunction(std::string funcName, std::function<void(int)> funcPointer);
 			xprt void AddFunction(std::string funcName, std::function<void(const char*)> funcPointer);
 
-			int GetId(program::FunctionDec &dec);
+			xprt int GetId(program::FunctionDec &dec);
 
-			void Invoke(int id, std::stack<int> &callStack);
+			xprt void Invoke(int id, std::stack<int> &callStack);
 
-			void Invoke(int id);
-			void Invoke(int id, int arg1);
-			void Invoke(int id, const char* arg1);
+			xprt void Invoke(int id);
+			xprt void Invoke(int id, int arg1);
+			xprt void Invoke(int id, const char* arg1);
 
 		private:
 			template<class _Fty>
