@@ -145,7 +145,7 @@ namespace charlie {
 			state.program.push_back(*it);
 		}
 
-		while (state.pos>-1)
+		while (state.pos>-1/* && !state.callStack.empty()*/)
 		{
 			InstructionManager::Instructions[state.program[state.pos]](state);
 			++state.pos;

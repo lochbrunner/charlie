@@ -25,26 +25,19 @@
 * SUCH DAMAGE.
 */
 
-#ifndef CONSOLE_FLAG_H
-#define CONSOLE_FLAG_H
+#ifndef CONSOLE_LOG_H
+#define CONSOLE_LOG_H 
 
-#include <map>
-#include "common\comparer_string.h"
+#include <fstream>
+#include <string>
+#include <sstream>
 
-class Flag {
+class Log {
 public:
-	enum FlagEnum {
-		None = 0,
-		Binary = 1<<0,
-		Ascii = 1<<1,
-		LogOutput = 1<<2
-	};
 
-	static void Create();
-	static int Get(const char* command);
-
-private:
-	static std::map<const char*, int, charlie::common::comparer_string> Dict;
+	static std::stringstream Buffer;
+	static bool Save(const std::string &filename);
+	static void Clear();
 };
 
-#endif // !CONSOLE_FLAG_H
+#endif // !CONSOLE_LOG_H

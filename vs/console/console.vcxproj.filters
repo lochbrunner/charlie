@@ -24,12 +24,18 @@
     <ClCompile Include="..\..\src\console\flag.cc">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\console\log.cc">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\console\command.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\console\flag.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\console\log.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

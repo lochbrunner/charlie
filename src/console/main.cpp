@@ -30,6 +30,7 @@
 
 #include "flag.h"
 #include "command.h"
+#include "log.h"
 
 #include "compiler.h"
 #include "common\comparer_string.h"
@@ -37,23 +38,29 @@
 using namespace std;
 using namespace charlie;
 
+
+
 void addExternalFunctions(Compiler &compiler)
 {
 	compiler.ExternalFunctionManager.AddFunction("print", [](const char* message) 
 	{
 		cout << message;
+		Log::Buffer << message;
 	});
 	compiler.ExternalFunctionManager.AddFunction("println", [](const char* message) 
 	{
 		cout << message << endl;
+		Log::Buffer << message << endl;
 	});
 	compiler.ExternalFunctionManager.AddFunction("println", [](int number) 
 	{
 		cout << number << endl;
+		Log::Buffer << number << endl;
 	});
 	compiler.ExternalFunctionManager.AddFunction("print", [](int number) 
 	{
 		cout << number;
+		Log::Buffer << number;
 	});
 }
 
@@ -116,6 +123,8 @@ int main(int argn, char** argv)
 		compiler.SaveProgram(entry, flag & Flag::Binary);
 
 		compiler.Run();
+		if(flag & Flag::LogOutput)
+			Log::Save(entry);
 	}
 
     return 0;

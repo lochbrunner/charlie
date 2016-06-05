@@ -37,6 +37,8 @@ void Flag::Create()
 	Dict["-b"] = FlagEnum::Binary;
 	Dict["text"] = FlagEnum::Ascii;
 	Dict["-a"] = FlagEnum::Ascii;
+	Dict["logoutput"] = FlagEnum::LogOutput;
+	Dict["-lo"] = FlagEnum::LogOutput;
 }
 
 int Flag::Get(const char* command)

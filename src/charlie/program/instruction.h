@@ -42,7 +42,8 @@ namespace charlie {
 
 		struct State {
 			State();
-			std::stack<int> st;
+			std::stack<int> aluStack;
+			std::stack<int> callStack;
 			std::vector<int> reg;
 			std::vector<int> program;
 			int pos;
@@ -62,7 +63,6 @@ namespace charlie {
 			IntMultiply,
 			IntDivide,
 			Return,
-			Quit,
 			Length
 		};
 
