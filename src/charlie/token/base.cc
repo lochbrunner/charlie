@@ -35,7 +35,7 @@ namespace charlie {
 		using namespace program;
 
 		Base::Base(TokenTypeEnum tokentype, int priorty, bool finished, VariableDec::TypeEnum type) :
-			TokenType(tokentype), Priority(priorty), Finished(finished), Type(type) {}
+			TokenType(tokentype), Priority(priorty), Finished(finished), Type(type), TokenChidrenPos(TokenChidrenPosEnum::None){}
 
 		Bracket::Bracket(KindEnum kind, DirectionEnum direction) : 
 			Base(TokenTypeEnum::Bracket, 8), Kind(kind), Direction(direction) {}
@@ -54,6 +54,16 @@ namespace charlie {
 			return string();
 		}
 		int Comma::ByteCode()
+		{
+			return -1;
+		}
+
+		List::List() : Base(TokenTypeEnum::List, 1) {}
+		std::string List::ToString()
+		{
+			return string();
+		}
+		int List::ByteCode()
 		{
 			return -1;
 		}
@@ -90,13 +100,17 @@ namespace charlie {
 			case charlie::token::Operator::Add:
 			case charlie::token::Operator::Substract:
 				Priority = 5;
+				TokenChidrenPos = TokenChidrenPosEnum::LeftAndRight;
 				break;
 			case charlie::token::Operator::Multipply:
 			case charlie::token::Operator::Divide:
 				Priority = 6;
+				TokenChidrenPos = TokenChidrenPosEnum::LeftAndRight;
 				break;
 			case charlie::token::Operator::Copy:
 				Priority = 2;
+				TokenChidrenPos = TokenChidrenPosEnum::LeftAndRight;
+				break;
 			case charlie::token::Operator::Equal:
 			case charlie::token::Operator::NotEqual:
 			case charlie::token::Operator::Greater:
@@ -104,15 +118,18 @@ namespace charlie {
 			case charlie::token::Operator::Less:
 			case charlie::token::Operator::LessEqual:
 				Priority = 4;
+				TokenChidrenPos = TokenChidrenPosEnum::LeftAndRight;
 				break;
 			case charlie::token::Operator::LogicAnd:
 			case charlie::token::Operator::LogicOr:
 				Priority = 3;
+				TokenChidrenPos = TokenChidrenPosEnum::LeftAndRight;
 				break;
 			case charlie::token::Operator::BitAnd:
 			case charlie::token::Operator::BitOr:
 			case charlie::token::Operator::BitXor:
 				Priority = 6;
+				TokenChidrenPos = TokenChidrenPosEnum::LeftAndRight;
 				break;
 			case charlie::token::Operator::AddTo:
 			case charlie::token::Operator::SubstractTo:
@@ -122,6 +139,7 @@ namespace charlie {
 			case charlie::token::Operator::OrTo:
 			case charlie::token::Operator::XorTo:
 				Priority = 2;
+				TokenChidrenPos = TokenChidrenPosEnum::LeftAndRight;
 				break;
 			default:
 				break;

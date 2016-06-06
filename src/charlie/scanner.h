@@ -79,9 +79,9 @@ namespace charlie {
 
 		bool getStatement(std::string const& code, int length, int& pos, program::Scope& prog, std::string& word);
 		void getStatemantTokens(std::string const& code, int length, int& pos, program::Statement& linearStatements);
-		program::Statement treeifyStatement(program::Statement& linearStatements);
+		program::Statement treeifyStatement(std::list<program::Statement>& linearStatements);
 
-		bool getBracket(program::Statement& linearStatements, std::list<program::Statement>::const_iterator& itOpening, std::list<program::Statement>& outList);
+		bool getBracket(std::list<program::Statement>& linearStatements, std::list<program::Statement>::const_iterator& itOpening, std::list<program::Statement>& outList);
 
 		inline bool isLabelBeginning(char c);
 		inline bool isOperator(char c);

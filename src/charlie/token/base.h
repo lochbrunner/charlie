@@ -50,7 +50,15 @@ namespace charlie {
 				TypeDeclarer,			// int, bool, ...
 				Label,
 				ControlFlow,			// for, while
+				List, 
 				Comma
+			};
+
+			enum class TokenChidrenPosEnum {
+				None = 0,
+				Left = 1,
+				Right = 2,
+				LeftAndRight = 3
 			};
 			Base(TokenTypeEnum tokentype, int priorty = 0, bool finished = false, program::VariableDec::TypeEnum type = program::VariableDec::Length);
 			TokenTypeEnum TokenType;
@@ -58,6 +66,7 @@ namespace charlie {
 			// comparer: 4, logic ops: 3, copy: 2 others: 1
 			int Priority;
 			bool Finished;
+			TokenChidrenPosEnum TokenChidrenPos;
 
 			program::VariableDec::TypeEnum Type;
 
@@ -92,6 +101,13 @@ namespace charlie {
 		class Comma : public Base {
 		public:
 			Comma();
+			virtual std::string ToString();
+			virtual int ByteCode();
+		};
+
+		class List : public Base {
+		public:
+			List();
 			virtual std::string ToString();
 			virtual int ByteCode();
 		};
@@ -169,9 +185,11 @@ namespace charlie {
 				Do,
 				If,
 				Else,
-				Continue,
 				Break,
+				Continue,
 				Return,
+				Switch,
+				Case,
 				Goto
 			};
 

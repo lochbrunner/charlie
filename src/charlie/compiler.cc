@@ -131,21 +131,20 @@ namespace charlie {
 	}
 
 	void Compiler::enroleStatement(program::Statement& statement, int& count) {
-		switch (statement.Value->TokenType)
-		{
-		case Base::TokenTypeEnum::ConstantInt:
+		auto tokenType = statement.Value->TokenType;
+		if (tokenType == Base::TokenTypeEnum::ConstantInt) {
 			_program.Instructions.push_back(InstructionEnums::PushConst);
 			++count;
 			_program.Instructions.push_back(statement.Value->ByteCode());
 			delete statement.Value;
 			++count;
-			break;
-		case Base::TokenTypeEnum::Label:
+		}
+		else if (tokenType == Base::TokenTypeEnum::Label) {
 			if (dynamic_cast<Label*>(statement.Value)->Kind == Label::Function) {
 				auto label = dynamic_cast<Label*>(statement.Value);
 
 				auto argTypes = std::list<VariableDec>();
-				for (auto it = statement.Arguments.begin(); it != statement.Arguments.end(); ++it) 
+				for (auto it = statement.Arguments.begin(); it != statement.Arguments.end(); ++it)
 				{
 					argTypes.push_back(it->Value->Type);
 					enroleStatement(*it, count);
@@ -156,15 +155,19 @@ namespace charlie {
 				int id = ExternalFunctionManager.GetId(dec);
 				if (id > -1) {
 					_program.Instructions.push_back(InstructionEnums::CallEx);
+					++count;
 					_program.Instructions.push_back(id);
-
+					++count;
 				}
-
-				++count;
 			}
-			break;
-		default:
-			break;
+		}
+		else if(tokenType == Base::TokenTypeEnum::Operator)
+		{
+			for (auto it = statement.Arguments.begin(); it != statement.Arguments.end(); ++it)
+				enroleStatement(*it, count);
+			_program.Instructions.push_back(statement.Value->ByteCode());
+			delete statement.Value;
+			++count;
 		}
 	}
 
@@ -181,8 +184,19 @@ namespace charlie {
 			log("Wrong bytecode version");
 			return -1;
 		}
-		// TODO
-		return 0;
+
+		for (; it != _program.Instructions.end(); ++it) {
+			state.program.push_back(*it);
+		}
+
+		while (state.pos>-1/* && !state.callStack.empty()*/)
+		{
+			InstructionManager::Instructions[state.program[state.pos]](state);
+			++state.pos;
+		}
+		if (state.aluStack.empty())
+			return 0;
+		return state.aluStack.top();
 	}
 
 	int Compiler::Run() {
@@ -206,6 +220,8 @@ namespace charlie {
 			InstructionManager::Instructions[state.program[state.pos]](state);
 			++state.pos;
 		}
-		return 0;
+		if(state.aluStack.empty())
+			return 0;
+		return state.aluStack.top();
 	}
 }

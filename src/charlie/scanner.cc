@@ -613,7 +613,7 @@ namespace charlie {
 		return pos;
 	}
 
-	bool Scanner::getStatement(string const &code, int length, int &pos, program::Scope & prog, string &word)
+	bool Scanner::getStatement(string const &code, int length, int &pos, Scope& prog, string &word)
 	{
 		Statement tokens = Statement(0);
 
@@ -621,31 +621,45 @@ namespace charlie {
 
 		getStatemantTokens(code, length, pos, tokens);
 
-		auto statement = treeifyStatement(tokens);
+		auto statement = treeifyStatement(tokens.Arguments);
 
 		prog.Statements.push_back(statement);
 
 		return true;
 	}
 
-	Statement Scanner::treeifyStatement(program::Statement &linearStatements)
+	Statement Scanner::treeifyStatement(list<Statement> &linearStatements)
 	{
+		if (++(linearStatements.begin()) == linearStatements.end() && linearStatements.begin()->Value->Finished) {
+			return *linearStatements.begin();
+		}
+
 		int maxPriority = 1;
-		std::list<Statement>::const_iterator itMax;
+		std::list<Statement>::iterator itMax;
 
 		while (maxPriority>0)
 		{
 			maxPriority = 0;
-			for (auto it = linearStatements.Arguments.begin(); it != linearStatements.Arguments.end(); ++it) {
+			for (auto it = linearStatements.begin(); it != linearStatements.end(); ++it) {
 				int priority = it->Priority();
 				if (priority > maxPriority) {
 					itMax = it;
 					maxPriority = priority;
 				}
 			}
+			if (maxPriority == 0)
+			{
+				if (++(linearStatements.begin()) == linearStatements.end() && linearStatements.begin()->Value->Finished) {
+					return *linearStatements.begin();
+				}
+				else {
+					log("Could not proceed statement", __FILE__, __LINE__);
+				}
+			}
 
 			std::list<Statement>::const_iterator itTemp;
-			switch (itMax->Value->TokenType)
+			auto tokenType = itMax->Value->TokenType;
+			switch (tokenType)
 			{
 			case Base::TokenTypeEnum::Label:
 				// Function or variable?
@@ -654,9 +668,19 @@ namespace charlie {
 				if (isBracketToken(itTemp->Value, Bracket::Opening, Bracket::Round))
 				{
 					auto functionNode = *itMax;
+					dynamic_cast<Label*>(functionNode.Value)->Kind = Label::Function;
+
 					getBracket(linearStatements, itTemp, functionNode.Arguments);
-					if (++(linearStatements.Arguments.begin()) == linearStatements.Arguments.end()) {
-						dynamic_cast<Label*>(functionNode.Value)->Kind = Label::Function;
+					if (++(functionNode.Arguments.begin()) == functionNode.Arguments.end())
+					{
+						functionNode.Value->Finished = true;
+						return Statement(functionNode);
+					}
+					else
+					{
+						auto arg = treeifyStatement(functionNode.Arguments);
+						//functionNode.Arguments.push_back(arg);
+						functionNode.Value->Finished = true;
 						return Statement(functionNode);
 					}
 				}
@@ -666,11 +690,34 @@ namespace charlie {
 					//TODO
 				}
 				break;
+			case Base::TokenTypeEnum::Operator:
+				if (itMax->Value->TokenChidrenPos == Base::TokenChidrenPosEnum::LeftAndRight) {
+					std::list<Statement>::const_iterator prev = itMax;
+					--prev;
+					std::list<Statement>::const_iterator post = itMax;
+					++post;
+					if (prev->Value->Finished && prev->Value->Type == VariableDec::Int) {
+						if (post->Value->Finished && post->Value->Type == VariableDec::Int) {
+
+							itMax->Value->Finished = true;
+							itMax->Value->Type = VariableDec::Int;
+							itMax->Arguments.push_back(*prev);
+							linearStatements.erase(prev);
+							itMax->Arguments.push_back(*post);
+							linearStatements.erase(post);
+						}
+						else {
+							log("Right symbol should be an int!", __FILE__, __LINE__);
+						}
+					}
+
+				}
+				break;
+			case Base::TokenTypeEnum::ConstantInt:
+				break;
 			default:
 				break;
 			}
-
-			return 0;
 		}
 
 
@@ -869,16 +916,16 @@ namespace charlie {
 
 
 	// Call this after opening bracket
-	bool Scanner::getBracket(Statement& linearStatements, list<Statement>::const_iterator& itOpening, std::list<program::Statement>& outList)
+	bool Scanner::getBracket(list<Statement>& linearStatements, list<Statement>::const_iterator& itOpening, std::list<program::Statement>& outList)
 	{
 		auto it = itOpening;
-		list<Statement>::const_iterator itClosing = linearStatements.Arguments.end();
+		list<Statement>::const_iterator itClosing = linearStatements.end();
 		
 		int openBrackets = 1;
 
 		delete it->Value;
 
-		for (++it; it != linearStatements.Arguments.end(); ++it) {
+		for (++it; it != linearStatements.end(); ++it) {
 			if (isBracketToken(it->Value, Bracket::Opening, Bracket::Round))
 				++openBrackets;
 			else if (isBracketToken(it->Value, Bracket::Closing, Bracket::Round)) {
@@ -893,7 +940,7 @@ namespace charlie {
 			outList.push_back(*it);
 		}
 
-		linearStatements.Arguments.erase(itOpening, itClosing);
+		linearStatements.erase(itOpening, itClosing);
 
 		return true;
 	}
