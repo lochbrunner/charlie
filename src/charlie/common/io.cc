@@ -32,7 +32,7 @@
 #include <list>
 #include <queue>
 
-#include "../program/instruction.h"
+#include "..\vm\instruction.h"
 
 using namespace std;
 
@@ -67,7 +67,7 @@ namespace charlie {
 				auto comments = queue<const char*>();
 				for (++it; it != program.Instructions.end(); ++it) {
 					if (comments.empty())
-						program::InstructionManager::GetLegend((*it), comments);
+						vm::InstructionManager::GetLegend((*it), comments);
 					file << (*it);
 					if (!comments.empty()) {
 						file << "\t// " << comments.front();

@@ -32,7 +32,7 @@ namespace charlie {
 		using namespace std;
 
 		Scope::Scope() :
-			Instructions() , VariableDecs()
+			Statements(), VariableDecs()
 		{
 		}
 	}

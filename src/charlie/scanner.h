@@ -43,6 +43,7 @@
 #include "program\functionDec.h"
 #include "program\scopeRoutine.h"
 #include "program\unresolvedProgram.h"
+#include "program\statement.h"
 
 #include "api\externalFunctionManager.h"
 
@@ -73,11 +74,14 @@ namespace charlie {
 
 		program::UnresolvedProgram *_pProgram;
 
-		int getFunctionDecArguments(std::string const &code, int begin, int length, std::list<program::VariableDec> &args);
-		int getFunctionDefinition(std::string const &code, int length, int pos, program::FunctionDefinition &definition);
+		int getFunctionDecArguments(std::string const& code, int begin, int length, std::list<program::VariableDec> &args);
+		int getFunctionDefinition(std::string const& code, int length, int pos, program::FunctionDefinition& definition);
 
-		bool getStatement(std::string const &code, int length, int &pos, program::Scope &prog, std::string &word);
-		bool getBracket(std::string const &code, int length, int &pos, program::Scope &prog);
+		bool getStatement(std::string const& code, int length, int& pos, program::Scope& prog, std::string& word);
+		void getStatemantTokens(std::string const& code, int length, int& pos, program::Statement& linearStatements);
+		program::Statement treeifyStatement(program::Statement& linearStatements);
+
+		bool getBracket(program::Statement& linearStatements, std::list<program::Statement>::const_iterator& itOpening, std::list<program::Statement>& outList);
 
 		inline bool isLabelBeginning(char c);
 		inline bool isOperator(char c);
@@ -89,7 +93,6 @@ namespace charlie {
 		FRIEND_TEST(ScannerTest, getNextWord);
 		friend class ScannerTest_getNextWord_Test;
 		__declspec(dllexport) void getNextWord(std::string const &code, int length, int &pos, std::string &word, WordType &type);
-		void getStatemantTokens(std::string const &code, int length, int &pos, std::list<token::Base*> &list);
 		int endOfLineComments(std::string const &code, int length, int pos);
 		int endOfBlockComments(std::string const &code, int length, int pos);
 	};

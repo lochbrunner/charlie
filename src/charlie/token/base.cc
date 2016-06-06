@@ -26,59 +26,190 @@
 */
 
 #include "base.h"
+#include "..\vm\instruction.h"
 
 namespace charlie {
 	namespace token {
 
 		using namespace std;
+		using namespace program;
 
-		Base::Base(TokenType type) : Type(type){}
+		Base::Base(TokenTypeEnum tokentype, int priorty, bool finished, VariableDec::TypeEnum type) :
+			TokenType(tokentype), Priority(priorty), Finished(finished), Type(type) {}
 
-		Bracket::Bracket(KindEnum kind, DirectionEnum direction) : Base(TokenType::Bracket), Kind(kind), Direction(direction) {}
-		std::string Bracket::ToString() {
+		Bracket::Bracket(KindEnum kind, DirectionEnum direction) : 
+			Base(TokenTypeEnum::Bracket, 8), Kind(kind), Direction(direction) {}
+		std::string Bracket::ToString() 
+		{
 			return string();
 		}
-
-		Comma::Comma() : Base(TokenType::Comma) {}
-		std::string Comma::ToString() {
-			return string();
+		int Bracket::ByteCode() 
+		{
+			return -1;
 		}
 
-		Constant::Constant(KindEnum kind, void* pointer) : Base(TokenType::Constant), Kind(kind), Pointer(pointer){}
+		Comma::Comma() : Base(TokenTypeEnum::Comma, 1) {}
+		std::string Comma::ToString() 
+		{
+			return string();
+		}
+		int Comma::ByteCode()
+		{
+			return -1;
+		}
+
+		Constant::Constant(KindEnum kind, void* pointer) : Base(TokenTypeEnum::Constant, 1, true), Kind(kind), Pointer(pointer){}
 		Constant::~Constant() {
 			if (Pointer != 0) {
 				delete Pointer;
 			}
 		}
-		std::string Constant::ToString() {
+		std::string Constant::ToString()
+		{
 			return string();
 		}
-
-		ConstantInt::ConstantInt(int value) : Base(TokenType::ConstantInt), Value(value){}
-		std::string ConstantInt::ToString() {
-			return string();
+		int Constant::ByteCode()
+		{
+			return -1;
 		}
 
-		Operator::Operator(KindEnum kind) : Base(TokenType::Operator), Kind(kind) {}
+		ConstantInt::ConstantInt(int value) : Base(TokenTypeEnum::ConstantInt, 1, true, VariableDec::Int), Value(value){}
+		std::string ConstantInt::ToString()
+		{
+			return string();
+		}
+		int ConstantInt::ByteCode()
+		{
+			return Value;
+		}
+
+		Operator::Operator(KindEnum kind) : Base(TokenTypeEnum::Operator), Kind(kind)
+		{
+			switch (kind)
+			{
+			case charlie::token::Operator::Add:
+			case charlie::token::Operator::Substract:
+				Priority = 5;
+				break;
+			case charlie::token::Operator::Multipply:
+			case charlie::token::Operator::Divide:
+				Priority = 6;
+				break;
+			case charlie::token::Operator::Copy:
+				Priority = 2;
+			case charlie::token::Operator::Equal:
+			case charlie::token::Operator::NotEqual:
+			case charlie::token::Operator::Greater:
+			case charlie::token::Operator::GreaterEqual:
+			case charlie::token::Operator::Less:
+			case charlie::token::Operator::LessEqual:
+				Priority = 4;
+				break;
+			case charlie::token::Operator::LogicAnd:
+			case charlie::token::Operator::LogicOr:
+				Priority = 3;
+				break;
+			case charlie::token::Operator::BitAnd:
+			case charlie::token::Operator::BitOr:
+			case charlie::token::Operator::BitXor:
+				Priority = 6;
+				break;
+			case charlie::token::Operator::AddTo:
+			case charlie::token::Operator::SubstractTo:
+			case charlie::token::Operator::MultiplyTo:
+			case charlie::token::Operator::DivideTo:
+			case charlie::token::Operator::AndTo:
+			case charlie::token::Operator::OrTo:
+			case charlie::token::Operator::XorTo:
+				Priority = 2;
+				break;
+			default:
+				break;
+			}
+		}
 		std::string Operator::ToString() {
 			return string();
 		}
-		Declarer::Declarer(program::VariableDec::TypeEnum kind) : Base(TokenType::TypeDeclarer), Kind(kind) {}
+		int Operator::ByteCode()
+		{
+			switch (Kind)
+			{
+			case charlie::token::Operator::Add:
+				return vm::IntAdd;
+			case charlie::token::Operator::Substract:
+				return vm::IntSubstract;
+			case charlie::token::Operator::Multipply:
+				return vm::IntMultiply;
+			case charlie::token::Operator::Divide:
+				return vm::IntDivide;
+			case charlie::token::Operator::Copy:
+				break;
+			case charlie::token::Operator::Equal:
+				break;
+			case charlie::token::Operator::NotEqual:
+				break;
+			case charlie::token::Operator::Greater:
+				break;
+			case charlie::token::Operator::GreaterEqual:
+				break;
+			case charlie::token::Operator::Less:
+				break;
+			case charlie::token::Operator::LessEqual:
+				break;
+			case charlie::token::Operator::LogicAnd:
+				break;
+			case charlie::token::Operator::LogicOr:
+				break;
+			case charlie::token::Operator::BitAnd:
+				break;
+			case charlie::token::Operator::BitOr:
+				break;
+			case charlie::token::Operator::BitXor:
+				break;
+			case charlie::token::Operator::AddTo:
+				break;
+			case charlie::token::Operator::SubstractTo:
+				break;
+			case charlie::token::Operator::MultiplyTo:
+				break;
+			case charlie::token::Operator::DivideTo:
+				break;
+			case charlie::token::Operator::AndTo:
+				break;
+			case charlie::token::Operator::OrTo:
+				break;
+			case charlie::token::Operator::XorTo:
+				break;
+			default:
+				break;
+			}
+			return -1;
+		}
+		Declarer::Declarer(program::VariableDec::TypeEnum kind) : Base(TokenTypeEnum::TypeDeclarer, 1), Kind(kind) {}
 		std::string Declarer::ToString() {
 			return string();
 		}
-		Label::Label(string *labelString) : Base(TokenType::TypeDeclarer), LabelString(labelString) {}
-		Label::~Label() {
-			if (LabelString != 0) {
-				delete LabelString;
-			}
+		int Declarer::ByteCode()
+		{
+			return -1;
 		}
-		std::string Label::ToString() {
+		Label::Label(string& labelString) : Base(TokenTypeEnum::Label, 9), LabelString(labelString), Kind(Unknown){}
+		std::string Label::ToString()
+		{
 			return string();
 		}
-		ControlFlow::ControlFlow(KindEnum kind) : Base(TokenType::ControlFlow), Kind(kind) {}
-		std::string ControlFlow::ToString() {
+		int Label::ByteCode()
+		{
+			return -1;
+		}
+		ControlFlow::ControlFlow(KindEnum kind) : Base(TokenTypeEnum::ControlFlow), Kind(kind) {}
+		std::string ControlFlow::ToString()
+		{
 			return string();
+		}
+		int ControlFlow::ByteCode()
+		{
+			return -1;
 		}
 	}
 }

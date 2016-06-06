@@ -29,7 +29,7 @@
 
 
 namespace charlie {
-	namespace program {
+	namespace vm {
 
 		using namespace std;
 

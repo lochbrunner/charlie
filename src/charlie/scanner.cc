@@ -30,10 +30,11 @@
 #include <sstream>
 
 #include "scanner.h"
-#include "program\UnresolvedProgram.h"
-#include "program\instruction.h"
 
 #include "common\comparer_string.h"
+#include "program\UnresolvedProgram.h"
+
+#include "vm\instruction.h"
 
 namespace charlie {
 
@@ -42,6 +43,11 @@ namespace charlie {
 	using namespace program;
 	using namespace api;
 	using namespace common;
+
+	inline bool isBracketToken(token::Base* token, Bracket::DirectionEnum direction, Bracket::KindEnum kind) {
+		return token->TokenType == Base::TokenTypeEnum::Bracket && dynamic_cast<Bracket*>(token)->Kind == kind &&
+			dynamic_cast<token::Bracket*>(token)->Direction == direction;
+	}
 
 	struct TypeDict {
 		static map<const char*, VariableDec::TypeEnum, comparer_string> create() {
@@ -609,24 +615,69 @@ namespace charlie {
 
 	bool Scanner::getStatement(string const &code, int length, int &pos, program::Scope & prog, string &word)
 	{
+		Statement tokens = Statement(0);
 
-		auto tokens = list<Base*>();
-		tokens.push_back(new Label(&word));
+		tokens.Arguments.push_back(new Label(word));
 
 		getStatemantTokens(code, length, pos, tokens);
 
+		auto statement = treeifyStatement(tokens);
 
-
-
-		for (auto it = tokens.begin(); it != tokens.end(); ++it) {
-			delete (*it);
-			(*it) = 0;
-		}
+		prog.Statements.push_back(statement);
 
 		return true;
 	}
 
-	void Scanner::getStatemantTokens(string const &code, int length, int &pos, list<Base*> &tokens) {
+	Statement Scanner::treeifyStatement(program::Statement &linearStatements)
+	{
+		int maxPriority = 1;
+		std::list<Statement>::const_iterator itMax;
+
+		while (maxPriority>0)
+		{
+			maxPriority = 0;
+			for (auto it = linearStatements.Arguments.begin(); it != linearStatements.Arguments.end(); ++it) {
+				int priority = it->Priority();
+				if (priority > maxPriority) {
+					itMax = it;
+					maxPriority = priority;
+				}
+			}
+
+			std::list<Statement>::const_iterator itTemp;
+			switch (itMax->Value->TokenType)
+			{
+			case Base::TokenTypeEnum::Label:
+				// Function or variable?
+				itTemp = itMax;
+				++itTemp;
+				if (isBracketToken(itTemp->Value, Bracket::Opening, Bracket::Round))
+				{
+					auto functionNode = *itMax;
+					getBracket(linearStatements, itTemp, functionNode.Arguments);
+					if (++(linearStatements.Arguments.begin()) == linearStatements.Arguments.end()) {
+						dynamic_cast<Label*>(functionNode.Value)->Kind = Label::Function;
+						return Statement(functionNode);
+					}
+				}
+				else 
+				{
+					dynamic_cast<Label*>(itMax->Value)->Kind = Label::Variable;
+					//TODO
+				}
+				break;
+			default:
+				break;
+			}
+
+			return 0;
+		}
+
+
+		return 0;
+	}
+
+	void Scanner::getStatemantTokens(string const& code, int length, int& pos, Statement& linearStatements) {
 		string  word;
 		WordType wordType;
 		int i;
@@ -643,7 +694,7 @@ namespace charlie {
 				switch (code[pos])
 				{
 				case '(':
-					tokens.push_back(new token::Bracket(Bracket::Round, Bracket::Opening));
+					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Round, Bracket::Opening));
 					++bracketStateRound;
 					break;
 				case ')':
@@ -652,11 +703,11 @@ namespace charlie {
 						log("There is nothing to close with a round bracket", __FILE__, __LINE__);
 						return;
 					}
-					tokens.push_back(new token::Bracket(Bracket::Round, Bracket::Closing));
+					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Round, Bracket::Closing));
 					--bracketStateRound;
 					break;
 				case '[':
-					tokens.push_back(new token::Bracket(Bracket::Square, Bracket::Opening));
+					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Square, Bracket::Opening));
 					++bracketStateSquare;
 					break;
 				case ']':
@@ -665,11 +716,11 @@ namespace charlie {
 						log("There is nothing to close with a square bracket", __FILE__, __LINE__);
 						return;
 					}
-					tokens.push_back(new token::Bracket(Bracket::Square, Bracket::Closing));
+					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Square, Bracket::Closing));
 					--bracketStateSquare;
 					break;
 				case '{':
-					tokens.push_back(new token::Bracket(Bracket::Curly, Bracket::Opening));
+					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Curly, Bracket::Opening));
 					++bracketStateCurly;
 					break;
 				case '}':
@@ -678,14 +729,14 @@ namespace charlie {
 						log("There is nothing to close with a curly bracket", __FILE__, __LINE__);
 						return;
 					}
-					tokens.push_back(new token::Bracket(Bracket::Curly, Bracket::Closing));
+					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Curly, Bracket::Closing));
 					--bracketStateCurly;
 					break;
 				case '<':
-					tokens.push_back(new token::Bracket(Bracket::Triangle, Bracket::Opening));
+					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Triangle, Bracket::Opening));
 					break;
 				case '>':
-					tokens.push_back(new token::Bracket(Bracket::Triangle, Bracket::Closing));
+					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Triangle, Bracket::Closing));
 					break;
 				default:
 					break;
@@ -693,52 +744,52 @@ namespace charlie {
 				++pos;
 				break;
 			case WordType::Char:
-				tokens.push_back(new token::Constant(Constant::Char, new char(code[pos])));
+				linearStatements.Arguments.push_back(new Constant(Constant::Char, new char(code[pos])));
 				break;
 			case WordType::Comma:
-				tokens.push_back(new token::Comma());
+				linearStatements.Arguments.push_back(new token::Comma());
 				++pos;
 				break;
 			case WordType::Name:
-				tokens.push_back(new token::Label(new string(word)));
+				linearStatements.Arguments.push_back(new Label(word));
 				break;
 			case WordType::Number:
 				i = atoi(word.c_str());
-				tokens.push_back(new token::ConstantInt(i));
+				linearStatements.Arguments.push_back(new ConstantInt(i));
 				break;
 			case WordType::Operator:
 				if (word.length() == 1) {
 					switch (word[0])
 					{
 					case '+':
-						tokens.push_back(new token::Operator(Operator::Add));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::Add));
 						break;
 					case '-':
-						tokens.push_back(new token::Operator(Operator::Substract));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::Substract));
 						break;
 					case '*':
-						tokens.push_back(new token::Operator(Operator::Multipply));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::Multipply));
 						break;
 					case '/':
-						tokens.push_back(new token::Operator(Operator::Divide));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::Divide));
 						break;
 					case '=':
-						tokens.push_back(new token::Operator(Operator::Copy));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::Copy));
 						break;
 					case '>':
-						tokens.push_back(new token::Operator(Operator::Greater));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::Greater));
 						break;
 					case '<':
-						tokens.push_back(new token::Operator(Operator::Less));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::Less));
 						break;
 					case '|':
-						tokens.push_back(new token::Operator(Operator::BitOr));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::BitOr));
 						break;
 					case '&':
-						tokens.push_back(new token::Operator(Operator::BitAnd));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::BitAnd));
 						break;
 					case '^':
-						tokens.push_back(new token::Operator(Operator::BitXor));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::BitXor));
 						break;
 					default:
 						log("Unexpected operator type", __FILE__, __LINE__);
@@ -749,37 +800,37 @@ namespace charlie {
 					switch (word[0])
 					{
 					case '=':
-						tokens.push_back(new token::Operator(Operator::Equal));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::Equal));
 						break;
 					case '!':
-						tokens.push_back(new token::Operator(Operator::NotEqual));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::NotEqual));
 						break;
 					case '>':
-						tokens.push_back(new token::Operator(Operator::GreaterEqual));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::GreaterEqual));
 						break;
 					case '<':
-						tokens.push_back(new token::Operator(Operator::LessEqual));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::LessEqual));
 						break;
 					case '+':
-						tokens.push_back(new token::Operator(Operator::AddTo));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::AddTo));
 						break;
 					case '-':
-						tokens.push_back(new token::Operator(Operator::SubstractTo));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::SubstractTo));
 						break;
 					case '*':
-						tokens.push_back(new token::Operator(Operator::MultiplyTo));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::MultiplyTo));
 						break;
 					case '/':
-						tokens.push_back(new token::Operator(Operator::DivideTo));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::DivideTo));
 						break;
 					case '&':
-						tokens.push_back(new token::Operator(Operator::AndTo));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::AndTo));
 						break;
 					case '|':
-						tokens.push_back(new token::Operator(Operator::OrTo));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::OrTo));
 						break;
 					case '^':
-						tokens.push_back(new token::Operator(Operator::XorTo));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::XorTo));
 						break;
 					default:
 						log("Unexpected operator type", __FILE__, __LINE__);
@@ -787,16 +838,16 @@ namespace charlie {
 					}
 				}
 				else if (word.length() == 2 && word[0] == '&' && word[1] == '&')
-					tokens.push_back(new token::Operator(Operator::LogicAnd));
+					linearStatements.Arguments.push_back(new token::Operator(Operator::LogicAnd));
 				else if(word.length() == 2 && word[0]=='|' && word[1] == '|')
-					tokens.push_back(new token::Operator(Operator::LogicOr));
+					linearStatements.Arguments.push_back(new token::Operator(Operator::LogicOr));
 				break;
 			case WordType::Semikolon:
 				++pos;
 				break;
 			case WordType::String:
 				proceessControlSequences(word);
-				tokens.push_back(new token::Constant(Constant::String, new string(word)));
+				linearStatements.Arguments.push_back(new token::Constant(Constant::String, new string(word)));
 				break;
 			default:
 				log("Unexpected word type", __FILE__, __LINE__);
@@ -818,23 +869,33 @@ namespace charlie {
 
 
 	// Call this after opening bracket
-	bool Scanner::getBracket(string const &code, int length, int &pos, program::Scope &prog)
+	bool Scanner::getBracket(Statement& linearStatements, list<Statement>::const_iterator& itOpening, std::list<program::Statement>& outList)
 	{
-		list<token::Base*> tokens = list<token::Base*>();
-		string word;
-		WordType wordType;
+		auto it = itOpening;
+		list<Statement>::const_iterator itClosing = linearStatements.Arguments.end();
+		
+		int openBrackets = 1;
 
-		while (pos != -1 && pos < length)
-		{
-			getNextWord(code, length, pos, word, wordType);
-			if (wordType == WordType::Bracket && code[pos] == ')') {
-				++pos;
-				break;
+		delete it->Value;
+
+		for (++it; it != linearStatements.Arguments.end(); ++it) {
+			if (isBracketToken(it->Value, Bracket::Opening, Bracket::Round))
+				++openBrackets;
+			else if (isBracketToken(it->Value, Bracket::Closing, Bracket::Round)) {
+				--openBrackets;
+				if (openBrackets == 0) {
+					delete it->Value;
+					itClosing = it;
+					++itClosing;
+					break;
+				}
 			}
-
+			outList.push_back(*it);
 		}
 
-		return false;
+		linearStatements.Arguments.erase(itOpening, itClosing);
+
+		return true;
 	}
 }
 

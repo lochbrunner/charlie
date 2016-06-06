@@ -36,6 +36,7 @@
 
 #include "program\functionDec.h"
 #include "program\unresolvedProgram.h"
+#include "program\statement.h"
 
 #include "api\externalFunctionManager.h"
 
@@ -57,6 +58,7 @@ namespace charlie {
 
 	private:
 		bool compile();
+		void enroleStatement(program::Statement& statement, int& count);
 		
 		program::UnresolvedProgram _program;
 	};

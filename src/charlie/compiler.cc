@@ -34,7 +34,7 @@
 #include "common\io.h"
 #include "common\definitions.h"
 
-#include "program\instruction.h"
+#include "vm\instruction.h"
 
 
 namespace charlie {
@@ -42,6 +42,7 @@ namespace charlie {
 	using namespace std;
 	using namespace common;
 	using namespace program;
+	using namespace vm;
 	using namespace token;
 
 	Compiler::Compiler() : 
@@ -104,9 +105,8 @@ namespace charlie {
 			}
 			funcPositions.insert(make_pair((*itF), count));
 			// Insert variable declaration and defintion of the argument list
-			for (auto itI = itF->Definition.main.Instructions.begin(); itI != itF->Definition.main.Instructions.end(); ++itI) {
-				_program.Instructions.push_back(*itI);
-				++count;
+			for (auto itI = itF->Definition.main.Statements.begin(); itI != itF->Definition.main.Statements.end(); ++itI) {
+				enroleStatement(*itI, count);
 			}
 			_program.Instructions.push_back(InstructionEnums::Return);
 			++count;
@@ -128,6 +128,44 @@ namespace charlie {
 		++third;
 		_program.Instructions.insert(third, main->second);
 		return true;
+	}
+
+	void Compiler::enroleStatement(program::Statement& statement, int& count) {
+		switch (statement.Value->TokenType)
+		{
+		case Base::TokenTypeEnum::ConstantInt:
+			_program.Instructions.push_back(InstructionEnums::PushConst);
+			++count;
+			_program.Instructions.push_back(statement.Value->ByteCode());
+			delete statement.Value;
+			++count;
+			break;
+		case Base::TokenTypeEnum::Label:
+			if (dynamic_cast<Label*>(statement.Value)->Kind == Label::Function) {
+				auto label = dynamic_cast<Label*>(statement.Value);
+
+				auto argTypes = std::list<VariableDec>();
+				for (auto it = statement.Arguments.begin(); it != statement.Arguments.end(); ++it) 
+				{
+					argTypes.push_back(it->Value->Type);
+					enroleStatement(*it, count);
+				}
+				auto dec = FunctionDec(label->LabelString, VariableDec::Length, argTypes);
+				delete statement.Value;
+
+				int id = ExternalFunctionManager.GetId(dec);
+				if (id > -1) {
+					_program.Instructions.push_back(InstructionEnums::CallEx);
+					_program.Instructions.push_back(id);
+
+				}
+
+				++count;
+			}
+			break;
+		default:
+			break;
+		}
 	}
 
 	int Compiler::Run(int argn, char** argv) {

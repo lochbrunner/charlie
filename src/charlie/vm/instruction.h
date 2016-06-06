@@ -25,25 +25,57 @@
 * SUCH DAMAGE.
 */
 
-#ifndef CHARLIE_PROGRAM_SCOPEROUTINE
-#define CHARLIE_PROGRAM_SCOPEROUTINE
+#ifndef CHARLIE_PROGRAM_INSTRUCTION_H
+#define CHARLIE_PROGRAM_INSTRUCTION_H
 
-#include <list>
-#include <map>
+#include <functional>
 
-#include "variableDec.h"
-#include "statement.h"
+#include <array>
+#include <stack>
+#include <queue>
+#include <vector>
+
+#include "..\api\externalFunctionManager.h"
 
 namespace charlie {
-	namespace program {
-		class Scope {
-		public:
-			Scope();
+	namespace vm {
 
-			std::list<Statement> Statements;
-			std::map<int, VariableDec> VariableDecs;
+		struct State {
+			State();
+			std::stack<int> aluStack;
+			std::stack<int> callStack;
+			std::vector<int> reg;
+			std::vector<int> program;
+			int pos;
+			api::ExternalFunctionManager *pExternalFunctionManager;
+		};
+
+		enum InstructionEnums
+		{
+			Push,
+			PushConst,
+			Pop,
+			Call,
+			CallEx,
+			Jump,
+			Return,
+			IntAdd,
+			IntSubstract,
+			IntMultiply,
+			IntDivide,
+			Length
+		};
+
+		typedef std::function<void(State&)> functionType;
+
+		struct InstructionManager {
+			static std::array<functionType, InstructionEnums::Length> Create();
+			static const std::array<functionType, InstructionEnums::Length> Instructions;
+			static functionType Get(InstructionEnums bc);
+			static void GetLegend(int instruction, std::queue<const char*> &comments);
 		};
 	}
 }
 
-#endif // !CHARLIE_PROGRAM_SCOPEROUTINE
+
+#endif // !CHARLIE_PROGRAM_INSTRUCTION_H

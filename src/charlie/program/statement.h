@@ -25,57 +25,33 @@
 * SUCH DAMAGE.
 */
 
-#ifndef CHARLIE_PROGRAM_INSTRUCTION_H
-#define CHARLIE_PROGRAM_INSTRUCTION_H
+#ifndef CHARLIE_PROGRAM_STATEMENT_H
+#define CHARLIE_PROGRAM_STATEMENT_H
 
-#include <functional>
+#include <list>
 
-#include <array>
-#include <stack>
-#include <queue>
-#include <vector>
-
-#include "..\api\externalFunctionManager.h"
+#include "..\token\base.h"
 
 namespace charlie {
 	namespace program {
+		class Statement {
+		public:
+			Statement(token::Base* value);
+			virtual ~Statement();
 
-		struct State {
-			State();
-			std::stack<int> aluStack;
-			std::stack<int> callStack;
-			std::vector<int> reg;
-			std::vector<int> program;
-			int pos;
-			api::ExternalFunctionManager *pExternalFunctionManager;
-		};
+			token::Base* Value;
+			std::list<Statement> Arguments;
 
-		enum InstructionEnums
-		{
-			Push,
-			PushConst,
-			Pop,
-			Call,
-			CallEx,
-			Jump,
-			Return,
-			IntAdd,
-			IntSubstract,
-			IntMultiply,
-			IntDivide,
-			Length
-		};
-
-		typedef std::function<void(State&)> functionType;
-
-		struct InstructionManager {
-			static std::array<functionType, InstructionEnums::Length> Create();
-			static const std::array<functionType, InstructionEnums::Length> Instructions;
-			static functionType Get(InstructionEnums bc);
-			static void GetLegend(int instruction, std::queue<const char*> &comments);
+			bool Finished();
+			int Priority();
 		};
 	}
 }
 
 
-#endif // !CHARLIE_PROGRAM_INSTRUCTION_H
+
+
+
+
+
+#endif // !CHARLIE_PROGRAM_STATEMENT_H

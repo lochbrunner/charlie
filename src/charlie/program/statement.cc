@@ -25,25 +25,29 @@
 * SUCH DAMAGE.
 */
 
-#ifndef CHARLIE_PROGRAM_SCOPEROUTINE
-#define CHARLIE_PROGRAM_SCOPEROUTINE
-
-#include <list>
-#include <map>
-
-#include "variableDec.h"
 #include "statement.h"
 
 namespace charlie {
 	namespace program {
-		class Scope {
-		public:
-			Scope();
+		Statement::Statement(token::Base* value) : Value(value), Arguments(){}
 
-			std::list<Statement> Statements;
-			std::map<int, VariableDec> VariableDecs;
-		};
+		Statement::~Statement() {
+			//if (Value != 0) {
+			//	delete Value;
+			//	Value = 0;
+			//}
+		}
+
+		bool Statement::Finished() {
+			if (Value == 0)
+				return false;
+			return Value->Finished;
+		}
+
+		int Statement::Priority() {
+			if (Value == 0 || Value->Finished)
+				return 0;
+			return Value->Priority;
+		}
 	}
 }
-
-#endif // !CHARLIE_PROGRAM_SCOPEROUTINE

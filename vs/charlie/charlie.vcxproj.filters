@@ -25,6 +25,9 @@
     <Filter Include="api">
       <UniqueIdentifier>{9116429e-83e7-4797-a728-daf9c8d67904}</UniqueIdentifier>
     </Filter>
+    <Filter Include="vm">
+      <UniqueIdentifier>{3ef02697-fd4d-4a9b-b41c-3ab2c0c96d65}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\charlie\compiler.cc">
@@ -45,9 +48,6 @@
     <ClCompile Include="..\..\src\charlie\program\unresolvedProgram.cc">
       <Filter>program</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\charlie\program\instruction.cc">
-      <Filter>program</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\charlie\program\functionDec.cc">
       <Filter>program</Filter>
     </ClCompile>
@@ -65,6 +65,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\charlie\common\comparer_string.cc">
       <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\charlie\vm\instruction.cc">
+      <Filter>vm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\charlie\program\statement.cc">
+      <Filter>program</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -89,9 +95,6 @@
     <ClInclude Include="..\..\src\charlie\program\unresolvedProgram.h">
       <Filter>program</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\charlie\program\instruction.h">
-      <Filter>program</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\charlie\program\functionDec.h">
       <Filter>program</Filter>
     </ClInclude>
@@ -112,6 +115,12 @@
     </ClInclude>
     <ClInclude Include="..\..\src\charlie\common\comparer_string.h">
       <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\charlie\vm\instruction.h">
+      <Filter>vm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\charlie\program\statement.h">
+      <Filter>program</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

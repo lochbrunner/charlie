@@ -25,6 +25,7 @@
 * SUCH DAMAGE.
 */
 
+// See: http://www.quut.com/c/ANSI-C-grammar-y.html
 
 #ifndef CHARLIE_TOKEN_BASE_H
 #define CHARLIE_TOKEN_BASE_H
@@ -40,7 +41,7 @@ namespace charlie {
 		class Base
 		{
 		public:
-			enum TokenType
+			enum class TokenTypeEnum
 			{
 				Bracket,				// (, ), {, }, ...
 				Constant,				// "Hello", 12, ...
@@ -51,9 +52,16 @@ namespace charlie {
 				ControlFlow,			// for, while
 				Comma
 			};
-			Base(TokenType type);
-			TokenType Type;
+			Base(TokenTypeEnum tokentype, int priorty = 0, bool finished = false, program::VariableDec::TypeEnum type = program::VariableDec::Length);
+			TokenTypeEnum TokenType;
+			// label: 9,  bracket: 8, namesep (::; .): 8,  (de)ref: 7; mul/div: 6, add/sub: 5, 
+			// comparer: 4, logic ops: 3, copy: 2 others: 1
+			int Priority;
+			bool Finished;
 
+			program::VariableDec::TypeEnum Type;
+
+			virtual int ByteCode()=0;
 			virtual std::string ToString()=0;
 		};
 
@@ -78,13 +86,14 @@ namespace charlie {
 			DirectionEnum Direction;
 
 			virtual std::string ToString();
-
+			virtual int ByteCode();
 		};
 
 		class Comma : public Base {
 		public:
 			Comma();
 			virtual std::string ToString();
+			virtual int ByteCode();
 		};
 
 		class Constant : public Base{
@@ -104,13 +113,14 @@ namespace charlie {
 			void* Pointer;
 
 			virtual std::string ToString();
-
+			virtual int ByteCode();
 		};
 
 		class ConstantInt : public Base {
 		public:
 			ConstantInt(int value);
 			virtual std::string ToString();
+			virtual int ByteCode();
 
 			int Value;
 		};
@@ -148,6 +158,7 @@ namespace charlie {
 			Operator(KindEnum kind);
 
 			virtual std::string ToString();
+			virtual int ByteCode();
 		};
 
 		class ControlFlow : public Base {
@@ -169,6 +180,7 @@ namespace charlie {
 			KindEnum Kind;
 
 			virtual std::string ToString();
+			virtual int ByteCode();
 		};
 
 		class Declarer : public Base 
@@ -178,17 +190,24 @@ namespace charlie {
 			program::VariableDec::TypeEnum Kind;
 
 			virtual std::string ToString();
+			virtual int ByteCode();
 		};
 
 		class Label : public Base {
 		public:
 
-			Label(std::string *labelString);
-			~Label();
-			std::string *LabelString;
+			enum KindEnum {
+				Function,
+				Variable,
+				Unknown
+			};
+
+			Label(std::string& labelString);
+			std::string LabelString;
+			KindEnum Kind;
 
 			virtual std::string ToString();
-
+			virtual int ByteCode();
 		};
 	}
 }

@@ -26,12 +26,13 @@
     <ClCompile Include="..\..\src\charlie\compiler.cc" />
     <ClCompile Include="..\..\src\charlie\program\functionDec.cc" />
     <ClCompile Include="..\..\src\charlie\program\functionDef.cc" />
-    <ClCompile Include="..\..\src\charlie\program\instruction.cc" />
     <ClCompile Include="..\..\src\charlie\program\scopeRoutine.cc" />
+    <ClCompile Include="..\..\src\charlie\program\statement.cc" />
     <ClCompile Include="..\..\src\charlie\program\unresolvedProgram.cc" />
     <ClCompile Include="..\..\src\charlie\program\variableDec.cc" />
     <ClCompile Include="..\..\src\charlie\scanner.cc" />
     <ClCompile Include="..\..\src\charlie\token\base.cc" />
+    <ClCompile Include="..\..\src\charlie\vm\instruction.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\charlie\api\externalFunctionManager.h" />
@@ -43,12 +44,13 @@
     <ClInclude Include="..\..\src\charlie\compiler.h" />
     <ClInclude Include="..\..\src\charlie\program\functionDec.h" />
     <ClInclude Include="..\..\src\charlie\program\functionDef.h" />
-    <ClInclude Include="..\..\src\charlie\program\instruction.h" />
     <ClInclude Include="..\..\src\charlie\program\scopeRoutine.h" />
+    <ClInclude Include="..\..\src\charlie\program\statement.h" />
     <ClInclude Include="..\..\src\charlie\program\unresolvedProgram.h" />
     <ClInclude Include="..\..\src\charlie\program\variableDec.h" />
     <ClInclude Include="..\..\src\charlie\scanner.h" />
     <ClInclude Include="..\..\src\charlie\token\base.h" />
+    <ClInclude Include="..\..\src\charlie\vm\instruction.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{F9B0A582-A9CD-444A-A11A-196CFC0B8B9D}</ProjectGuid>
