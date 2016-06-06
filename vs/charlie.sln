@@ -20,6 +20,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{60ED
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "charlie.test", "charlie.test\charlie.test.vcxproj", "{56BED8E6-7912-4150-8C97-AD0BFDDE9133}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{E15F113C-C391-4FEC-B92A-35FAABC736BA}"
+	ProjectSection(SolutionItems) = preProject
+		..\docs\features.md = ..\docs\features.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64

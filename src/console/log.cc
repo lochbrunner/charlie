@@ -27,6 +27,8 @@
 
 #include "log.h"
 
+#include <iostream> 
+
 using namespace std;
 
 stringstream Log::Buffer = stringstream();
@@ -44,6 +46,7 @@ bool Log::Save(const string &filename) {
 	file << Buffer.str();
 
 	file.close();
+	cout << "Saving output to " << fullfilename << endl;
 	return true;
 }
 

@@ -153,13 +153,21 @@ namespace charlie {
 			switch (Kind)
 			{
 			case charlie::token::Operator::Add:
-				return vm::IntAdd;
+				if(Type == VariableDec::Int)
+					return vm::IntAdd;
+				return -1;
 			case charlie::token::Operator::Substract:
-				return vm::IntSubstract;
+				if (Type == VariableDec::Int)
+					return vm::IntSubstract;
+				return -1;
 			case charlie::token::Operator::Multipply:
-				return vm::IntMultiply;
+				if (Type == VariableDec::Int)
+					return vm::IntMultiply;
+				return -1;
 			case charlie::token::Operator::Divide:
-				return vm::IntDivide;
+				if (Type == VariableDec::Int)
+					return vm::IntDivide;
+				return -1;
 			case charlie::token::Operator::Copy:
 				break;
 			case charlie::token::Operator::Equal:

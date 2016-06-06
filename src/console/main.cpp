@@ -121,8 +121,10 @@ int main(int argn, char** argv)
 
 		compiler.Build(entry);
 		compiler.SaveProgram(entry, flag & Flag::Binary);
-
+		cout << "Saving program to " << entry << (flag & Flag::Binary? ".bc" : ".bc.txt") << endl;
+		cout << "Running program ..\n\n";
 		compiler.Run();
+		cout << endl;
 		if(flag & Flag::LogOutput)
 			Log::Save(entry);
 	}

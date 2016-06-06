@@ -1,5 +1,5 @@
 # charlie
-A learning project: Compiles C++ code to byte-code and runs it in a virtual machine.
+A learning project: Compiles C-Code to Byte-Code and runs it in a virtual machine.
 
 
 ## Usage
@@ -39,7 +39,7 @@ compiler.Run();
 
 ## Supported Features
 
-
+The [samples](charlie/samples) in show the currently supported features of that tool set. Or [klick here](charlie/docs/features.md) for more informations.
 
 ## Contributing Code
 
