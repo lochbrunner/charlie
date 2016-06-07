@@ -28,6 +28,7 @@
 #include "compiler.h"
 
 #include <sstream>
+#include <assert.h>
 
 #include "scanner.h"
 
@@ -171,20 +172,34 @@ namespace charlie {
 			{
 				Label* label = dynamic_cast<Label*>(statement.Value);
 				if (label->Address > -1) {
-					_program.Instructions.push_back(InstructionEnums::PushConst);
+					//_program.Instructions.push_back(InstructionEnums::PushConst);
+					_program.Instructions.push_back(InstructionEnums::Push);
 					_program.Instructions.push_back(label->Address);
 				}
 				else 
 				{
 					logging("Unknown variable found!");
+					return;
 				}
 			}
 		}
 		else if(tokenType == Base::TokenTypeEnum::Operator)
 		{
-			for (auto it = statement.Arguments.begin(); it != statement.Arguments.end(); ++it)
-				enroleStatement(*it, count);
-			_program.Instructions.push_back(statement.Value->ByteCode());
+			auto op = dynamic_cast<Operator*>(statement.Value);
+			if (op->Kind == Operator::Copy) {
+				auto itAddress = statement.Arguments.begin();
+				assert(itAddress->Value->TokenType == Base::TokenTypeEnum::Label);
+				
+				int address = dynamic_cast<Label*>(itAddress->Value)->Address;
+				enroleStatement(*++itAddress, count);
+				_program.Instructions.push_back(InstructionEnums::IntCopy);
+				_program.Instructions.push_back(address);
+			}
+			else {
+				for (auto it = statement.Arguments.begin(); it != statement.Arguments.end(); ++it)
+					enroleStatement(*it, count);
+				_program.Instructions.push_back(statement.Value->ByteCode());
+			}
 			delete statement.Value;
 			++count;
 		}

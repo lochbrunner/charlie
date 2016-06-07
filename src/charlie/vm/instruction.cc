@@ -50,9 +50,9 @@ namespace charlie {
 			};
 			types[InstructionEnums::Push] = [](State& state)
 			{
-				int adress = state.program[++state.pos];
-				if (static_cast<int>(state.reg.size()) > adress) {
-					state.aluStack.push(state.reg[adress]);
+				int address = state.program[++state.pos];
+				if (static_cast<int>(state.reg.size()) > address) {
+					state.aluStack.push(state.reg[address]);
 					++state.pos;
 					return 0;
 				}
@@ -71,12 +71,12 @@ namespace charlie {
 			};
 			types[InstructionEnums::Pop] = [](State& state)
 			{
-				int adress = state.program[++state.pos];
-				if (static_cast<int>(state.reg.size()) > adress)
+				int address = state.program[++state.pos];
+				if (static_cast<int>(state.reg.size()) > address)
 				{
 					int value = state.aluStack.top();
 					state.aluStack.pop();
-					state.reg[adress] = value;
+					state.reg[address] = value;
 					++state.pos;
 					return 0;
 				}
@@ -117,8 +117,8 @@ namespace charlie {
 			types[InstructionEnums::IntCopy] = [](State& state) {
 				int value = state.aluStack.top();
 				state.aluStack.pop();
-				int address = state.aluStack.top();
-				state.aluStack.pop();
+				int address = state.program[++state.pos];
+				
 				if (state.reg.size() > static_cast<size_t>(address))
 				{
 					state.reg[address] = value;
@@ -188,7 +188,7 @@ namespace charlie {
 				break;
 			case InstructionEnums::Push:
 				comments.push("Pushs the value ...");
-				comments.push("... at adress");
+				comments.push("... at address");
 				break;
 			case InstructionEnums::PushConst:
 				comments.push("Pushs a constant ...");
@@ -196,7 +196,7 @@ namespace charlie {
 				break;
 			case InstructionEnums::Pop:
 				comments.push("Pops from stack and copies to register ...");
-				comments.push("... at adress");
+				comments.push("... at address");
 				break;
 			case InstructionEnums::Call:
 				comments.push("Calls function ...");
@@ -214,7 +214,8 @@ namespace charlie {
 				comments.push("Returns");
 				break;
 			case InstructionEnums::IntCopy:
-				comments.push("Copies integer to register");
+				comments.push("Copies integer to register ...");
+				comments.push("... at address");
 				break;
 			case InstructionEnums::IntAdd:
 				comments.push("Adds two integers");

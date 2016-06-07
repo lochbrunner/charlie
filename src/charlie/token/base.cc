@@ -34,11 +34,13 @@ namespace charlie {
 		using namespace std;
 		using namespace program;
 
-		Base::Base(TokenTypeEnum tokentype, int priorty, bool finished, VariableDec::TypeEnum type) :
-			TokenType(tokentype), Priority(priorty), Finished(finished), Type(type), TokenChidrenPos(TokenChidrenPosEnum::None){}
+		CodePostion::CodePostion(int characterPosition) : CharacterNumber(characterPosition) {}
 
-		Bracket::Bracket(KindEnum kind, DirectionEnum direction) : 
-			Base(TokenTypeEnum::Bracket, 8), Kind(kind), Direction(direction) {}
+		Base::Base(TokenTypeEnum tokentype, CodePostion& position, int priorty, bool finished, VariableDec::TypeEnum type) :
+			TokenType(tokentype), Position(position), Priority(priorty), Finished(finished), Type(type), TokenChidrenPos(TokenChidrenPosEnum::None){}
+
+		Bracket::Bracket(KindEnum kind, DirectionEnum direction, CodePostion position) :
+			Base(TokenTypeEnum::Bracket, position,8), Kind(kind), Direction(direction) {}
 		std::string Bracket::ToString() 
 		{
 			return string();
@@ -48,7 +50,7 @@ namespace charlie {
 			return -1;
 		}
 
-		Comma::Comma() : Base(TokenTypeEnum::Comma, 1) {}
+		Comma::Comma(CodePostion& position) : Base(TokenTypeEnum::Comma, position, 1) {}
 		std::string Comma::ToString() 
 		{
 			return string();
@@ -58,7 +60,7 @@ namespace charlie {
 			return -1;
 		}
 
-		List::List() : Base(TokenTypeEnum::List, 1) {}
+		List::List(CodePostion& position) : Base(TokenTypeEnum::List, position, 1) {}
 		std::string List::ToString()
 		{
 			return string();
@@ -68,7 +70,7 @@ namespace charlie {
 			return -1;
 		}
 
-		Constant::Constant(KindEnum kind, void* pointer) : Base(TokenTypeEnum::Constant, 1, true), Kind(kind), Pointer(pointer){}
+		Constant::Constant(KindEnum kind, void* pointer, CodePostion& position) : Base(TokenTypeEnum::Constant, position, 1, true), Kind(kind), Pointer(pointer){}
 		Constant::~Constant() {
 			if (Pointer != 0) {
 				delete Pointer;
@@ -83,7 +85,7 @@ namespace charlie {
 			return -1;
 		}
 
-		ConstantInt::ConstantInt(int value) : Base(TokenTypeEnum::ConstantInt, 1, true, VariableDec::Int), Value(value){}
+		ConstantInt::ConstantInt(int value, CodePostion& position) : Base(TokenTypeEnum::ConstantInt, position, 1, true, VariableDec::Int), Value(value){}
 		std::string ConstantInt::ToString()
 		{
 			return string();
@@ -93,7 +95,7 @@ namespace charlie {
 			return Value;
 		}
 
-		Operator::Operator(KindEnum kind) : Base(TokenTypeEnum::Operator), Kind(kind)
+		Operator::Operator(KindEnum kind, CodePostion& postion) : Base(TokenTypeEnum::Operator, postion), Kind(kind)
 		{
 			switch (kind)
 			{
@@ -213,7 +215,7 @@ namespace charlie {
 			}
 			return -1;
 		}
-		Declarer::Declarer(program::VariableDec::TypeEnum kind) : Base(TokenTypeEnum::TypeDeclarer, 1), Kind(kind) {}
+		Declarer::Declarer(program::VariableDec::TypeEnum kind, CodePostion& position) : Base(TokenTypeEnum::TypeDeclarer, position,  1), Kind(kind) {}
 		std::string Declarer::ToString() {
 			return string();
 		}
@@ -221,17 +223,17 @@ namespace charlie {
 		{
 			return -1;
 		}
-		Label::Label(string& labelString) : 
-			Base(TokenTypeEnum::Label, 9), LabelString(labelString), Kind(Unknown), Address(-1) {}
+		Label::Label(string& labelString, CodePostion& position) :
+			Base(TokenTypeEnum::Label, position, 9), LabelString(labelString), Kind(Unknown), Address(-1) {}
 		std::string Label::ToString()
 		{
-			return string();
+			return LabelString;
 		}
 		int Label::ByteCode()
 		{
 			return -1;
 		}
-		ControlFlow::ControlFlow(KindEnum kind) : Base(TokenTypeEnum::ControlFlow), Kind(kind) {}
+		ControlFlow::ControlFlow(KindEnum kind, CodePostion& position) : Base(TokenTypeEnum::ControlFlow, position), Kind(kind) {}
 		std::string ControlFlow::ToString()
 		{
 			return string();

@@ -30,18 +30,18 @@
 #include <sstream>
 #include <iomanip>
 
+#include <assert.h>
+
 namespace charlie {
 	namespace common {
 		using namespace std;
 
-		LogginComponent::LogginComponent() 
+		LogginComponent::LogginComponent() : _messageDelegate(0), _pCurrentCode(0)
 		{
-			_messageDelegate = NULL;
 		}
 
-		LogginComponent::LogginComponent(function<void(string const&message)> messageDelegate)
+		LogginComponent::LogginComponent(function<void(string const&message)> messageDelegate) : _messageDelegate(messageDelegate), _pCurrentCode(0)
 		{
-			_messageDelegate = messageDelegate;
 		}
 
 		void LogginComponent::logOut(string const &message)
@@ -54,6 +54,80 @@ namespace charlie {
 				stringstream st;
 				st << static_cast<char>(toupper(codefileName[0])) << setfill('0') << setw(4) << lineNumber << ": " << message;
 				_messageDelegate(st.str());
+			}
+		}
+		void LogginComponent::logOut(stringstream const &message)
+		{
+			if (_messageDelegate != NULL)
+				_messageDelegate(message.str());
+		}
+		void LogginComponent::logOut(std::stringstream const &message, const char* codefileName, int lineNumber) {
+			if (_messageDelegate != NULL) {
+				stringstream st;
+				st << static_cast<char>(toupper(codefileName[0])) << setfill('0') << setw(4) << lineNumber << ": " << message.str();
+				_messageDelegate(st.str());
+			}
+		}
+		void LogginComponent::logOut(string const &message, token::CodePostion& codePosition)
+		{
+			if (_messageDelegate != NULL)
+			{
+
+				stringstream st;
+				st << message;
+				getPositionString(codePosition.CharacterNumber, st);
+				_messageDelegate(st.str());
+			}
+		}
+		void LogginComponent::logOut(std::string const &message, token::CodePostion& codePosition, const char* codefileName, int lineNumber) {
+			if (_messageDelegate != NULL) {
+				stringstream st;
+				st << static_cast<char>(toupper(codefileName[0])) << setfill('0') << setw(4) << lineNumber << message;
+				getPositionString(codePosition.CharacterNumber, st);
+				_messageDelegate(st.str());
+			}
+		}
+		void LogginComponent::logOut(stringstream const &message, token::CodePostion& codePosition)
+		{
+			if (_messageDelegate != NULL)
+			{
+				stringstream st;
+				st << message.str();
+				getPositionString(codePosition.CharacterNumber, st);
+				_messageDelegate(st.str());
+			}
+		}
+		void LogginComponent::logOut(std::stringstream const &message, token::CodePostion& codePosition, const char* codefileName, int lineNumber) {
+			if (_messageDelegate != NULL) {
+				stringstream st;
+				st << static_cast<char>(toupper(codefileName[0])) << setfill('0') << setw(4) << lineNumber << ": " << message.str();
+				getPositionString(codePosition.CharacterNumber, st);
+				_messageDelegate(st.str());
+			}
+		}
+
+		void LogginComponent::getPositionString(int pos, std::stringstream& st) {
+			int line;
+			int column;
+			getLineNumberAndColumnPos(pos, line, column);
+
+			st << "at line: " << line << " columns: " << column;
+		}
+
+		void LogginComponent::getLineNumberAndColumnPos(int pos, int& line, int& column)
+		{
+			if (_pCurrentCode != 0) {
+				assert(_pCurrentCode->length() > static_cast<size_t>(pos));
+				column = 0;
+				line = 0;
+				for (int i = 0; i <= pos; ++i) {
+					++column;
+					if (_pCurrentCode->at(i) == '\n')
+					{
+						++line;
+						column = 0;
+					}
+				}
 			}
 		}
 	}

@@ -37,6 +37,11 @@
 namespace charlie {
 	namespace token {
 
+		class CodePostion {
+		public:
+			CodePostion(int characterPosition);
+			int CharacterNumber;
+		};
 
 		class Base
 		{
@@ -60,13 +65,14 @@ namespace charlie {
 				Right = 2,
 				LeftAndRight = 3
 			};
-			Base(TokenTypeEnum tokentype, int priorty = 0, bool finished = false, program::VariableDec::TypeEnum type = program::VariableDec::Length);
+			Base(TokenTypeEnum tokentype, CodePostion& position, int priorty = 0, bool finished = false, program::VariableDec::TypeEnum type = program::VariableDec::Length);
 			TokenTypeEnum TokenType;
 			// label: 9,  bracket: 8, namesep (::; .): 8,  (de)ref: 7; mul/div: 6, add/sub: 5, 
 			// comparer: 4, logic ops: 3, copy: 2 others: 1
 			int Priority;
 			bool Finished;
 			TokenChidrenPosEnum TokenChidrenPos;
+			CodePostion Position;
 
 			program::VariableDec::TypeEnum Type;
 
@@ -90,7 +96,7 @@ namespace charlie {
 				Opening
 			};
 
-			Bracket(KindEnum kind, DirectionEnum direction);
+			Bracket(KindEnum kind, DirectionEnum direction, CodePostion position);
 			KindEnum Kind;
 			DirectionEnum Direction;
 
@@ -100,14 +106,14 @@ namespace charlie {
 
 		class Comma : public Base {
 		public:
-			Comma();
+			Comma(CodePostion& position);
 			virtual std::string ToString();
 			virtual int ByteCode();
 		};
 
 		class List : public Base {
 		public:
-			List();
+			List(CodePostion& position);
 			virtual std::string ToString();
 			virtual int ByteCode();
 		};
@@ -122,7 +128,7 @@ namespace charlie {
 				Boolean			// bool
 			};
 
-			Constant(KindEnum kind, void* pointer);
+			Constant(KindEnum kind, void* pointer, CodePostion& position);
 			~Constant();
 
 			KindEnum Kind;
@@ -134,7 +140,7 @@ namespace charlie {
 
 		class ConstantInt : public Base {
 		public:
-			ConstantInt(int value);
+			ConstantInt(int value, CodePostion& position);
 			virtual std::string ToString();
 			virtual int ByteCode();
 
@@ -171,7 +177,7 @@ namespace charlie {
 			};
 			KindEnum Kind;
 
-			Operator(KindEnum kind);
+			Operator(KindEnum kind, CodePostion& position);
 
 			virtual std::string ToString();
 			virtual int ByteCode();
@@ -193,7 +199,7 @@ namespace charlie {
 				Goto
 			};
 
-			ControlFlow(KindEnum kind);
+			ControlFlow(KindEnum kind, CodePostion& position);
 
 			KindEnum Kind;
 
@@ -204,7 +210,7 @@ namespace charlie {
 		class Declarer : public Base 
 		{
 		public:
-			Declarer(program::VariableDec::TypeEnum kind);
+			Declarer(program::VariableDec::TypeEnum kind, CodePostion& position);
 			program::VariableDec::TypeEnum Kind;
 
 			virtual std::string ToString();
@@ -220,7 +226,7 @@ namespace charlie {
 				Unknown
 			};
 
-			Label(std::string& labelString);
+			Label(std::string& labelString, CodePostion& position);
 			std::string LabelString;
 			KindEnum Kind;
 			int Address;

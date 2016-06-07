@@ -112,6 +112,7 @@ namespace charlie {
 
 	bool Scanner::Scan(string const &code) 
 	{
+		_pCurrentCode = &code;
 		_pProgram->Clear();
 
 		// Search declarations
@@ -130,7 +131,7 @@ namespace charlie {
 			{
 				stringstream st;
 				st << "Unexpected word \"" << word << "\" found!";
-				logging(st.str());
+				logging(st, CodePostion(pos));
 				return false;
 			}
 
@@ -143,7 +144,7 @@ namespace charlie {
 				if (wordType != WordType::Name) {
 					stringstream st;
 					st << "Unexpected word \"" << word << "\" after type found!";
-					logging(st.str());
+					logging(st, CodePostion(pos));
 					return false;
 				}
 				auto variableName = word;
@@ -174,7 +175,7 @@ namespace charlie {
 
 					}
 					else {
-						logging("Unexpected symbol after function declaration");
+						logging("Unexpected symbol after function declaration", CodePostion(pos));
 						return false;
 					}
 
@@ -187,7 +188,7 @@ namespace charlie {
 				else {
 					stringstream st;
 					st << "Unexpected word \"" << word << "\" after variable name";
-					logging(st.str());
+					logging(st, CodePostion(pos));
 					return false;
 				}
 			}
@@ -195,7 +196,7 @@ namespace charlie {
 			{
 				stringstream st;
 				st << "Unsupported type \"" << word << "\" found!";
-				logging(st.str());
+				logging(st, CodePostion(pos));
 				return false;
 			}
 		}
@@ -588,7 +589,7 @@ namespace charlie {
 			}
 			else if (wordType != WordType::Name) 
 			{
-				logging("Unexpected symbol in function definition");
+				logging("Unexpected symbol in function definition", CodePostion(pos));
 				return -1;
 			}
 			wordBuffer = word.c_str();
@@ -613,7 +614,7 @@ namespace charlie {
 				}
 				else
 				{
-					logging("Unexpected symbol in function definition");
+					logging("Unexpected symbol in function definition", CodePostion(pos));
 					return -1;
 				}
 			}
@@ -636,7 +637,7 @@ namespace charlie {
 	{
 		Statement tokens = Statement(0);
 
-		tokens.Arguments.push_back(new Label(word));
+		tokens.Arguments.push_back(new Label(word, CodePostion(pos)));
 
 		int num = getStatemantTokens(code, length, pos, tokens);
 		if (num > 0)
@@ -674,7 +675,8 @@ namespace charlie {
 					return *linearStatements.begin();
 				}
 				else {
-					logging("Could not proceed statement");
+					logging("Could not proceed statement", linearStatements.begin()->Value->Position);
+					return 0;
 				}
 			}
 
@@ -688,7 +690,13 @@ namespace charlie {
 				++itTemp;
 				if (itTemp == linearStatements.end() || !isBracketToken(itTemp->Value, Bracket::Opening, Bracket::Round))
 				{
-					dynamic_cast<Label*>(itMax->Value)->Kind = Label::Variable;
+					if(!tryGettingTypeOfVariable(itMax->Value, scope))
+					{
+						stringstream st;
+						st << "Not declared \"" << itMax->Value->ToString() << "\" variable used";
+						logging(st, itTemp->Value->Position);
+						return 0;
+					}
 					itMax->Value->Finished = true;
 				}
 				else
@@ -785,7 +793,7 @@ namespace charlie {
 				switch (code[pos])
 				{
 				case '(':
-					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Round, Bracket::Opening));
+					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Round, Bracket::Opening, CodePostion(pos)));
 					++bracketStateRound;
 					break;
 				case ')':
@@ -794,11 +802,11 @@ namespace charlie {
 						logging("There is nothing to close with a round bracket");
 						return -1;
 					}
-					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Round, Bracket::Closing));
+					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Round, Bracket::Closing, CodePostion(pos)));
 					--bracketStateRound;
 					break;
 				case '[':
-					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Square, Bracket::Opening));
+					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Square, Bracket::Opening, CodePostion(pos)));
 					++bracketStateSquare;
 					break;
 				case ']':
@@ -807,11 +815,11 @@ namespace charlie {
 						logging("There is nothing to close with a square bracket");
 						return -1;
 					}
-					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Square, Bracket::Closing));
+					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Square, Bracket::Closing, CodePostion(pos)));
 					--bracketStateSquare;
 					break;
 				case '{':
-					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Curly, Bracket::Opening));
+					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Curly, Bracket::Opening, CodePostion(pos)));
 					++bracketStateCurly;
 					break;
 				case '}':
@@ -820,14 +828,14 @@ namespace charlie {
 						logging("There is nothing to close with a curly bracket");
 						return -1;
 					}
-					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Curly, Bracket::Closing));
+					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Curly, Bracket::Closing, CodePostion(pos)));
 					--bracketStateCurly;
 					break;
 				case '<':
-					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Triangle, Bracket::Opening));
+					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Triangle, Bracket::Opening, CodePostion(pos)));
 					break;
 				case '>':
-					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Triangle, Bracket::Closing));
+					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Triangle, Bracket::Closing, CodePostion(pos)));
 					break;
 				default:
 					break;
@@ -835,52 +843,52 @@ namespace charlie {
 				++pos;
 				break;
 			case WordType::Char:
-				linearStatements.Arguments.push_back(new Constant(Constant::Char, new char(code[pos])));
+				linearStatements.Arguments.push_back(new Constant(Constant::Char, new char(code[pos]), CodePostion(pos)));
 				break;
 			case WordType::Comma:
-				linearStatements.Arguments.push_back(new token::Comma());
+				linearStatements.Arguments.push_back(new token::Comma(CodePostion(pos)));
 				++pos;
 				break;
 			case WordType::Name:
-				linearStatements.Arguments.push_back(new Label(word));
+				linearStatements.Arguments.push_back(new Label(word, CodePostion(pos)));
 				break;
 			case WordType::Number:
 				i = atoi(word.c_str());
-				linearStatements.Arguments.push_back(new ConstantInt(i));
+				linearStatements.Arguments.push_back(new ConstantInt(i, CodePostion(pos)));
 				break;
 			case WordType::Operator:
 				if (word.length() == 1) {
 					switch (word[0])
 					{
 					case '+':
-						linearStatements.Arguments.push_back(new token::Operator(Operator::Add));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::Add, CodePostion(pos)));
 						break;
 					case '-':
-						linearStatements.Arguments.push_back(new token::Operator(Operator::Substract));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::Substract, CodePostion(pos)));
 						break;
 					case '*':
-						linearStatements.Arguments.push_back(new token::Operator(Operator::Multipply));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::Multipply, CodePostion(pos)));
 						break;
 					case '/':
-						linearStatements.Arguments.push_back(new token::Operator(Operator::Divide));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::Divide, CodePostion(pos)));
 						break;
 					case '=':
-						linearStatements.Arguments.push_back(new token::Operator(Operator::Copy));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::Copy, CodePostion(pos)));
 						break;
 					case '>':
-						linearStatements.Arguments.push_back(new token::Operator(Operator::Greater));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::Greater, CodePostion(pos)));
 						break;
 					case '<':
-						linearStatements.Arguments.push_back(new token::Operator(Operator::Less));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::Less, CodePostion(pos)));
 						break;
 					case '|':
-						linearStatements.Arguments.push_back(new token::Operator(Operator::BitOr));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::BitOr, CodePostion(pos)));
 						break;
 					case '&':
-						linearStatements.Arguments.push_back(new token::Operator(Operator::BitAnd));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::BitAnd, CodePostion(pos)));
 						break;
 					case '^':
-						linearStatements.Arguments.push_back(new token::Operator(Operator::BitXor));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::BitXor, CodePostion(pos)));
 						break;
 					default:
 						logging("Unexpected operator type");
@@ -891,37 +899,37 @@ namespace charlie {
 					switch (word[0])
 					{
 					case '=':
-						linearStatements.Arguments.push_back(new token::Operator(Operator::Equal));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::Equal, CodePostion(pos)));
 						break;
 					case '!':
-						linearStatements.Arguments.push_back(new token::Operator(Operator::NotEqual));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::NotEqual, CodePostion(pos)));
 						break;
 					case '>':
-						linearStatements.Arguments.push_back(new token::Operator(Operator::GreaterEqual));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::GreaterEqual, CodePostion(pos)));
 						break;
 					case '<':
-						linearStatements.Arguments.push_back(new token::Operator(Operator::LessEqual));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::LessEqual, CodePostion(pos)));
 						break;
 					case '+':
-						linearStatements.Arguments.push_back(new token::Operator(Operator::AddTo));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::AddTo, CodePostion(pos)));
 						break;
 					case '-':
-						linearStatements.Arguments.push_back(new token::Operator(Operator::SubstractTo));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::SubstractTo, CodePostion(pos)));
 						break;
 					case '*':
-						linearStatements.Arguments.push_back(new token::Operator(Operator::MultiplyTo));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::MultiplyTo, CodePostion(pos)));
 						break;
 					case '/':
-						linearStatements.Arguments.push_back(new token::Operator(Operator::DivideTo));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::DivideTo, CodePostion(pos)));
 						break;
 					case '&':
-						linearStatements.Arguments.push_back(new token::Operator(Operator::AndTo));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::AndTo, CodePostion(pos)));
 						break;
 					case '|':
-						linearStatements.Arguments.push_back(new token::Operator(Operator::OrTo));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::OrTo, CodePostion(pos)));
 						break;
 					case '^':
-						linearStatements.Arguments.push_back(new token::Operator(Operator::XorTo));
+						linearStatements.Arguments.push_back(new token::Operator(Operator::XorTo, CodePostion(pos)));
 						break;
 					default:
 						logging("Unexpected operator type");
@@ -929,16 +937,16 @@ namespace charlie {
 					}
 				}
 				else if (word.length() == 2 && word[0] == '&' && word[1] == '&')
-					linearStatements.Arguments.push_back(new token::Operator(Operator::LogicAnd));
+					linearStatements.Arguments.push_back(new token::Operator(Operator::LogicAnd, CodePostion(pos)));
 				else if(word.length() == 2 && word[0]=='|' && word[1] == '|')
-					linearStatements.Arguments.push_back(new token::Operator(Operator::LogicOr));
+					linearStatements.Arguments.push_back(new token::Operator(Operator::LogicOr, CodePostion(pos)));
 				break;
 			case WordType::Semikolon:
 				++pos;
 				break;
 			case WordType::String:
 				proceessControlSequences(word);
-				linearStatements.Arguments.push_back(new token::Constant(Constant::String, new string(word)));
+				linearStatements.Arguments.push_back(new token::Constant(Constant::String, new string(word), CodePostion(pos)));
 				break;
 			default:
 				logging("Unexpected word type");
@@ -1002,6 +1010,7 @@ namespace charlie {
 			}
 			token->Type = it->first.ImageType;
 			dynamic_cast<Label*>(token)->Address = it->second;
+			dynamic_cast<Label*>(token)->Kind = Label::Variable;
 		}
 		return true;
 	}

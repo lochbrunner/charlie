@@ -28,10 +28,23 @@
 #ifndef CHARLIE_COMMON_LOGGIN_COMPONENT_H
 #define CHARLIE_COMMON_LOGGIN_COMPONENT_H
 
-#define logging(x) logOut(x, __FILE__, __LINE__)
+//#define logging_1(message)					logOut(message, __FILE__, __LINE__)
+//#define logging_2(message, codePosition)	logOut(message, __FILE__, __LINE__, codePosition)
+#define logging_1(message)					logOut(message, __FILE__, __LINE__)
+#define logging_2(message, codePosition)	logOut(message, codePosition, __FILE__, __LINE__)
+
+#define GET_3TH_ARG(arg1, arg2, arg3, ...) arg3
+#define LOGGIN_MACRO_CHOOSER(...) \
+    GET_3TH_ARG(__VA_ARGS__, \
+                logging_2, logging_1, )
+
+#define logging(...) LOGGIN_MACRO_CHOOSER(__VA_ARGS__)(__VA_ARGS__)
 
 #include <string>
+#include <sstream>
 #include <functional>
+
+#include "..\token\base.h"
 
 namespace charlie {
 namespace common {
@@ -43,8 +56,21 @@ namespace common {
 
 	protected:
 		std::function<void(std::string const &message)> _messageDelegate;
+		void logOut(std::stringstream const &message);
+		void logOut(std::stringstream const &message, const char* codefileName, int lineNumber);
 		void logOut(std::string const &message);
 		void logOut(std::string const &message, const char* codefileName, int lineNumber);
+
+		void logOut(std::stringstream const &message, token::CodePostion& codePosition);
+		void logOut(std::stringstream const &message, token::CodePostion& codePosition, const char* codefileName, int lineNumber);
+		void logOut(std::string const &message, token::CodePostion& codePosition);
+		void logOut(std::string const &message, token::CodePostion& codePosition, const char* codefileName, int lineNumber);
+
+		const std::string *_pCurrentCode;
+
+	private:
+		void getLineNumberAndColumnPos(int pos, int& line, int& column);
+		void getPositionString(int pos, std::stringstream& st);
 	};
 }
 }
