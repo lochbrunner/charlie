@@ -36,6 +36,13 @@ namespace charlie {
 	namespace common {
 		using namespace std;
 
+		char significantChar(const char* codefileName) {
+			auto path = string(codefileName);
+			string base_filename = path.substr(path.find_last_of("/\\") + 1);
+			return static_cast<char>(toupper(path[path.find_last_of("/\\") + 1]));
+		}
+
+
 		LogginComponent::LogginComponent() : _messageDelegate(0), _pCurrentCode(0)
 		{
 		}
@@ -52,7 +59,7 @@ namespace charlie {
 		void LogginComponent::logOut(std::string const &message, const char* codefileName, int lineNumber) {
 			if (_messageDelegate != NULL) {
 				stringstream st;
-				st << static_cast<char>(toupper(codefileName[0])) << setfill('0') << setw(4) << lineNumber << ": " << message;
+				st << significantChar(codefileName) << setfill('0') << setw(4) << lineNumber << ": " << message;
 				_messageDelegate(st.str());
 			}
 		}
@@ -64,7 +71,7 @@ namespace charlie {
 		void LogginComponent::logOut(std::stringstream const &message, const char* codefileName, int lineNumber) {
 			if (_messageDelegate != NULL) {
 				stringstream st;
-				st << static_cast<char>(toupper(codefileName[0])) << setfill('0') << setw(4) << lineNumber << ": " << message.str();
+				st << significantChar(codefileName) << setfill('0') << setw(4) << lineNumber << ": " << message.str();
 				_messageDelegate(st.str());
 			}
 		}
@@ -82,7 +89,7 @@ namespace charlie {
 		void LogginComponent::logOut(std::string const &message, token::CodePostion& codePosition, const char* codefileName, int lineNumber) {
 			if (_messageDelegate != NULL) {
 				stringstream st;
-				st << static_cast<char>(toupper(codefileName[0])) << setfill('0') << setw(4) << lineNumber << message;
+				st << significantChar(codefileName) << setfill('0') << setw(4) << lineNumber << message;
 				getPositionString(codePosition.CharacterNumber, st);
 				_messageDelegate(st.str());
 			}
@@ -100,7 +107,7 @@ namespace charlie {
 		void LogginComponent::logOut(std::stringstream const &message, token::CodePostion& codePosition, const char* codefileName, int lineNumber) {
 			if (_messageDelegate != NULL) {
 				stringstream st;
-				st << static_cast<char>(toupper(codefileName[0])) << setfill('0') << setw(4) << lineNumber << ": " << message.str();
+				st << significantChar(codefileName) << setfill('0') << setw(4) << lineNumber << ": " << message.str();
 				getPositionString(codePosition.CharacterNumber, st);
 				_messageDelegate(st.str());
 			}

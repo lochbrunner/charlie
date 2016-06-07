@@ -31,14 +31,42 @@ namespace charlie {
 	namespace program {
 		using namespace std;
 
-		Scope::Scope() :
-			Statements(), VariableDecs(), CountVariableDecs(0)
+		Scope::Scope(Scope* pParant) :
+			Statements(), VariableDecs(), CountVariableDecs(0), _pParant(pParant)
 		{
+		}
+		Scope::VariableInfo Scope::GetVariableInfo(VariableDec & dec)
+		{
+			auto it = VariableDecs.find(dec);
+			if (it == VariableDecs.end())
+			{
+				if(_pParant == 0)
+					return VariableInfo(0, VariableDec::TypeEnum::Length);
+				return _pParant->GetVariableInfo(dec);
+			}
+			int pos = it->second;
+			auto par = _pParant;
+
+			return VariableInfo([=](){ 
+				if (par == 0)
+					return pos;
+				return pos + par->ParentOffset() + par->CountVariableDecs;
+			}, it->first.ImageType);
 		}
 		int Scope::AddVariableDec(VariableDec& dec)
 		{
 			VariableDecs.insert(make_pair(dec, CountVariableDecs++));
 			return CountVariableDecs;
+		}
+
+		int Scope::ParentOffset() const
+		{
+			if (_pParant == 0)
+				return 0;
+			return _pParant->ParentOffset() + _pParant->CountVariableDecs;
+		}
+		Scope::VariableInfo::VariableInfo(std::function<int()> offset, VariableDec::TypeEnum type) : Offset(offset), Type(type)
+		{
 		}
 	}
 }

@@ -46,8 +46,8 @@ namespace charlie {
 			std::string Label;
 			bool HasDefinition;
 
-			FunctionDec(std::string &label, VariableDec::TypeEnum imageType, std::list<VariableDec> &argumentType);
-			FunctionDec(std::string &label, VariableDec::TypeEnum imageType);
+			FunctionDec(std::string &label, VariableDec::TypeEnum imageType, std::list<VariableDec> &argumentType, Scope* pParent=0);
+			FunctionDec(std::string &label, VariableDec::TypeEnum imageType, Scope* pParent=0);
 
 			FunctionDefinition Definition;
 

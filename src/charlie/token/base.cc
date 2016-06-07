@@ -224,7 +224,7 @@ namespace charlie {
 			return -1;
 		}
 		Label::Label(string& labelString, CodePostion& position) :
-			Base(TokenTypeEnum::Label, position, 9), LabelString(labelString), Kind(Unknown), Address(-1) {}
+			Base(TokenTypeEnum::Label, position, 9), LabelString(labelString), Kind(Unknown), RegAddress(0) {}
 		std::string Label::ToString()
 		{
 			return LabelString;

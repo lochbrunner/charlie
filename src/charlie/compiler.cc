@@ -91,9 +91,21 @@ namespace charlie {
 
 	bool Compiler::compile() {
 		_program.Instructions.push_back(BYTECODE_VERSION);
-		_program.Instructions.push_back(InstructionEnums::Call);
 		// Junp address will be inserted at the end
-		int count = 2;
+		// Global varibles
+		_program.Instructions.push_back(InstructionEnums::IncreaseRegister);
+		_program.Instructions.push_back(_program.Root.CountVariableDecs);
+		
+		int count = 4;
+		for (auto itI = _program.Root.Statements.begin(); itI != _program.Root.Statements.end(); ++itI)
+		{
+			if (!enroleStatement(*itI, count))
+				return false;
+		}
+		
+		_program.Instructions.push_back(InstructionEnums::Call);
+		auto itMainAddress = --_program.Instructions.end();
+		++count;
 
 		auto funcPositions = std::map<FunctionDec, int, FunctionDec::comparer>();
 
@@ -101,24 +113,31 @@ namespace charlie {
 			if (!itF->HasDefinition) {
 				stringstream st;
 				st << "Missing defintion for function: " << (*itF);
-				logging(st.str());
+				logging(st);
 				return false;
 			}
 			funcPositions.insert(make_pair((*itF), count));
-			for (auto itV = itF->Definition.main.VariableDecs.begin(); itV != itF->Definition.main.VariableDecs.end(); ++itV) {
-				_program.Instructions.push_back(InstructionEnums::IncreaseRegister);
+
+			_program.Instructions.push_back(InstructionEnums::IncreaseRegister);
+			_program.Instructions.push_back(itF->Definition.main.CountVariableDecs);
+		
+			// Insert variable declaration and defintion of the argument list
+			for (auto itI = itF->Definition.main.Statements.begin(); itI != itF->Definition.main.Statements.end(); ++itI)
+			{
+				if (!enroleStatement(*itI, count))
+					return false;
 			}
 			
-			// Insert variable declaration and defintion of the argument list
-			for (auto itI = itF->Definition.main.Statements.begin(); itI != itF->Definition.main.Statements.end(); ++itI) {
-				enroleStatement(*itI, count);
-			}
-			for (auto itV = itF->Definition.main.VariableDecs.begin(); itV != itF->Definition.main.VariableDecs.end(); ++itV) {
-				_program.Instructions.push_back(InstructionEnums::DecreaseRegister);
-			}
+			_program.Instructions.push_back(InstructionEnums::DecreaseRegister);
+			_program.Instructions.push_back(itF->Definition.main.CountVariableDecs);
+
 			_program.Instructions.push_back(InstructionEnums::Return);
 			++count;
 		}
+
+		_program.Instructions.push_back(InstructionEnums::DecreaseRegister);
+		_program.Instructions.push_back(_program.Root.CountVariableDecs);
+
 		// Find entryPoint
 		auto args = list<VariableDec>();
 		args.push_back(VariableDec::Int);
@@ -131,14 +150,11 @@ namespace charlie {
 		}
 
 
-		auto third = _program.Instructions.begin();
-		++third;
-		++third;
-		_program.Instructions.insert(third, main->second);
+		_program.Instructions.insert(++itMainAddress, main->second);
 		return true;
 	}
 
-	void Compiler::enroleStatement(program::Statement& statement, int& count) {
+	bool Compiler::enroleStatement(program::Statement& statement, int& count) {
 		auto tokenType = statement.Value->TokenType;
 		if (tokenType == Base::TokenTypeEnum::ConstantInt) {
 			_program.Instructions.push_back(InstructionEnums::PushConst);
@@ -155,7 +171,8 @@ namespace charlie {
 				for (auto it = statement.Arguments.begin(); it != statement.Arguments.end(); ++it)
 				{
 					argTypes.push_back(it->Value->Type);
-					enroleStatement(*it, count);
+					if (!enroleStatement(*it, count))
+						return false;
 				}
 				auto dec = FunctionDec(label->LabelString, VariableDec::Length, argTypes);
 				delete statement.Value;
@@ -167,19 +184,26 @@ namespace charlie {
 					_program.Instructions.push_back(id);
 					++count;
 				}
+				else {
+					stringstream st;
+					st << "Can not find function " << dec;
+					logging(st, label->Position);
+					return false;
+				}
 			}
-			else
+			else if(dynamic_cast<Label*>(statement.Value)->Kind == Label::Variable)
 			{
 				Label* label = dynamic_cast<Label*>(statement.Value);
-				if (label->Address > -1) {
-					//_program.Instructions.push_back(InstructionEnums::PushConst);
+				int address = label->RegAddress();
+				if (address > -1) {
 					_program.Instructions.push_back(InstructionEnums::Push);
-					_program.Instructions.push_back(label->Address);
+					_program.Instructions.push_back(address);
+					delete statement.Value;
 				}
 				else 
 				{
-					logging("Unknown variable found!");
-					return;
+					logging("Not addressed variable found!", label->Position);
+					return false;
 				}
 			}
 		}
@@ -190,19 +214,24 @@ namespace charlie {
 				auto itAddress = statement.Arguments.begin();
 				assert(itAddress->Value->TokenType == Base::TokenTypeEnum::Label);
 				
-				int address = dynamic_cast<Label*>(itAddress->Value)->Address;
-				enroleStatement(*++itAddress, count);
+				int address = dynamic_cast<Label*>(itAddress->Value)->RegAddress();
+				if (!enroleStatement(*++itAddress, count))
+					return false;
 				_program.Instructions.push_back(InstructionEnums::IntCopy);
 				_program.Instructions.push_back(address);
 			}
 			else {
 				for (auto it = statement.Arguments.begin(); it != statement.Arguments.end(); ++it)
-					enroleStatement(*it, count);
+				{
+					if (!enroleStatement(*it, count))
+						return false;
+				}
 				_program.Instructions.push_back(statement.Value->ByteCode());
 			}
 			delete statement.Value;
 			++count;
 		}
+		return true;
 	}
 
 	int Compiler::Run(int argn, char** argv) {

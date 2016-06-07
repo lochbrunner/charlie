@@ -38,7 +38,7 @@ namespace charlie {
 		public:
 			program::Scope main;
 
-			FunctionDefinition();
+			FunctionDefinition(Scope *pParent);
 		};
 	}
 }

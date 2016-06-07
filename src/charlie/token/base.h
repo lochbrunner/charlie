@@ -31,6 +31,7 @@
 #define CHARLIE_TOKEN_BASE_H
 
 #include <string>
+#include <functional>
 
 #include "../program/variableDec.h"
 
@@ -229,7 +230,7 @@ namespace charlie {
 			Label(std::string& labelString, CodePostion& position);
 			std::string LabelString;
 			KindEnum Kind;
-			int Address;
+			std::function<int()> RegAddress;
 
 			virtual std::string ToString();
 			virtual int ByteCode();

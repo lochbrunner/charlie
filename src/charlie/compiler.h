@@ -58,7 +58,7 @@ namespace charlie {
 
 	private:
 		bool compile();
-		void enroleStatement(program::Statement& statement, int& count);
+		bool enroleStatement(program::Statement& statement, int& count);
 		
 		program::UnresolvedProgram _program;
 	};

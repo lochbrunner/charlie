@@ -35,10 +35,10 @@ namespace charlie {
 
 		using namespace std;
 
-		FunctionDec::FunctionDec(std::string &label, VariableDec::TypeEnum imageType, std::list<VariableDec> &argumentType)
-			: Label(label), ImageType(imageType), ArgumentType(argumentType), HasDefinition(false){}
-		FunctionDec::FunctionDec(std::string &label, VariableDec::TypeEnum imageType)
-			: Label(label), ImageType(imageType), HasDefinition(false)
+		FunctionDec::FunctionDec(std::string &label, VariableDec::TypeEnum imageType, std::list<VariableDec> &argumentType, Scope* pParent)
+			: Label(label), ImageType(imageType), ArgumentType(argumentType), HasDefinition(false), Definition(pParent){}
+		FunctionDec::FunctionDec(std::string &label, VariableDec::TypeEnum imageType, Scope* pParent)
+			: Label(label), ImageType(imageType), HasDefinition(false), Definition(pParent)
 		{
 			ArgumentType = std::list<VariableDec>();
 		}

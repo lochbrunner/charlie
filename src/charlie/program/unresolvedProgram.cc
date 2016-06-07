@@ -31,17 +31,14 @@ namespace charlie {
 	namespace program {
 
 		using namespace std;
-		//using namespace token;
 
 		UnresolvedProgram::UnresolvedProgram() : 
-			Instructions(), FunctionDecs(), VariableDecs()
+			Instructions(), Root(0), FunctionDecs()
 		{
 		}
 		void UnresolvedProgram::Clear()
 		{
-			Instructions.clear();
 			FunctionDecs.clear();
-			VariableDecs.clear();
 		}
 	}
 }

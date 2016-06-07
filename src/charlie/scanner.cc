@@ -160,12 +160,12 @@ namespace charlie {
 					getNextWord(code, length, pos, word, wordType);
 					if (wordType == WordType::Semikolon) {
 						++pos;
-						_pProgram->FunctionDecs.push_back(FunctionDec(variableName, type, args));
+						_pProgram->FunctionDecs.push_back(FunctionDec(variableName, type, args, &_pProgram->Root));
 						continue;
 					}
 					else if(wordType == WordType::Bracket && code[pos] == '{') {
 						++pos;
-						auto dec = FunctionDec(variableName, type, args);
+						auto dec = FunctionDec(variableName, type, args, &_pProgram->Root);
 						// TODO: copy arguments into variables
 						pos = getFunctionDefinition(code, length, pos, dec.Definition);
 						dec.HasDefinition = true;
@@ -183,7 +183,13 @@ namespace charlie {
 				else if (code[pos] == ';') {
 					++pos;
 					VariableDec dec = VariableDec(variableName, type);
-					_pProgram->VariableDecs.push_back(dec);
+					_pProgram->Root.AddVariableDec(dec);
+				}
+				else if (word.length() == 1 && word[0] == '=') {
+					VariableDec dec = VariableDec(variableName, type);
+					_pProgram->Root.AddVariableDec(dec);
+					--pos;
+					getStatement(code, length, pos, _pProgram->Root, variableName);
 				}
 				else {
 					stringstream st;
@@ -642,7 +648,9 @@ namespace charlie {
 		int num = getStatemantTokens(code, length, pos, tokens);
 		if (num > 0)
 		{
-			auto statement = treeifyStatement(tokens.Arguments, prog);
+			Statement statement = 0;
+			if (!treeifyStatement(tokens.Arguments, prog, statement))
+				return false;
 			prog.Statements.push_back(statement);
 		}
 		else if (num < 0)
@@ -650,10 +658,11 @@ namespace charlie {
 		return true;
 	}
 
-	Statement Scanner::treeifyStatement(list<Statement> &linearStatements, program::Scope& scope)
+	bool Scanner::treeifyStatement(list<Statement> &linearStatements, program::Scope& scope, Statement& statement)
 	{
 		if (++(linearStatements.begin()) == linearStatements.end() && linearStatements.begin()->Value->Finished) {
-			return *linearStatements.begin();
+			statement = *linearStatements.begin();
+			return true;
 		}
 
 		int maxPriority = 1;
@@ -672,11 +681,12 @@ namespace charlie {
 			if (maxPriority == 0)
 			{
 				if (++(linearStatements.begin()) == linearStatements.end() && linearStatements.begin()->Value->Finished) {
-					return *linearStatements.begin();
+					statement = *linearStatements.begin();
+					return true;
 				}
 				else {
 					logging("Could not proceed statement", linearStatements.begin()->Value->Position);
-					return 0;
+					return false;
 				}
 			}
 
@@ -708,13 +718,16 @@ namespace charlie {
 					if (++(functionNode.Arguments.begin()) == functionNode.Arguments.end())
 					{
 						functionNode.Value->Finished = true;
-						return Statement(functionNode);
+						statement = functionNode;
+						return true;
 					}
 					else
 					{
-						auto arg = treeifyStatement(functionNode.Arguments, scope);
+						if(!treeifyStatement(functionNode.Arguments, scope, statement))
+							return false;
 						functionNode.Value->Finished = true;
-						return Statement(functionNode);
+						statement = functionNode;
+						return true;
 					}
 				}
 				break;
@@ -728,18 +741,18 @@ namespace charlie {
 					if (prev == linearStatements.end())
 					{
 						logging("Missing symbol on the left side of a operator");
-						return 0;
+						return false;
 					}
 					if (post == linearStatements.end())
 					{
 						logging("Missing symbol on the right side of a operator");
-						return 0;
+						return false;
 					}
 
 					if (!tryGettingTypeOfVariable(prev->Value, scope))
-						return 0;
+						return false;
 					if(!tryGettingTypeOfVariable(post->Value, scope))
-						return 0;
+						return false;
 
 					if (prev->Value->Finished && prev->Value->Type == VariableDec::Int) {
 						if (post->Value->Finished && post->Value->Type == VariableDec::Int) {
@@ -753,13 +766,13 @@ namespace charlie {
 						}
 						else {
 							logging("Right symbol should be an int!");
-							return 0;
+							return false;
 						}
 					}
 					else
 					{
 						logging("Unspecified error");
-						return 0;
+						return false;
 					}
 				}
 				break;
@@ -771,7 +784,7 @@ namespace charlie {
 		}
 
 
-		return 0;
+		return true;
 	}
 
 	int Scanner::getStatemantTokens(string const& code, int length, int& pos, Statement& linearStatements) {
@@ -1001,15 +1014,17 @@ namespace charlie {
 	bool Scanner::tryGettingTypeOfVariable(token::Base *token, program::Scope& scope) {
 		if (token->Type == VariableDec::Length && token->TokenType == Base::TokenTypeEnum::Label)
 		{
-			auto it = scope.VariableDecs.find(VariableDec(dynamic_cast<Label*>(token)->LabelString, VariableDec::Length));
-			if (it == scope.VariableDecs.end()) {
+			auto dec = VariableDec(dynamic_cast<Label*>(token)->LabelString, VariableDec::Length);
+			auto info = scope.GetVariableInfo(dec);
+
+			if (info.Offset == 0) {
 				stringstream st;
 				st << "Unknown Variable found: \"" << dynamic_cast<Label*>(token)->LabelString << "\"!";
 				logging(st.str());
 				return false;
 			}
-			token->Type = it->first.ImageType;
-			dynamic_cast<Label*>(token)->Address = it->second;
+			token->Type = info.Type;
+			dynamic_cast<Label*>(token)->RegAddress = info.Offset;
 			dynamic_cast<Label*>(token)->Kind = Label::Variable;
 		}
 		return true;

@@ -33,6 +33,7 @@
 
 #include "functionDec.h"
 #include "variableDec.h"
+#include "scopeRoutine.h"
 
 #include "..\common\exportDefs.h"
 
@@ -41,10 +42,9 @@ namespace charlie {
 		class UnresolvedProgram {
 		public:
 			std::list<int> Instructions;
-			//std::map<int, FunctionDec> FunctionDecs;
-			//std::map<int, VariableDec> VariableDecs;
 			std::list<FunctionDec> FunctionDecs;
-			std::list<VariableDec> VariableDecs;
+
+			Scope Root;
 
 			xprt UnresolvedProgram();
 			xprt void Clear();

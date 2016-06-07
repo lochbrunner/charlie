@@ -30,6 +30,7 @@
 
 #include <list>
 #include <map>
+#include <functional>
 
 #include "variableDec.h"
 #include "statement.h"
@@ -38,12 +39,22 @@ namespace charlie {
 	namespace program {
 		class Scope {
 		public:
-			Scope();
+			struct VariableInfo {
+				VariableInfo(std::function<int()> offset, VariableDec::TypeEnum type);
+				VariableDec::TypeEnum Type;
+				std::function<int()> Offset;
+			};
+
+			Scope(Scope* pParant);
 			int CountVariableDecs;
 			std::list<Statement> Statements;
-			std::map<VariableDec, int, VariableDec::comparer_only_name> VariableDecs;
 
+			VariableInfo GetVariableInfo(VariableDec& dec);
 			int AddVariableDec(VariableDec& dec);
+			int ParentOffset() const;
+		private:
+			std::map<VariableDec, int, VariableDec::comparer_only_name> VariableDecs;
+			Scope* _pParant;
 		};
 	}
 }

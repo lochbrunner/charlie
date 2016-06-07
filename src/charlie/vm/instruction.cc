@@ -38,13 +38,17 @@ namespace charlie {
 			array<functionType, InstructionEnums::Length> types = array<functionType, InstructionEnums::Length>();
 			types[InstructionEnums::IncreaseRegister] = [](State& state)
 			{
-				state.reg.push_back(0);
+				int currentSize = state.reg.size();
+				int addition = state.program[++state.pos];
+				state.reg.resize(currentSize + addition);
 				++state.pos;
 				return 0;
 			};
 			types[InstructionEnums::DecreaseRegister] = [](State& state)
 			{
-				state.reg.pop_back();
+				int currentSize = state.reg.size();
+				int remove = state.program[++state.pos];
+				state.reg.resize(currentSize - remove);
 				++state.pos;
 				return 0;
 			};
@@ -181,10 +185,13 @@ namespace charlie {
 			switch (instruction)
 			{
 			case InstructionEnums::IncreaseRegister:
-				comments.push("Increases the register space");
+				comments.push("Increases the register space ...");
+				comments.push("... size to increase");
 				break;
 			case InstructionEnums::DecreaseRegister:
-				comments.push("Decreases the register space");
+				comments.push("Decreases the register space ...");
+				comments.push("... size to decrease");
+
 				break;
 			case InstructionEnums::Push:
 				comments.push("Pushs the value ...");
@@ -235,6 +242,6 @@ namespace charlie {
 		}
 		const array<functionType, InstructionEnums::Length> InstructionManager::Instructions = InstructionManager::Create();
 
-		State::State(): aluStack(), callStack(), reg(), program(), pos(0), pExternalFunctionManager(0){}
+		State::State(): aluStack(), callStack(), reg(0), program(), pos(0), pExternalFunctionManager(0){}
 	}
 }
