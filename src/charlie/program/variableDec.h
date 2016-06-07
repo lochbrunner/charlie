@@ -49,11 +49,15 @@ namespace charlie {
 			};
 
 			struct comparer {
-				bool operator()(VariableDec &a, VariableDec &b);
+				bool operator()(const VariableDec& a, const VariableDec& b);
 			};
 
 			struct comparer_only_type {
-				bool operator()(VariableDec &a, VariableDec &b);
+				bool operator()(const VariableDec& a, const VariableDec& b);
+			};
+
+			struct comparer_only_name {
+				bool operator()(const VariableDec& a, const VariableDec& b);
 			};
 
 			std::string Name;

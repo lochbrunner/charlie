@@ -56,13 +56,16 @@ namespace charlie {
 			}
 			bool saveProgramAscii(std::string const &filename, program::UnresolvedProgram & program)
 			{
+				list<int>::const_iterator it = program.Instructions.begin();
+				if (it == program.Instructions.end())
+					return false;
+				
 				std::string fullfilename = filename;
 				fullfilename.append(".bc.txt");
 				ofstream file(fullfilename);
 				if (!file.is_open()) {
 					return false;
 				}
-				list<int>::const_iterator it = program.Instructions.begin();
 				file << (*it) << "\t// Version\n";
 				auto comments = queue<const char*>();
 				for (++it; it != program.Instructions.end(); ++it) {

@@ -223,6 +223,7 @@ namespace charlie {
 			Label(std::string& labelString);
 			std::string LabelString;
 			KindEnum Kind;
+			int Address;
 
 			virtual std::string ToString();
 			virtual int ByteCode();

@@ -36,18 +36,38 @@ namespace charlie {
 		array<functionType, InstructionEnums::Length> InstructionManager::Create() {
 
 			array<functionType, InstructionEnums::Length> types = array<functionType, InstructionEnums::Length>();
+			types[InstructionEnums::IncreaseRegister] = [](State& state)
+			{
+				state.reg.push_back(0);
+				++state.pos;
+				return 0;
+			};
+			types[InstructionEnums::DecreaseRegister] = [](State& state)
+			{
+				state.reg.pop_back();
+				++state.pos;
+				return 0;
+			};
 			types[InstructionEnums::Push] = [](State& state)
 			{
 				int adress = state.program[++state.pos];
-				if (static_cast<int>(state.reg.size()) > adress)
+				if (static_cast<int>(state.reg.size()) > adress) {
 					state.aluStack.push(state.reg[adress]);
+					++state.pos;
+					return 0;
+				}
 				else
+				{
 					state.pos = -2;
+					return -1;
+				}
 			};
 			types[InstructionEnums::PushConst] = [](State& state) 
 			{
 				int i = state.program[++state.pos];
 				state.aluStack.push(i);
+				++state.pos;
+				return 0;
 			};
 			types[InstructionEnums::Pop] = [](State& state)
 			{
@@ -57,31 +77,56 @@ namespace charlie {
 					int value = state.aluStack.top();
 					state.aluStack.pop();
 					state.reg[adress] = value;
+					++state.pos;
+					return 0;
 				}
 				else
+				{
 					state.pos = -2;
+					return -1;
+				}
 			};
 			types[InstructionEnums::Call] = [](State& state) 
 			{
 				state.callStack.push(state.pos);
 				int address = state.program[++state.pos];
 				state.pos = address;
+				return 0;
 			};
 			types[InstructionEnums::Return] = [](State& state) 
 			{
 				// Only for testing
 				state.callStack.pop();
 				if (state.callStack.empty())
+				{
 					state.pos = -2;
+					return -1;
+				}
 				else
 					state.pos = state.callStack.top();
+				return 0;
 			};
 			types[InstructionEnums::CallEx] = [](State& state) 
 			{
 				int id = state.program[++state.pos];
 				if(state.pExternalFunctionManager != 0)
 					state.pExternalFunctionManager->Invoke(id, state.aluStack);
-
+				++state.pos;
+				return 0;
+			};
+			types[InstructionEnums::IntCopy] = [](State& state) {
+				int value = state.aluStack.top();
+				state.aluStack.pop();
+				int address = state.aluStack.top();
+				state.aluStack.pop();
+				if (state.reg.size() > static_cast<size_t>(address))
+				{
+					state.reg[address] = value;
+					++state.pos;
+					return 0;
+				}
+				else 
+					return -1;
 			};
 			types[InstructionEnums::IntAdd] = [](State& state) 
 			{
@@ -90,6 +135,8 @@ namespace charlie {
 				int b = state.aluStack.top();
 				state.aluStack.pop();
 				state.aluStack.push(a+b);
+				++state.pos;
+				return 0;
 			};
 			types[InstructionEnums::IntSubstract] = [](State& state)
 			{
@@ -98,6 +145,8 @@ namespace charlie {
 				int a = state.aluStack.top();
 				state.aluStack.pop();
 				state.aluStack.push(a - b);
+				++state.pos;
+				return 0;
 			};
 			types[InstructionEnums::IntMultiply] = [](State& state) 
 			{
@@ -106,6 +155,8 @@ namespace charlie {
 				int b = state.aluStack.top();
 				state.aluStack.pop();
 				state.aluStack.push(a * b);
+				++state.pos;
+				return 0;
 			};
 			types[InstructionEnums::IntDivide] = [](State& state)
 			{
@@ -114,6 +165,8 @@ namespace charlie {
 				int a = state.aluStack.top();
 				state.aluStack.pop();
 				state.aluStack.push(a / b);
+				++state.pos;
+				return 0;
 			};
 			
 
@@ -127,6 +180,12 @@ namespace charlie {
 		{
 			switch (instruction)
 			{
+			case InstructionEnums::IncreaseRegister:
+				comments.push("Increases the register space");
+				break;
+			case InstructionEnums::DecreaseRegister:
+				comments.push("Decreases the register space");
+				break;
 			case InstructionEnums::Push:
 				comments.push("Pushs the value ...");
 				comments.push("... at adress");
@@ -153,6 +212,9 @@ namespace charlie {
 				break;
 			case InstructionEnums::Return:
 				comments.push("Returns");
+				break;
+			case InstructionEnums::IntCopy:
+				comments.push("Copies integer to register");
 				break;
 			case InstructionEnums::IntAdd:
 				comments.push("Adds two integers");

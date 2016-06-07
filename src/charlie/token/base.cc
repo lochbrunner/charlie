@@ -169,7 +169,9 @@ namespace charlie {
 					return vm::IntDivide;
 				return -1;
 			case charlie::token::Operator::Copy:
-				break;
+				if (Type == VariableDec::Int)
+					return vm::IntCopy;
+				return -1;
 			case charlie::token::Operator::Equal:
 				break;
 			case charlie::token::Operator::NotEqual:
@@ -219,7 +221,8 @@ namespace charlie {
 		{
 			return -1;
 		}
-		Label::Label(string& labelString) : Base(TokenTypeEnum::Label, 9), LabelString(labelString), Kind(Unknown){}
+		Label::Label(string& labelString) : 
+			Base(TokenTypeEnum::Label, 9), LabelString(labelString), Kind(Unknown), Address(-1) {}
 		std::string Label::ToString()
 		{
 			return string();

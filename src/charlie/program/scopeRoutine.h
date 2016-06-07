@@ -39,9 +39,11 @@ namespace charlie {
 		class Scope {
 		public:
 			Scope();
-
+			int CountVariableDecs;
 			std::list<Statement> Statements;
-			std::map<int, VariableDec> VariableDecs;
+			std::map<VariableDec, int, VariableDec::comparer_only_name> VariableDecs;
+
+			int AddVariableDec(VariableDec& dec);
 		};
 	}
 }

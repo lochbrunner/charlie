@@ -39,7 +39,7 @@ compiler.Run();
 
 ## Supported Features
 
-The [samples](charlie/samples) in show the currently supported features of that tool set. Or [klick here](charlie/docs/features.md) for more informations.
+The [samples](/samples) in show the currently supported features of that tool set. Or [klick here](/docs/features.md) for more informations.
 
 ## Contributing Code
 

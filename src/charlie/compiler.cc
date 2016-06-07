@@ -62,37 +62,37 @@ namespace charlie {
 		if (!io::ascii2string(filename, code)) {
 			std::stringstream str;
 			str << "Can not open file \"" << filename << "\"";
-			log(str.str());
+			logOut(str.str());
 			return false;
 		}
 
 		Scanner scanner = Scanner(&_program, &ExternalFunctionManager, _messageDelegate);
 
 		if(!scanner.Scan(code)) {
-			log("Scanning failed!");
+			logOut("Scanning failed!");
 			return false;
 		}
 		if (!compile()) {
-			log("Compiling failed!");
+			logOut("Compiling failed!");
 			return false;
 		}
 
-		log("Building succeded!");
+		logOut("Building succeded!");
 		return true;
 	}
 
-	void Compiler::SaveProgram(std::string const &filename, bool binary) {
+	bool Compiler::SaveProgram(std::string const &filename, bool binary) {
 		if(binary)
-			io::saveProgramBinary(filename, _program);
+			return io::saveProgramBinary(filename, _program);
 		else
-			io::saveProgramAscii(filename, _program);
+			return io::saveProgramAscii(filename, _program);
 	}
 
 	bool Compiler::compile() {
 		_program.Instructions.push_back(BYTECODE_VERSION);
 		_program.Instructions.push_back(InstructionEnums::Call);
 		// Junp address will be inserted at the end
-		int count = 1;
+		int count = 2;
 
 		auto funcPositions = std::map<FunctionDec, int, FunctionDec::comparer>();
 
@@ -100,13 +100,20 @@ namespace charlie {
 			if (!itF->HasDefinition) {
 				stringstream st;
 				st << "Missing defintion for function: " << (*itF);
-				log(st.str());
+				logging(st.str());
 				return false;
 			}
 			funcPositions.insert(make_pair((*itF), count));
+			for (auto itV = itF->Definition.main.VariableDecs.begin(); itV != itF->Definition.main.VariableDecs.end(); ++itV) {
+				_program.Instructions.push_back(InstructionEnums::IncreaseRegister);
+			}
+			
 			// Insert variable declaration and defintion of the argument list
 			for (auto itI = itF->Definition.main.Statements.begin(); itI != itF->Definition.main.Statements.end(); ++itI) {
 				enroleStatement(*itI, count);
+			}
+			for (auto itV = itF->Definition.main.VariableDecs.begin(); itV != itF->Definition.main.VariableDecs.end(); ++itV) {
+				_program.Instructions.push_back(InstructionEnums::DecreaseRegister);
 			}
 			_program.Instructions.push_back(InstructionEnums::Return);
 			++count;
@@ -118,7 +125,7 @@ namespace charlie {
 		auto main = funcPositions.find(FunctionDec(string("main"), VariableDec::Int, args));
 		if (main == funcPositions.end())
 		{
-			log("Can not find entry point");
+			logging("Can not find entry point");
 			return false;
 		}
 
@@ -160,6 +167,18 @@ namespace charlie {
 					++count;
 				}
 			}
+			else
+			{
+				Label* label = dynamic_cast<Label*>(statement.Value);
+				if (label->Address > -1) {
+					_program.Instructions.push_back(InstructionEnums::PushConst);
+					_program.Instructions.push_back(label->Address);
+				}
+				else 
+				{
+					logging("Unknown variable found!");
+				}
+			}
 		}
 		else if(tokenType == Base::TokenTypeEnum::Operator)
 		{
@@ -172,16 +191,19 @@ namespace charlie {
 	}
 
 	int Compiler::Run(int argn, char** argv) {
+		list<int>::const_iterator it = _program.Instructions.begin();
+		if (it == _program.Instructions.end())
+			return false;
+
 		auto state = State();
 		state.pExternalFunctionManager = &ExternalFunctionManager;
 		state.aluStack.push(argn);
 		state.aluStack.push(reinterpret_cast<int>(argv));
 
-		list<int>::const_iterator it = _program.Instructions.begin();
 		int version = (*it++);
 
 		if (version != BYTECODE_VERSION) {
-			log("Wrong bytecode version");
+			logging("Wrong bytecode version");
 			return -1;
 		}
 
@@ -191,8 +213,9 @@ namespace charlie {
 
 		while (state.pos>-1/* && !state.callStack.empty()*/)
 		{
-			InstructionManager::Instructions[state.program[state.pos]](state);
-			++state.pos;
+			int r = InstructionManager::Instructions[state.program[state.pos]](state);
+			if (r < 0)
+				break;
 		}
 		if (state.aluStack.empty())
 			return 0;
@@ -200,14 +223,17 @@ namespace charlie {
 	}
 
 	int Compiler::Run() {
+		list<int>::const_iterator it = _program.Instructions.begin();
+		if (it == _program.Instructions.end())
+			return false;
+
 		auto state = State();
 		state.pExternalFunctionManager = &ExternalFunctionManager;
 
-		list<int>::const_iterator it = _program.Instructions.begin();
 		int version = (*it++);
 
 		if (version != BYTECODE_VERSION) {
-			log("Wrong bytecode version");
+			logging("Wrong bytecode version");
 			return -1;
 		}
 
@@ -217,8 +243,9 @@ namespace charlie {
 
 		while (state.pos>-1/* && !state.callStack.empty()*/)
 		{
-			InstructionManager::Instructions[state.program[state.pos]](state);
-			++state.pos;
+			int r = InstructionManager::Instructions[state.program[state.pos]](state);
+			if (r < 0)
+				break;
 		}
 		if(state.aluStack.empty())
 			return 0;

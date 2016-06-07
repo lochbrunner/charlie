@@ -44,15 +44,15 @@ namespace charlie {
 			_messageDelegate = messageDelegate;
 		}
 
-		void LogginComponent::log(string const &message)
+		void LogginComponent::logOut(string const &message)
 		{
 			if (_messageDelegate != NULL)
 				_messageDelegate(message);
 		}
-		void LogginComponent::log(std::string const &message, const char* codefileName, int lineNumber) {
+		void LogginComponent::logOut(std::string const &message, const char* codefileName, int lineNumber) {
 			if (_messageDelegate != NULL) {
 				stringstream st;
-				st << codefileName[0] << setfill('0') << setw(4) << lineNumber << ": " << message;
+				st << static_cast<char>(toupper(codefileName[0])) << setfill('0') << setw(4) << lineNumber << ": " << message;
 				_messageDelegate(st.str());
 			}
 		}

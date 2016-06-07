@@ -130,7 +130,7 @@ namespace charlie {
 			{
 				stringstream st;
 				st << "Unexpected word \"" << word << "\" found!";
-				log(st.str());
+				logging(st.str());
 				return false;
 			}
 
@@ -143,7 +143,7 @@ namespace charlie {
 				if (wordType != WordType::Name) {
 					stringstream st;
 					st << "Unexpected word \"" << word << "\" after type found!";
-					log(st.str());
+					logging(st.str());
 					return false;
 				}
 				auto variableName = word;
@@ -174,7 +174,7 @@ namespace charlie {
 
 					}
 					else {
-						log("Unexpected symbol after function declaration");
+						logging("Unexpected symbol after function declaration");
 						return false;
 					}
 
@@ -187,7 +187,7 @@ namespace charlie {
 				else {
 					stringstream st;
 					st << "Unexpected word \"" << word << "\" after variable name";
-					log(st.str());
+					logging(st.str());
 					return false;
 				}
 			}
@@ -195,7 +195,7 @@ namespace charlie {
 			{
 				stringstream st;
 				st << "Unsupported type \"" << word << "\" found!";
-				log(st.str());
+				logging(st.str());
 				return false;
 			}
 		}
@@ -251,7 +251,7 @@ namespace charlie {
 						continue;
 					else
 					{
-						log("No newline in a string allowed!");
+						logging("No newline in a string allowed!");
 						pos = -1;
 						return;
 					}
@@ -286,7 +286,7 @@ namespace charlie {
 					}
 					else
 					{
-						log("Why is there a letter after a number?");
+						logging("Why is there a letter after a number?");
 						pos = -1;
 						return;
 					}
@@ -320,7 +320,7 @@ namespace charlie {
 					continue;
 				}
 				else {
-					log("Could not understand why there is dot?");
+					logging("Could not understand why there is dot?");
 					pos = -1;
 					return;
 				}
@@ -344,7 +344,7 @@ namespace charlie {
 						pos = endOfBlockComments(code, length, pos);
 						if (pos == -1)
 						{
-							log("Could not find end of block comment!");
+							logging("Could not find end of block comment!");
 							return;
 						}
 						if (type != WordType::None)
@@ -394,13 +394,13 @@ namespace charlie {
 								pos += 3;
 							}
 							else {
-								log("A String must be embeddend in \" and not in \'");
+								logging("A String must be embeddend in \" and not in \'");
 								pos = -1;
 								return;
 							}
 						}
 						else {
-							log("Error after \'\\");
+							logging("Error after \'\\");
 							pos = -1;
 							return;
 						}
@@ -412,14 +412,14 @@ namespace charlie {
 							pos += 2;
 						}
 						else {
-							log("A String must be embeddend in \" and not in \'");
+							logging("A String must be embeddend in \" and not in \'");
 							pos = -1;
 							return;
 						}
 					}
 				}
 				else {
-					log("Error after \'");
+					logging("Error after \'");
 					pos = -1;
 					return;
 				}
@@ -439,7 +439,7 @@ namespace charlie {
 					continue;
 				stringstream st;
 				st << "Unkown character found \'" << c << "\'";
-				log(st.str());
+				logging(st.str());
 				pos = -1;
 				return;
 			}
@@ -492,7 +492,7 @@ namespace charlie {
 				if(first)
 					break;
 				else {
-					log("Missing Type after comma");
+					logging("Missing Type after comma");
 					return -1;
 				}
 			}
@@ -527,24 +527,24 @@ namespace charlie {
 							break;
 						}
 						else {
-							log("Unexpected symbols after variable name");
+							logging("Unexpected symbols after variable name");
 							return -1;
 						}
 					}
 					else {
-						log("Unexpected symbols after type");
+						logging("Unexpected symbols after type");
 						return -1;
 					}
 				}
 				else {
 					stringstream st;
 					st << "Unknown word type \"" << typeBuf << "\" !";
-					log(st.str());
+					logging(st.str());
 					return -1;
 				}
 			}
 			else {
-				log("Unexpected word in argument list.");
+				logging("Unexpected word in argument list.");
 				return -1;
 			}
 			first = false;
@@ -588,22 +588,41 @@ namespace charlie {
 			}
 			else if (wordType != WordType::Name) 
 			{
-				log("Unexpected symbol in function definition");
+				logging("Unexpected symbol in function definition");
 				return -1;
 			}
 			wordBuffer = word.c_str();
 			if (TypeDict::Contains(wordBuffer))
 			{
 				auto type = TypeDict::Get(wordBuffer);
-				return -1;
-
+				string variableName;
+				getNextWord(code, length, pos, variableName, wordType);
+				
+				if (wordType == WordType::Name)
+				{
+					definition.main.AddVariableDec(VariableDec(variableName, type));
+					if (!getStatement(code, length, pos, definition.main, variableName))
+					{
+						return -1;
+					}
+				}
+				else if (wordType == WordType::Semikolon) 
+				{
+					++pos;
+					continue;
+				}
+				else
+				{
+					logging("Unexpected symbol in function definition");
+					return -1;
+				}
 			}
 			else if (ControlFlowDict::Contains(wordBuffer))
 			{
 				return -1;
 			}
 			else {
-				if (!getStatement(code, length, pos, definition.main, word)) 
+				if (!getStatement(code, length, pos, definition.main, word))
 				{
 					return -1;
 				}
@@ -619,16 +638,18 @@ namespace charlie {
 
 		tokens.Arguments.push_back(new Label(word));
 
-		getStatemantTokens(code, length, pos, tokens);
-
-		auto statement = treeifyStatement(tokens.Arguments);
-
-		prog.Statements.push_back(statement);
-
+		int num = getStatemantTokens(code, length, pos, tokens);
+		if (num > 0)
+		{
+			auto statement = treeifyStatement(tokens.Arguments, prog);
+			prog.Statements.push_back(statement);
+		}
+		else if (num < 0)
+			return false;
 		return true;
 	}
 
-	Statement Scanner::treeifyStatement(list<Statement> &linearStatements)
+	Statement Scanner::treeifyStatement(list<Statement> &linearStatements, program::Scope& scope)
 	{
 		if (++(linearStatements.begin()) == linearStatements.end() && linearStatements.begin()->Value->Finished) {
 			return *linearStatements.begin();
@@ -653,7 +674,7 @@ namespace charlie {
 					return *linearStatements.begin();
 				}
 				else {
-					log("Could not proceed statement", __FILE__, __LINE__);
+					logging("Could not proceed statement");
 				}
 			}
 
@@ -665,7 +686,12 @@ namespace charlie {
 				// Function or variable?
 				itTemp = itMax;
 				++itTemp;
-				if (isBracketToken(itTemp->Value, Bracket::Opening, Bracket::Round))
+				if (itTemp == linearStatements.end() || !isBracketToken(itTemp->Value, Bracket::Opening, Bracket::Round))
+				{
+					dynamic_cast<Label*>(itMax->Value)->Kind = Label::Variable;
+					itMax->Value->Finished = true;
+				}
+				else
 				{
 					auto functionNode = *itMax;
 					dynamic_cast<Label*>(functionNode.Value)->Kind = Label::Function;
@@ -678,16 +704,10 @@ namespace charlie {
 					}
 					else
 					{
-						auto arg = treeifyStatement(functionNode.Arguments);
-						//functionNode.Arguments.push_back(arg);
+						auto arg = treeifyStatement(functionNode.Arguments, scope);
 						functionNode.Value->Finished = true;
 						return Statement(functionNode);
 					}
-				}
-				else 
-				{
-					dynamic_cast<Label*>(itMax->Value)->Kind = Label::Variable;
-					//TODO
 				}
 				break;
 			case Base::TokenTypeEnum::Operator:
@@ -696,6 +716,23 @@ namespace charlie {
 					--prev;
 					std::list<Statement>::const_iterator post = itMax;
 					++post;
+
+					if (prev == linearStatements.end())
+					{
+						logging("Missing symbol on the left side of a operator");
+						return 0;
+					}
+					if (post == linearStatements.end())
+					{
+						logging("Missing symbol on the right side of a operator");
+						return 0;
+					}
+
+					if (!tryGettingTypeOfVariable(prev->Value, scope))
+						return 0;
+					if(!tryGettingTypeOfVariable(post->Value, scope))
+						return 0;
+
 					if (prev->Value->Finished && prev->Value->Type == VariableDec::Int) {
 						if (post->Value->Finished && post->Value->Type == VariableDec::Int) {
 
@@ -707,10 +744,15 @@ namespace charlie {
 							linearStatements.erase(post);
 						}
 						else {
-							log("Right symbol should be an int!", __FILE__, __LINE__);
+							logging("Right symbol should be an int!");
+							return 0;
 						}
 					}
-
+					else
+					{
+						logging("Unspecified error");
+						return 0;
+					}
 				}
 				break;
 			case Base::TokenTypeEnum::ConstantInt:
@@ -724,10 +766,11 @@ namespace charlie {
 		return 0;
 	}
 
-	void Scanner::getStatemantTokens(string const& code, int length, int& pos, Statement& linearStatements) {
+	int Scanner::getStatemantTokens(string const& code, int length, int& pos, Statement& linearStatements) {
 		string  word;
 		WordType wordType;
 		int i;
+		int count = 0;
 
 		int bracketStateRound = 0;
 		int bracketStateSquare = 0;
@@ -735,6 +778,7 @@ namespace charlie {
 
 		do {
 			getNextWord(code, length, pos, word, wordType);
+			++count;
 			switch (wordType)
 			{
 			case WordType::Bracket:
@@ -747,8 +791,8 @@ namespace charlie {
 				case ')':
 					if (bracketStateRound <= 0)
 					{
-						log("There is nothing to close with a round bracket", __FILE__, __LINE__);
-						return;
+						logging("There is nothing to close with a round bracket");
+						return -1;
 					}
 					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Round, Bracket::Closing));
 					--bracketStateRound;
@@ -760,8 +804,8 @@ namespace charlie {
 				case ']':
 					if (bracketStateSquare <= 0)
 					{
-						log("There is nothing to close with a square bracket", __FILE__, __LINE__);
-						return;
+						logging("There is nothing to close with a square bracket");
+						return -1;
 					}
 					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Square, Bracket::Closing));
 					--bracketStateSquare;
@@ -773,8 +817,8 @@ namespace charlie {
 				case '}':
 					if (bracketStateCurly <= 0)
 					{
-						log("There is nothing to close with a curly bracket", __FILE__, __LINE__);
-						return;
+						logging("There is nothing to close with a curly bracket");
+						return -1;
 					}
 					linearStatements.Arguments.push_back(new token::Bracket(Bracket::Curly, Bracket::Closing));
 					--bracketStateCurly;
@@ -839,8 +883,8 @@ namespace charlie {
 						linearStatements.Arguments.push_back(new token::Operator(Operator::BitXor));
 						break;
 					default:
-						log("Unexpected operator type", __FILE__, __LINE__);
-						return;
+						logging("Unexpected operator type");
+						return -1;
 					}
 				}
 				else if (word.length() == 2 && word[1] == '=') {
@@ -880,8 +924,8 @@ namespace charlie {
 						linearStatements.Arguments.push_back(new token::Operator(Operator::XorTo));
 						break;
 					default:
-						log("Unexpected operator type", __FILE__, __LINE__);
-						return;
+						logging("Unexpected operator type");
+						return -1;
 					}
 				}
 				else if (word.length() == 2 && word[0] == '&' && word[1] == '&')
@@ -897,21 +941,22 @@ namespace charlie {
 				linearStatements.Arguments.push_back(new token::Constant(Constant::String, new string(word)));
 				break;
 			default:
-				log("Unexpected word type", __FILE__, __LINE__);
-				return;
+				logging("Unexpected word type");
+				return -1;
 			}
 
 
 		} while (wordType != WordType::Semikolon);
 		if (bracketStateRound != 0) {
-			log("There is still an open round bracket", __FILE__, __LINE__);
+			logging("There is still an open round bracket");
 		}
 		if (bracketStateSquare != 0) {
-			log("There is still an open square bracket", __FILE__, __LINE__);
+			logging("There is still an open square bracket");
 		}
 		if (bracketStateCurly != 0) {
-			log("There is still an open curly bracket", __FILE__, __LINE__);
+			logging("There is still an open curly bracket");
 		}
+		return count-1;
 	}
 
 
@@ -942,6 +987,22 @@ namespace charlie {
 
 		linearStatements.erase(itOpening, itClosing);
 
+		return true;
+	}
+
+	bool Scanner::tryGettingTypeOfVariable(token::Base *token, program::Scope& scope) {
+		if (token->Type == VariableDec::Length && token->TokenType == Base::TokenTypeEnum::Label)
+		{
+			auto it = scope.VariableDecs.find(VariableDec(dynamic_cast<Label*>(token)->LabelString, VariableDec::Length));
+			if (it == scope.VariableDecs.end()) {
+				stringstream st;
+				st << "Unknown Variable found: \"" << dynamic_cast<Label*>(token)->LabelString << "\"!";
+				logging(st.str());
+				return false;
+			}
+			token->Type = it->first.ImageType;
+			dynamic_cast<Label*>(token)->Address = it->second;
+		}
 		return true;
 	}
 }

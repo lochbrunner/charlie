@@ -52,6 +52,8 @@ namespace charlie {
 
 		enum InstructionEnums
 		{
+			IncreaseRegister,
+			DecreaseRegister,
 			Push,
 			PushConst,
 			Pop,
@@ -59,6 +61,7 @@ namespace charlie {
 			CallEx,
 			Jump,
 			Return,
+			IntCopy,
 			IntAdd,
 			IntSubstract,
 			IntMultiply,
@@ -66,7 +69,7 @@ namespace charlie {
 			Length
 		};
 
-		typedef std::function<void(State&)> functionType;
+		typedef std::function<int(State&)> functionType;
 
 		struct InstructionManager {
 			static std::array<functionType, InstructionEnums::Length> Create();

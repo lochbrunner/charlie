@@ -54,14 +54,19 @@ namespace charlie {
 			return typeStringArray[type];
 		}
 
-		bool VariableDec::comparer::operator()(VariableDec &a, VariableDec &b) {
+		bool VariableDec::comparer::operator()(const VariableDec& a, const VariableDec& b) {
 			if (a.ImageType == b.ImageType)
 				return std::strcmp(a.Name.c_str(), b.Name.c_str()) < 0;
 			return  a.ImageType < b.ImageType;
 		}
-		bool VariableDec::comparer_only_type::operator()(VariableDec & a, VariableDec & b)
+		bool VariableDec::comparer_only_type::operator()(const VariableDec& a, const VariableDec& b)
 		{
 			return a.ImageType < b.ImageType;
+		}
+
+		bool VariableDec::comparer_only_name::operator()(const VariableDec& a, const VariableDec& b)
+		{
+			return std::strcmp(a.Name.c_str(), b.Name.c_str()) < 0;
 		}
 	}
 }

@@ -49,7 +49,7 @@ namespace charlie {
 		xprt Compiler(std::function<void(std::string const &message)> messageDelegate);
 		/// Compiles the speciefed file
 		xprt bool Build(std::string const &filename);
-		xprt void SaveProgram(std::string const &filename, bool binary = true);
+		xprt bool SaveProgram(std::string const &filename, bool binary = true);
 
 		xprt int Run();
 		xprt int Run(int argn, char** argv);

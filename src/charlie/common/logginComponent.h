@@ -28,6 +28,8 @@
 #ifndef CHARLIE_COMMON_LOGGIN_COMPONENT_H
 #define CHARLIE_COMMON_LOGGIN_COMPONENT_H
 
+#define logging(x) logOut(x, __FILE__, __LINE__)
+
 #include <string>
 #include <functional>
 
@@ -41,8 +43,8 @@ namespace common {
 
 	protected:
 		std::function<void(std::string const &message)> _messageDelegate;
-		void log(std::string const &message);
-		void log(std::string const &message, const char* codefileName, int lineNumber);
+		void logOut(std::string const &message);
+		void logOut(std::string const &message, const char* codefileName, int lineNumber);
 	};
 }
 }

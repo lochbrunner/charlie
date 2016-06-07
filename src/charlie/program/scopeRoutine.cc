@@ -32,8 +32,13 @@ namespace charlie {
 		using namespace std;
 
 		Scope::Scope() :
-			Statements(), VariableDecs()
+			Statements(), VariableDecs(), CountVariableDecs(0)
 		{
+		}
+		int Scope::AddVariableDec(VariableDec& dec)
+		{
+			VariableDecs.insert(make_pair(dec, CountVariableDecs++));
+			return CountVariableDecs;
 		}
 	}
 }

@@ -78,10 +78,12 @@ namespace charlie {
 		int getFunctionDefinition(std::string const& code, int length, int pos, program::FunctionDefinition& definition);
 
 		bool getStatement(std::string const& code, int length, int& pos, program::Scope& prog, std::string& word);
-		void getStatemantTokens(std::string const& code, int length, int& pos, program::Statement& linearStatements);
-		program::Statement treeifyStatement(std::list<program::Statement>& linearStatements);
+		int getStatemantTokens(std::string const& code, int length, int& pos, program::Statement& linearStatements);
+		program::Statement treeifyStatement(std::list<program::Statement>& linearStatements, program::Scope& scope);
 
 		bool getBracket(std::list<program::Statement>& linearStatements, std::list<program::Statement>::const_iterator& itOpening, std::list<program::Statement>& outList);
+
+		inline bool tryGettingTypeOfVariable(token::Base *token, program::Scope& scope);
 
 		inline bool isLabelBeginning(char c);
 		inline bool isOperator(char c);

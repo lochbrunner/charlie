@@ -111,6 +111,7 @@ int main(int argn, char** argv)
 		return -1;
 	}
 
+	int result = 0;
 	if (command == Command::Build)
 	{
 		Compiler compiler = Compiler([](string const &message) {
@@ -118,17 +119,18 @@ int main(int argn, char** argv)
 		});
 
 		addExternalFunctions(compiler);
-
-		compiler.Build(entry);
-		compiler.SaveProgram(entry, flag & Flag::Binary);
-		cout << "Saving program to " << entry << (flag & Flag::Binary? ".bc" : ".bc.txt") << endl;
-		cout << "Running program ..\n\n";
-		compiler.Run();
-		cout << endl;
-		if(flag & Flag::LogOutput)
-			Log::Save(entry);
+		if (compiler.Build(entry))
+		{
+			if (compiler.SaveProgram(entry, flag & Flag::Binary))
+				cout << "Saving program to " << entry << (flag & Flag::Binary ? ".bc" : ".bc.txt") << endl;
+			cout << "Running program ..\n\n";
+			result = compiler.Run();
+			cout << endl;
+			if (flag & Flag::LogOutput)
+				Log::Save(entry);
+		}
 	}
 
-    return 0;
+    return result;
 }
 
