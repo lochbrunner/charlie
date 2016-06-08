@@ -106,6 +106,7 @@ namespace charlie {
 				break;
 			case charlie::token::Operator::Multipply:
 			case charlie::token::Operator::Divide:
+			case charlie::token::Operator::Modulo:
 				Priority = 6;
 				TokenChidrenPos = TokenChidrenPosEnum::LeftAndRight;
 				break;
@@ -137,6 +138,7 @@ namespace charlie {
 			case charlie::token::Operator::SubstractTo:
 			case charlie::token::Operator::MultiplyTo:
 			case charlie::token::Operator::DivideTo:
+			case charlie::token::Operator::ModuloTo:
 			case charlie::token::Operator::AndTo:
 			case charlie::token::Operator::OrTo:
 			case charlie::token::Operator::XorTo:

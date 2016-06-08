@@ -25,8 +25,8 @@
 * SUCH DAMAGE.
 */
 
-#ifndef CHARLIE_PROGRAM_SCOPEROUTINE
-#define CHARLIE_PROGRAM_SCOPEROUTINE
+#ifndef CHARLIE_PROGRAM_SCOPE_H
+#define CHARLIE_PROGRAM_SCOPE_H
 
 #include <list>
 #include <map>
@@ -59,4 +59,4 @@ namespace charlie {
 	}
 }
 
-#endif // !CHARLIE_PROGRAM_SCOPEROUTINE
+#endif // !CHARLIE_PROGRAM_SCOPE_H

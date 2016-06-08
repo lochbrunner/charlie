@@ -66,6 +66,7 @@ namespace charlie {
 			IntSubstract,
 			IntMultiply,
 			IntDivide,
+			IntModulo,
 			Length
 		};
 

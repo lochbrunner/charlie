@@ -25,7 +25,7 @@
 * SUCH DAMAGE.
 */
 
-#include "scopeRoutine.h"
+#include "scope.h"
 
 namespace charlie {
 	namespace program {

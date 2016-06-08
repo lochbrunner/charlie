@@ -28,8 +28,6 @@
 #ifndef CHARLIE_COMMON_LOGGIN_COMPONENT_H
 #define CHARLIE_COMMON_LOGGIN_COMPONENT_H
 
-//#define logging_1(message)					logOut(message, __FILE__, __LINE__)
-//#define logging_2(message, codePosition)	logOut(message, __FILE__, __LINE__, codePosition)
 #define logging_1(message)					logOut(message, __FILE__, __LINE__)
 #define logging_2(message, codePosition)	logOut(message, codePosition, __FILE__, __LINE__)
 
@@ -49,10 +47,10 @@
 namespace charlie {
 namespace common {
 
-	class LogginComponent {
+	class LoggingComponent {
 	public:
-		LogginComponent();
-		LogginComponent(std::function<void(std::string const &message)> messageDelegate);
+		LoggingComponent();
+		LoggingComponent(std::function<void(std::string const &message)> messageDelegate);
 
 	protected:
 		std::function<void(std::string const &message)> _messageDelegate;

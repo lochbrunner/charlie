@@ -47,12 +47,12 @@ namespace charlie {
 	using namespace token;
 
 	Compiler::Compiler() : 
-		LogginComponent(), ExternalFunctionManager(), _program() 
+		LoggingComponent(), ExternalFunctionManager(), _program()
 	{
 	}
 
-	Compiler::Compiler(function<void(string const&message)> messageDelegate) : 
-		LogginComponent(messageDelegate), ExternalFunctionManager(), _program()
+	Compiler::Compiler(function<void(string const& message)> messageDelegate) : 
+		LoggingComponent(messageDelegate), ExternalFunctionManager(), _program()
 	{
 	}
 	

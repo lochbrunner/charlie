@@ -123,7 +123,6 @@ namespace charlie {
 		public:
 			enum KindEnum {
 				String,			// use std::string
-				//Integer,		// int
 				Char,			// char
 				Decimal,		// float
 				Boolean			// bool
@@ -154,24 +153,26 @@ namespace charlie {
 			{
 				Add,			// +
 				Substract,		// -		// Could be also uniary
-				Multipply,		// *
+				Multipply,		// *		// Or dereference
 				Divide,			// /
+				Modulo,			// %
 				Copy,			// =
 				Equal,			// ==
 				NotEqual,		// !=
-				Greater,		// >
+				Greater,		// >		// Or template bracket
 				GreaterEqual,	// >=
-				Less,			// <
+				Less,			// <		// Or template bracket
 				LessEqual,		// <=
 				LogicAnd,		// &&
 				LogicOr,		// ||
-				BitAnd,			// &
+				BitAnd,			// &		// Or reference
 				BitOr,			// |
 				BitXor,			// ^
 				AddTo,			// +=
 				SubstractTo,	// -=
 				MultiplyTo,		// *=
 				DivideTo,		// /=
+				ModuloTo,		// /=
 				AndTo,			// &=
 				OrTo,			// |=,
 				XorTo			// ^=

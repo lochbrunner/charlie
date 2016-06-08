@@ -39,9 +39,6 @@
     <ClCompile Include="..\..\src\charlie\scanner.cc">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\charlie\common\logginComponent.cc">
-      <Filter>common</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\charlie\token\base.cc">
       <Filter>token</Filter>
     </ClCompile>
@@ -49,9 +46,6 @@
       <Filter>program</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\charlie\program\functionDec.cc">
-      <Filter>program</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\charlie\program\scopeRoutine.cc">
       <Filter>program</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\charlie\api\externalFunctionManager.cc">
@@ -72,6 +66,12 @@
     <ClCompile Include="..\..\src\charlie\program\statement.cc">
       <Filter>program</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\charlie\program\scope.cc">
+      <Filter>program</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\charlie\common\loggingComponent.cc">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\charlie\compiler.h">
@@ -86,9 +86,6 @@
     <ClInclude Include="..\..\src\charlie\scanner.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\charlie\common\logginComponent.h">
-      <Filter>common</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\charlie\token\base.h">
       <Filter>token</Filter>
     </ClInclude>
@@ -96,9 +93,6 @@
       <Filter>program</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\charlie\program\functionDec.h">
-      <Filter>program</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\charlie\program\scopeRoutine.h">
       <Filter>program</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\charlie\api\externalFunctionManager.h">
@@ -121,6 +115,12 @@
     </ClInclude>
     <ClInclude Include="..\..\src\charlie\program\statement.h">
       <Filter>program</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\charlie\program\scope.h">
+      <Filter>program</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\charlie\common\loggingComponent.h">
+      <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

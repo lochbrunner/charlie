@@ -32,7 +32,7 @@
 #include <string>
 #include <functional>
 #include "common\exportDefs.h"
-#include "common\logginComponent.h"
+#include "common\LoggingComponent.h"
 
 #include "program\functionDec.h"
 #include "program\unresolvedProgram.h"
@@ -43,7 +43,7 @@
 
 namespace charlie {
 
-	class Compiler : public common::LogginComponent {
+	class Compiler : public common::LoggingComponent {
 	public:
 		xprt Compiler();
 		xprt Compiler(std::function<void(std::string const &message)> messageDelegate);

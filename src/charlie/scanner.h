@@ -32,7 +32,7 @@
 #include <list>
 #include <string>
 
-#include "common\logginComponent.h"
+#include "common\LoggingComponent.h"
 #include "common\definitions.h"
 #include "common\exportDefs.h"
 
@@ -41,7 +41,7 @@
 #include "program\functionDef.h"
 #include "program\variableDec.h"
 #include "program\functionDec.h"
-#include "program\scopeRoutine.h"
+#include "program\scope.h"
 #include "program\unresolvedProgram.h"
 #include "program\statement.h"
 
@@ -49,7 +49,7 @@
 
 namespace charlie {
 
-	class Scanner : public common::LogginComponent{
+	class Scanner : public common::LoggingComponent {
 	public:
 		xprt Scanner(program::UnresolvedProgram *pProgram, api::ExternalFunctionManager *pExternalFunctionManager);
 		xprt Scanner(program::UnresolvedProgram *pProgram, api::ExternalFunctionManager *pExternalFunctionManager, std::function<void(std::string const &message)> messageDelegate);

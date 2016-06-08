@@ -100,13 +100,13 @@ namespace charlie {
 
 
 	Scanner::Scanner(program::UnresolvedProgram *pProgram, api::ExternalFunctionManager *pExternalFunctionManager) :
-		LogginComponent(), _pProgram(pProgram), _pExternalFunctionManager(pExternalFunctionManager)
+		LoggingComponent(), _pProgram(pProgram), _pExternalFunctionManager(pExternalFunctionManager)
 	{
 		
 	};
 
 	Scanner::Scanner(program::UnresolvedProgram *pProgram, api::ExternalFunctionManager *pExternalFunctionManager, function<void(string const&message)> messageDelegate) :
-		LogginComponent(messageDelegate), _pProgram(pProgram), _pExternalFunctionManager(pExternalFunctionManager)
+		LoggingComponent(messageDelegate), _pProgram(pProgram), _pExternalFunctionManager(pExternalFunctionManager)
 	{
 	};
 
@@ -885,6 +885,9 @@ namespace charlie {
 					case '/':
 						linearStatements.Arguments.push_back(new token::Operator(Operator::Divide, CodePostion(pos)));
 						break;
+					case '%':
+						linearStatements.Arguments.push_back(new token::Operator(Operator::Modulo, CodePostion(pos)));
+						break;
 					case '=':
 						linearStatements.Arguments.push_back(new token::Operator(Operator::Copy, CodePostion(pos)));
 						break;
@@ -934,6 +937,9 @@ namespace charlie {
 						break;
 					case '/':
 						linearStatements.Arguments.push_back(new token::Operator(Operator::DivideTo, CodePostion(pos)));
+						break;
+					case '%':
+						linearStatements.Arguments.push_back(new token::Operator(Operator::ModuloTo, CodePostion(pos)));
 						break;
 					case '&':
 						linearStatements.Arguments.push_back(new token::Operator(Operator::AndTo, CodePostion(pos)));

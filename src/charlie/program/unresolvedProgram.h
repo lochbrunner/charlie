@@ -33,7 +33,7 @@
 
 #include "functionDec.h"
 #include "variableDec.h"
-#include "scopeRoutine.h"
+#include "scope.h"
 
 #include "..\common\exportDefs.h"
 

@@ -25,7 +25,7 @@
 * SUCH DAMAGE.
 */
 
-#include "logginComponent.h"
+#include "LoggingComponent.h"
 
 #include <sstream>
 #include <iomanip>
@@ -43,39 +43,39 @@ namespace charlie {
 		}
 
 
-		LogginComponent::LogginComponent() : _messageDelegate(0), _pCurrentCode(0)
+		LoggingComponent::LoggingComponent() : _messageDelegate(0), _pCurrentCode(0)
 		{
 		}
 
-		LogginComponent::LogginComponent(function<void(string const&message)> messageDelegate) : _messageDelegate(messageDelegate), _pCurrentCode(0)
+		LoggingComponent::LoggingComponent(function<void(string const&message)> messageDelegate) : _messageDelegate(messageDelegate), _pCurrentCode(0)
 		{
 		}
 
-		void LogginComponent::logOut(string const &message)
+		void LoggingComponent::logOut(string const &message)
 		{
 			if (_messageDelegate != NULL)
 				_messageDelegate(message);
 		}
-		void LogginComponent::logOut(std::string const &message, const char* codefileName, int lineNumber) {
+		void LoggingComponent::logOut(std::string const &message, const char* codefileName, int lineNumber) {
 			if (_messageDelegate != NULL) {
 				stringstream st;
 				st << significantChar(codefileName) << setfill('0') << setw(4) << lineNumber << ": " << message;
 				_messageDelegate(st.str());
 			}
 		}
-		void LogginComponent::logOut(stringstream const &message)
+		void LoggingComponent::logOut(stringstream const &message)
 		{
 			if (_messageDelegate != NULL)
 				_messageDelegate(message.str());
 		}
-		void LogginComponent::logOut(std::stringstream const &message, const char* codefileName, int lineNumber) {
+		void LoggingComponent::logOut(std::stringstream const &message, const char* codefileName, int lineNumber) {
 			if (_messageDelegate != NULL) {
 				stringstream st;
 				st << significantChar(codefileName) << setfill('0') << setw(4) << lineNumber << ": " << message.str();
 				_messageDelegate(st.str());
 			}
 		}
-		void LogginComponent::logOut(string const &message, token::CodePostion& codePosition)
+		void LoggingComponent::logOut(string const &message, token::CodePostion& codePosition)
 		{
 			if (_messageDelegate != NULL)
 			{
@@ -86,7 +86,7 @@ namespace charlie {
 				_messageDelegate(st.str());
 			}
 		}
-		void LogginComponent::logOut(std::string const &message, token::CodePostion& codePosition, const char* codefileName, int lineNumber) {
+		void LoggingComponent::logOut(std::string const &message, token::CodePostion& codePosition, const char* codefileName, int lineNumber) {
 			if (_messageDelegate != NULL) {
 				stringstream st;
 				st << significantChar(codefileName) << setfill('0') << setw(4) << lineNumber << message;
@@ -94,7 +94,7 @@ namespace charlie {
 				_messageDelegate(st.str());
 			}
 		}
-		void LogginComponent::logOut(stringstream const &message, token::CodePostion& codePosition)
+		void LoggingComponent::logOut(stringstream const &message, token::CodePostion& codePosition)
 		{
 			if (_messageDelegate != NULL)
 			{
@@ -104,7 +104,7 @@ namespace charlie {
 				_messageDelegate(st.str());
 			}
 		}
-		void LogginComponent::logOut(std::stringstream const &message, token::CodePostion& codePosition, const char* codefileName, int lineNumber) {
+		void LoggingComponent::logOut(std::stringstream const &message, token::CodePostion& codePosition, const char* codefileName, int lineNumber) {
 			if (_messageDelegate != NULL) {
 				stringstream st;
 				st << significantChar(codefileName) << setfill('0') << setw(4) << lineNumber << ": " << message.str();
@@ -113,7 +113,7 @@ namespace charlie {
 			}
 		}
 
-		void LogginComponent::getPositionString(int pos, std::stringstream& st) {
+		void LoggingComponent::getPositionString(int pos, std::stringstream& st) {
 			int line;
 			int column;
 			getLineNumberAndColumnPos(pos, line, column);
@@ -121,7 +121,7 @@ namespace charlie {
 			st << "at line: " << line << " columns: " << column;
 		}
 
-		void LogginComponent::getLineNumberAndColumnPos(int pos, int& line, int& column)
+		void LoggingComponent::getLineNumberAndColumnPos(int pos, int& line, int& column)
 		{
 			if (_pCurrentCode != 0) {
 				assert(_pCurrentCode->length() > static_cast<size_t>(pos));

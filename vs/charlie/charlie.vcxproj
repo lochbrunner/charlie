@@ -22,11 +22,11 @@
     <ClCompile Include="..\..\src\charlie\api\externalFunctionManager.cc" />
     <ClCompile Include="..\..\src\charlie\common\comparer_string.cc" />
     <ClCompile Include="..\..\src\charlie\common\io.cc" />
-    <ClCompile Include="..\..\src\charlie\common\logginComponent.cc" />
+    <ClCompile Include="..\..\src\charlie\common\loggingComponent.cc" />
     <ClCompile Include="..\..\src\charlie\compiler.cc" />
     <ClCompile Include="..\..\src\charlie\program\functionDec.cc" />
     <ClCompile Include="..\..\src\charlie\program\functionDef.cc" />
-    <ClCompile Include="..\..\src\charlie\program\scopeRoutine.cc" />
+    <ClCompile Include="..\..\src\charlie\program\scope.cc" />
     <ClCompile Include="..\..\src\charlie\program\statement.cc" />
     <ClCompile Include="..\..\src\charlie\program\unresolvedProgram.cc" />
     <ClCompile Include="..\..\src\charlie\program\variableDec.cc" />
@@ -40,11 +40,11 @@
     <ClInclude Include="..\..\src\charlie\common\definitions.h" />
     <ClInclude Include="..\..\src\charlie\common\exportDefs.h" />
     <ClInclude Include="..\..\src\charlie\common\io.h" />
-    <ClInclude Include="..\..\src\charlie\common\logginComponent.h" />
+    <ClInclude Include="..\..\src\charlie\common\loggingComponent.h" />
     <ClInclude Include="..\..\src\charlie\compiler.h" />
     <ClInclude Include="..\..\src\charlie\program\functionDec.h" />
     <ClInclude Include="..\..\src\charlie\program\functionDef.h" />
-    <ClInclude Include="..\..\src\charlie\program\scopeRoutine.h" />
+    <ClInclude Include="..\..\src\charlie\program\scope.h" />
     <ClInclude Include="..\..\src\charlie\program\statement.h" />
     <ClInclude Include="..\..\src\charlie\program\unresolvedProgram.h" />
     <ClInclude Include="..\..\src\charlie\program\variableDec.h" />

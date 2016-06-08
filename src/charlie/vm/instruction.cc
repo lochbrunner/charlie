@@ -172,7 +172,16 @@ namespace charlie {
 				++state.pos;
 				return 0;
 			};
-			
+			types[InstructionEnums::IntModulo] = [](State& state)
+			{
+				int b = state.aluStack.top();
+				state.aluStack.pop();
+				int a = state.aluStack.top();
+				state.aluStack.pop();
+				state.aluStack.push(a % b);
+				++state.pos;
+				return 0;
+			};
 
 			return types;
 		}
@@ -235,6 +244,9 @@ namespace charlie {
 				break;
 			case InstructionEnums::IntDivide:
 				comments.push("Divides two integers");
+				break;
+			case InstructionEnums::IntModulo:
+				comments.push("Modulo of two integers");
 				break;
 			default:
 				break;
