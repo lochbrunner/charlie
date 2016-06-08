@@ -46,8 +46,9 @@ namespace charlie {
 
 			Scope Root;
 
+			xprt void Dispose();
+
 			xprt UnresolvedProgram();
-			xprt void Clear();
 		};
 	}
 }

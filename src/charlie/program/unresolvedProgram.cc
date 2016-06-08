@@ -36,9 +36,13 @@ namespace charlie {
 			Instructions(), Root(0), FunctionDecs()
 		{
 		}
-		void UnresolvedProgram::Clear()
+
+		void UnresolvedProgram::Dispose()
 		{
+			for (auto it = FunctionDecs.begin(); it != FunctionDecs.end(); ++it)
+				it->Dispose();
 			FunctionDecs.clear();
+			Root.Dispose();
 		}
 	}
 }

@@ -30,8 +30,8 @@
 namespace charlie {
 
 	namespace program {
-		FunctionDefinition::FunctionDefinition(Scope *pParent) : main(pParent)
-		{
-		}
+		//FunctionDefinition::FunctionDefinition(Scope *pParent) : main(pParent)
+		//{
+		//}
 	}
 }

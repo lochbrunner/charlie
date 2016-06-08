@@ -175,7 +175,8 @@ namespace charlie {
 				ModuloTo,		// /=
 				AndTo,			// &=
 				OrTo,			// |=,
-				XorTo			// ^=
+				XorTo,			// ^=,
+				Pop
 			};
 			KindEnum Kind;
 

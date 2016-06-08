@@ -33,7 +33,7 @@
 #include <sstream>
 
 #include "variableDec.h"
-#include "functionDef.h"
+#include "scope.h"
 
 namespace charlie {
 
@@ -45,11 +45,12 @@ namespace charlie {
 			std::list<program::VariableDec> ArgumentType;
 			std::string Label;
 			bool HasDefinition;
+			Scope Definition;
 
 			FunctionDec(std::string &label, VariableDec::TypeEnum imageType, std::list<VariableDec> &argumentType, Scope* pParent=0);
 			FunctionDec(std::string &label, VariableDec::TypeEnum imageType, Scope* pParent=0);
 
-			FunctionDefinition Definition;
+			void Dispose();
 
 			struct comparer {
 				bool operator()(const FunctionDec &a, const FunctionDec &b);

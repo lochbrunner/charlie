@@ -58,7 +58,7 @@ namespace charlie {
 
 	private:
 		bool compile();
-		bool enroleStatement(program::Statement& statement, int& count);
+		bool enroleStatement(program::Statement& statement, int& count, std::map<program::FunctionDec, int, program::FunctionDec::comparer>& functionDict);
 		
 		program::UnresolvedProgram _program;
 	};

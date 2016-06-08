@@ -38,17 +38,23 @@ namespace charlie {
 			array<functionType, InstructionEnums::Length> types = array<functionType, InstructionEnums::Length>();
 			types[InstructionEnums::IncreaseRegister] = [](State& state)
 			{
-				int currentSize = state.reg.size();
 				int addition = state.program[++state.pos];
-				state.reg.resize(currentSize + addition);
+				if (addition > 0)
+				{
+					int currentSize = state.reg.size();
+					state.reg.resize(currentSize + addition);
+				}
 				++state.pos;
 				return 0;
 			};
 			types[InstructionEnums::DecreaseRegister] = [](State& state)
 			{
-				int currentSize = state.reg.size();
 				int remove = state.program[++state.pos];
-				state.reg.resize(currentSize - remove);
+				if (remove > 0)
+				{
+					int currentSize = state.reg.size();
+					state.reg.resize(currentSize - remove);
+				}
 				++state.pos;
 				return 0;
 			};
@@ -73,7 +79,7 @@ namespace charlie {
 				++state.pos;
 				return 0;
 			};
-			types[InstructionEnums::Pop] = [](State& state)
+			types[InstructionEnums::IntPop] = [](State& state)
 			{
 				int address = state.program[++state.pos];
 				if (static_cast<int>(state.reg.size()) > address)
@@ -92,7 +98,7 @@ namespace charlie {
 			};
 			types[InstructionEnums::Call] = [](State& state) 
 			{
-				state.callStack.push(state.pos);
+				state.callStack.push(state.pos+2);
 				int address = state.program[++state.pos];
 				state.pos = address;
 				return 0;
@@ -100,7 +106,6 @@ namespace charlie {
 			types[InstructionEnums::Return] = [](State& state) 
 			{
 				// Only for testing
-				state.callStack.pop();
 				if (state.callStack.empty())
 				{
 					state.pos = -2;
@@ -108,6 +113,7 @@ namespace charlie {
 				}
 				else
 					state.pos = state.callStack.top();
+				state.callStack.pop();
 				return 0;
 			};
 			types[InstructionEnums::CallEx] = [](State& state) 
@@ -116,6 +122,11 @@ namespace charlie {
 				if(state.pExternalFunctionManager != 0)
 					state.pExternalFunctionManager->Invoke(id, state.aluStack);
 				++state.pos;
+				return 0;
+			};
+			types[InstructionEnums::Exit] = [](State& state)
+			{
+				state.pos = -1;
 				return 0;
 			};
 			types[InstructionEnums::IntCopy] = [](State& state) {
@@ -130,6 +141,20 @@ namespace charlie {
 					return 0;
 				}
 				else 
+					return -1;
+			};
+			types[InstructionEnums::IntPop] = [](State& state) {
+				int value = state.aluStack.top();
+				state.aluStack.pop();
+				int address = state.program[++state.pos];
+
+				if (state.reg.size() > static_cast<size_t>(address))
+				{
+					state.reg[address] = value;
+					++state.pos;
+					return 0;
+				}
+				else
 					return -1;
 			};
 			types[InstructionEnums::IntAdd] = [](State& state) 
@@ -210,8 +235,8 @@ namespace charlie {
 				comments.push("Pushs a constant ...");
 				comments.push("... value to push");
 				break;
-			case InstructionEnums::Pop:
-				comments.push("Pops from stack and copies to register ...");
+			case InstructionEnums::IntPop:
+				comments.push("Pops an integer from stack and copies to register ...");
 				comments.push("... at address");
 				break;
 			case InstructionEnums::Call:
@@ -247,6 +272,9 @@ namespace charlie {
 				break;
 			case InstructionEnums::IntModulo:
 				comments.push("Modulo of two integers");
+				break;
+			case InstructionEnums::Exit:
+				comments.push("Exit program");
 				break;
 			default:
 				break;

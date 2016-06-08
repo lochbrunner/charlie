@@ -89,7 +89,7 @@ namespace charlie {
 		void LoggingComponent::logOut(std::string const &message, token::CodePostion& codePosition, const char* codefileName, int lineNumber) {
 			if (_messageDelegate != NULL) {
 				stringstream st;
-				st << significantChar(codefileName) << setfill('0') << setw(4) << lineNumber << message;
+				st << significantChar(codefileName) << setfill('0') << setw(4) << lineNumber << ": " << message;
 				getPositionString(codePosition.CharacterNumber, st);
 				_messageDelegate(st.str());
 			}
@@ -114,26 +114,34 @@ namespace charlie {
 		}
 
 		void LoggingComponent::getPositionString(int pos, std::stringstream& st) {
+			if (pos < 0)
+			{
+				st << " at unspecifed position";
+				return;
+			}
 			int line;
 			int column;
 			getLineNumberAndColumnPos(pos, line, column);
 
-			st << "at line: " << line << " columns: " << column;
+			st << " at line: " << line << " columns: " << column;
 		}
 
 		void LoggingComponent::getLineNumberAndColumnPos(int pos, int& line, int& column)
 		{
 			if (_pCurrentCode != 0) {
-				assert(_pCurrentCode->length() > static_cast<size_t>(pos));
 				column = 0;
-				line = 0;
+				line = 1;
+				if (_pCurrentCode->length() <= static_cast<size_t>(pos))
+					return;
 				for (int i = 0; i <= pos; ++i) {
-					++column;
 					if (_pCurrentCode->at(i) == '\n')
 					{
 						++line;
 						column = 0;
 					}
+					else if (_pCurrentCode->at(i) == '\r')
+						continue;
+					++column;
 				}
 			}
 		}

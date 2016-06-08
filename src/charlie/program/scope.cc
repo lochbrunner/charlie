@@ -65,6 +65,13 @@ namespace charlie {
 				return 0;
 			return _pParant->ParentOffset() + _pParant->CountVariableDecs;
 		}
+
+		void Scope::Dispose()
+		{
+			for (auto it = Statements.begin(); it != Statements.end(); ++it)
+				it->Dispose();
+		}
+
 		Scope::VariableInfo::VariableInfo(std::function<int()> offset, VariableDec::TypeEnum type) : Offset(offset), Type(type)
 		{
 		}

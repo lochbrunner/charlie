@@ -54,9 +54,6 @@
     <ClCompile Include="..\..\src\charlie\program\variableDec.cc">
       <Filter>program</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\charlie\program\functionDef.cc">
-      <Filter>program</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\charlie\common\comparer_string.cc">
       <Filter>common</Filter>
     </ClCompile>
@@ -99,9 +96,6 @@
       <Filter>api</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\charlie\program\variableDec.h">
-      <Filter>program</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\charlie\program\functionDef.h">
       <Filter>program</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\charlie\common\definitions.h">

@@ -42,6 +42,7 @@ namespace charlie {
 			token::Base* Value;
 			std::list<Statement> Arguments;
 
+			void Dispose();
 			bool Finished();
 			int Priority();
 		};

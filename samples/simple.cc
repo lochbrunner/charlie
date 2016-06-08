@@ -2,7 +2,15 @@
 
 int g = 4;
 
-int main(int num, char argv) {
+int cubic(int v)
+{
+	return v *v*v;
+}
+
+int main()
+{
 	int i = 7;
 	println(2*g+i);
+
+	println(cubic(4));
 }

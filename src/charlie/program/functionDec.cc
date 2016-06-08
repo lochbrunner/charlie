@@ -42,6 +42,10 @@ namespace charlie {
 		{
 			ArgumentType = std::list<VariableDec>();
 		}
+
+		void FunctionDec::Dispose() {
+			Definition.Dispose();
+		}
 		std::ostream& operator<<(std::ostream & stream, const FunctionDec &dec)
 		{
 			// See: http://stackoverflow.com/questions/476272/how-to-properly-overload-the-operator-for-an-ostream
@@ -53,7 +57,6 @@ namespace charlie {
 				else
 					first = false;
 				stream << VariableDec::TypeString(it->ImageType);
-				return stream;
 			}
 			stream << ')';
 			return stream;

@@ -49,8 +49,12 @@ namespace charlie {
 			"Void"
 		};
 
+		const char* undefined = "undefined";
+
 		const char * VariableDec::TypeString(TypeEnum type)
 		{
+			if (type > VariableDec::TypeEnum::Length - 2)
+				return undefined;
 			return typeStringArray[type];
 		}
 

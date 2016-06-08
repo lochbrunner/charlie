@@ -38,7 +38,7 @@
 
 #include "token\base.h"
 
-#include "program\functionDef.h"
+//#include "program\functionDef.h"
 #include "program\variableDec.h"
 #include "program\functionDec.h"
 #include "program\scope.h"
@@ -75,9 +75,10 @@ namespace charlie {
 		program::UnresolvedProgram *_pProgram;
 
 		int getFunctionDecArguments(std::string const& code, int begin, int length, std::list<program::VariableDec> &args);
-		int getFunctionDefinition(std::string const& code, int length, int pos, program::FunctionDefinition& definition);
+		int getFunctionDefinition(std::string const& code, int length, int pos, program::FunctionDec& dec);
 
 		bool getStatement(std::string const& code, int length, int& pos, program::Scope& prog, std::string& word);
+		bool getExpression(std::string const& code, int length, int& pos, program::Scope& prog);
 		int getStatemantTokens(std::string const& code, int length, int& pos, program::Statement& linearStatements);
 		bool treeifyStatement(std::list<program::Statement>& linearStatements, program::Scope& scope, program::Statement& statement);
 

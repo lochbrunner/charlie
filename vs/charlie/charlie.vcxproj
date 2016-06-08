@@ -25,7 +25,6 @@
     <ClCompile Include="..\..\src\charlie\common\loggingComponent.cc" />
     <ClCompile Include="..\..\src\charlie\compiler.cc" />
     <ClCompile Include="..\..\src\charlie\program\functionDec.cc" />
-    <ClCompile Include="..\..\src\charlie\program\functionDef.cc" />
     <ClCompile Include="..\..\src\charlie\program\scope.cc" />
     <ClCompile Include="..\..\src\charlie\program\statement.cc" />
     <ClCompile Include="..\..\src\charlie\program\unresolvedProgram.cc" />
@@ -43,7 +42,6 @@
     <ClInclude Include="..\..\src\charlie\common\loggingComponent.h" />
     <ClInclude Include="..\..\src\charlie\compiler.h" />
     <ClInclude Include="..\..\src\charlie\program\functionDec.h" />
-    <ClInclude Include="..\..\src\charlie\program\functionDef.h" />
     <ClInclude Include="..\..\src\charlie\program\scope.h" />
     <ClInclude Include="..\..\src\charlie\program\statement.h" />
     <ClInclude Include="..\..\src\charlie\program\unresolvedProgram.h" />

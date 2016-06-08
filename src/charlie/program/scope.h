@@ -49,6 +49,8 @@ namespace charlie {
 			int CountVariableDecs;
 			std::list<Statement> Statements;
 
+			void Dispose();
+
 			VariableInfo GetVariableInfo(VariableDec& dec);
 			int AddVariableDec(VariableDec& dec);
 			int ParentOffset() const;

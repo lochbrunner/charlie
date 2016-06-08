@@ -113,7 +113,7 @@ namespace charlie {
 	bool Scanner::Scan(string const &code) 
 	{
 		_pCurrentCode = &code;
-		_pProgram->Clear();
+		_pProgram->Dispose();
 
 		// Search declarations
 		int length = static_cast<int>(code.length());
@@ -167,7 +167,7 @@ namespace charlie {
 						++pos;
 						auto dec = FunctionDec(variableName, type, args, &_pProgram->Root);
 						// TODO: copy arguments into variables
-						pos = getFunctionDefinition(code, length, pos, dec.Definition);
+						pos = getFunctionDefinition(code, length, pos, dec);
 						dec.HasDefinition = true;
 						_pProgram->FunctionDecs.push_back(dec);
 						if (pos == -1)
@@ -570,10 +570,30 @@ namespace charlie {
 		text.replace(text.begin(), text.end(), "\\\'", "\'");
 	}
 
-	int Scanner::getFunctionDefinition(string const &code, int length, int pos, FunctionDefinition &definition) {
+	int Scanner::getFunctionDefinition(string const &code, int length, int pos, FunctionDec &dec) {
 		WordType wordType;
 		string word;
 		const char* wordBuffer;
+
+		// Are Arguments declared?
+		for (auto it = dec.ArgumentType.begin(); it != dec.ArgumentType.end(); ++it)
+		{
+			dec.Definition.AddVariableDec(*it);
+			if (it->ImageType == VariableDec::Int) {
+				auto pOp = new token::Operator(Operator::Pop, CodePostion(pos));
+				pOp->Type = it->ImageType;
+				Statement statement(pOp);
+				auto pLa = new token::Label(it->Name, CodePostion(pos));
+				tryGettingTypeOfVariable(pLa, dec.Definition);
+				statement.Arguments.push_back(pLa);
+				dec.Definition.Statements.push_back(statement);
+			}
+			else {
+				logging("Unspported type", CodePostion(pos));
+				return -1;
+			}
+		}
+		
 
 		while (pos < length && pos != -1)
 		{
@@ -607,8 +627,8 @@ namespace charlie {
 				
 				if (wordType == WordType::Name)
 				{
-					definition.main.AddVariableDec(VariableDec(variableName, type));
-					if (!getStatement(code, length, pos, definition.main, variableName))
+					dec.Definition.AddVariableDec(VariableDec(variableName, type));
+					if (!getStatement(code, length, pos, dec.Definition, variableName))
 					{
 						return -1;
 					}
@@ -626,10 +646,58 @@ namespace charlie {
 			}
 			else if (ControlFlowDict::Contains(wordBuffer))
 			{
-				return -1;
+				auto control = ControlFlowDict::Get(wordBuffer);
+				switch (control)
+				{
+				case charlie::token::ControlFlow::While:
+					break;
+				case charlie::token::ControlFlow::For:
+					break;
+				case charlie::token::ControlFlow::Do:
+					break;
+				case charlie::token::ControlFlow::If:
+					break;
+				case charlie::token::ControlFlow::Else:
+					break;
+				case charlie::token::ControlFlow::Break:
+					break;
+				case charlie::token::ControlFlow::Continue:
+					break;
+				case charlie::token::ControlFlow::Return:
+					if (dec.ImageType != VariableDec::Void) {
+
+						if (getExpression(code, length, pos, dec.Definition))
+						{
+							dec.Definition.Statements.push_back(Statement(new token::ControlFlow(control, CodePostion(pos))));
+							break;
+						}
+						return -1;
+					}
+					else {
+						getNextWord(code, length, pos, word, wordType);
+						if (wordType == WordType::Semikolon)
+						{
+							dec.Definition.Statements.push_back(Statement(new token::ControlFlow(control, CodePostion(pos))));
+							break;
+						}
+						else 
+						{
+							logging("This function has returning type of void and nothing else!", CodePostion(pos));
+						}
+					}
+				case charlie::token::ControlFlow::Switch:
+					break;
+				case charlie::token::ControlFlow::Case:
+					break;
+				case charlie::token::ControlFlow::Goto:
+					break;
+				default:
+					break;
+				}
+
 			}
 			else {
-				if (!getStatement(code, length, pos, definition.main, word))
+				if (!getStatement(code, length, pos, dec.Definition, word))
 				{
 					return -1;
 				}
@@ -637,6 +705,22 @@ namespace charlie {
 		}
 
 		return pos;
+	}
+
+	bool Scanner::getExpression(string const &code, int length, int &pos, Scope& prog) {
+		Statement tokens = Statement(0);
+
+		int num = getStatemantTokens(code, length, pos, tokens);
+		if (num > 0)
+		{
+			Statement statement = 0;
+			if (!treeifyStatement(tokens.Arguments, prog, statement))
+				return false;
+			prog.Statements.push_back(statement);
+		}
+		else if (num < 0)
+			return false;
+		return true;
 	}
 
 	bool Scanner::getStatement(string const &code, int length, int &pos, Scope& prog, string &word)
@@ -713,7 +797,6 @@ namespace charlie {
 				{
 					auto functionNode = *itMax;
 					dynamic_cast<Label*>(functionNode.Value)->Kind = Label::Function;
-
 					getBracket(linearStatements, itTemp, functionNode.Arguments);
 					if (++(functionNode.Arguments.begin()) == functionNode.Arguments.end())
 					{
@@ -726,8 +809,8 @@ namespace charlie {
 						if(!treeifyStatement(functionNode.Arguments, scope, statement))
 							return false;
 						functionNode.Value->Finished = true;
-						statement = functionNode;
-						return true;
+						itMax->Arguments.push_back(statement);
+						itMax->Value->Finished = true;
 					}
 				}
 				break;
@@ -1018,20 +1101,36 @@ namespace charlie {
 	}
 
 	bool Scanner::tryGettingTypeOfVariable(token::Base *token, program::Scope& scope) {
-		if (token->Type == VariableDec::Length && token->TokenType == Base::TokenTypeEnum::Label)
+		if (token->TokenType == Base::TokenTypeEnum::Label)
 		{
-			auto dec = VariableDec(dynamic_cast<Label*>(token)->LabelString, VariableDec::Length);
-			auto info = scope.GetVariableInfo(dec);
-
-			if (info.Offset == 0) {
-				stringstream st;
-				st << "Unknown Variable found: \"" << dynamic_cast<Label*>(token)->LabelString << "\"!";
-				logging(st.str());
-				return false;
+			if(dynamic_cast<Label*>(token)->Kind == Label::KindEnum::Function)
+			{
+				if(token->Type == VariableDec::Length)
+				{
+					stringstream st;
+					st << "Unknown Function found: \"" << dynamic_cast<Label*>(token)->LabelString << "\"!";
+					logging(st.str());
+					return false;
+				}
 			}
-			token->Type = info.Type;
-			dynamic_cast<Label*>(token)->RegAddress = info.Offset;
-			dynamic_cast<Label*>(token)->Kind = Label::Variable;
+			else
+			{
+				if (token->Type == VariableDec::Length)
+				{
+					auto dec = VariableDec(dynamic_cast<Label*>(token)->LabelString, VariableDec::Length);
+					auto info = scope.GetVariableInfo(dec);
+
+					if (info.Offset == 0) {
+						stringstream st;
+						st << "Unknown Variable found: \"" << dynamic_cast<Label*>(token)->LabelString << "\"!";
+						logging(st.str());
+						return false;
+					}
+					token->Type = info.Type;
+					dynamic_cast<Label*>(token)->RegAddress = info.Offset;
+					dynamic_cast<Label*>(token)->Kind = Label::Variable;
+				}
+			}
 		}
 		return true;
 	}

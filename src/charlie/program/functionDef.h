@@ -34,12 +34,12 @@
 namespace charlie {
 
 	namespace program {
-		class FunctionDefinition {
-		public:
-			program::Scope main;
+		//class FunctionDefinition {
+		//public:
+		//	program::Scope main;
 
-			FunctionDefinition(Scope *pParent);
-		};
+		//	FunctionDefinition(Scope *pParent);
+		//};
 	}
 }
 

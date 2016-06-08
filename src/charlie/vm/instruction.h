@@ -56,7 +56,7 @@ namespace charlie {
 			DecreaseRegister,
 			Push,
 			PushConst,
-			Pop,
+			IntPop,
 			Call,
 			CallEx,
 			Jump,
@@ -67,6 +67,7 @@ namespace charlie {
 			IntMultiply,
 			IntDivide,
 			IntModulo,
+			Exit,
 			Length
 		};
 

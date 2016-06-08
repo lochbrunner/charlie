@@ -32,10 +32,14 @@ namespace charlie {
 		Statement::Statement(token::Base* value) : Value(value), Arguments(){}
 
 		Statement::~Statement() {
-			//if (Value != 0) {
-			//	delete Value;
-			//	Value = 0;
-			//}
+			//Dispose();
+		}
+
+		void Statement::Dispose() {
+			if (Value != 0) {
+				delete Value;
+				Value = 0;
+			}
 		}
 
 		bool Statement::Finished() {

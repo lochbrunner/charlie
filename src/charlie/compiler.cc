@@ -58,7 +58,6 @@ namespace charlie {
 	
 	bool Compiler::Build(string const &filename)
 	{
-		_program.Clear();
 		string code;
 		if (!io::ascii2string(filename, code)) {
 			std::stringstream str;
@@ -67,6 +66,7 @@ namespace charlie {
 			return false;
 		}
 
+		_pCurrentCode = &code;
 		Scanner scanner = Scanner(&_program, &ExternalFunctionManager, _messageDelegate);
 
 		if(!scanner.Scan(code)) {
@@ -90,24 +90,25 @@ namespace charlie {
 	}
 
 	bool Compiler::compile() {
+		auto funcPositions = map<FunctionDec, int, FunctionDec::comparer>();
+
 		_program.Instructions.push_back(BYTECODE_VERSION);
 		// Junp address will be inserted at the end
-		// Global varibles
+		// Global variables
 		_program.Instructions.push_back(InstructionEnums::IncreaseRegister);
 		_program.Instructions.push_back(_program.Root.CountVariableDecs);
+		int count = 2;
 		
-		int count = 4;
 		for (auto itI = _program.Root.Statements.begin(); itI != _program.Root.Statements.end(); ++itI)
 		{
-			if (!enroleStatement(*itI, count))
+			if (!enroleStatement(*itI, count, funcPositions))
 				return false;
 		}
 		
 		_program.Instructions.push_back(InstructionEnums::Call);
 		auto itMainAddress = --_program.Instructions.end();
-		++count;
-
-		auto funcPositions = std::map<FunctionDec, int, FunctionDec::comparer>();
+		_program.Instructions.push_back(InstructionEnums::Exit);
+		count+=3;
 
 		for (auto itF = _program.FunctionDecs.begin(); itF != _program.FunctionDecs.end(); ++itF) {
 			if (!itF->HasDefinition) {
@@ -119,49 +120,48 @@ namespace charlie {
 			funcPositions.insert(make_pair((*itF), count));
 
 			_program.Instructions.push_back(InstructionEnums::IncreaseRegister);
-			_program.Instructions.push_back(itF->Definition.main.CountVariableDecs);
+			_program.Instructions.push_back(itF->Definition.CountVariableDecs);
+			count += 2;
 		
 			// Insert variable declaration and defintion of the argument list
-			for (auto itI = itF->Definition.main.Statements.begin(); itI != itF->Definition.main.Statements.end(); ++itI)
+			for (auto itI = itF->Definition.Statements.begin(); itI != itF->Definition.Statements.end(); ++itI)
 			{
-				if (!enroleStatement(*itI, count))
+				if (!enroleStatement(*itI, count, funcPositions))
 					return false;
 			}
 			
 			_program.Instructions.push_back(InstructionEnums::DecreaseRegister);
-			_program.Instructions.push_back(itF->Definition.main.CountVariableDecs);
-
+			_program.Instructions.push_back(itF->Definition.CountVariableDecs);
 			_program.Instructions.push_back(InstructionEnums::Return);
-			++count;
+			count += 3;
 		}
 
 		_program.Instructions.push_back(InstructionEnums::DecreaseRegister);
 		_program.Instructions.push_back(_program.Root.CountVariableDecs);
+		count += 2;
 
 		// Find entryPoint
 		auto args = list<VariableDec>();
 		args.push_back(VariableDec::Int);
 		args.push_back(VariableDec::Char);
-		auto main = funcPositions.find(FunctionDec(string("main"), VariableDec::Int, args));
+		auto main = funcPositions.find(FunctionDec(string("main"), VariableDec::Int));
 		if (main == funcPositions.end())
 		{
 			logging("Can not find entry point");
 			return false;
 		}
 
-
 		_program.Instructions.insert(++itMainAddress, main->second);
+		_program.Dispose();
 		return true;
 	}
 
-	bool Compiler::enroleStatement(program::Statement& statement, int& count) {
+	bool Compiler::enroleStatement(program::Statement& statement, int& count, std::map<FunctionDec, int, FunctionDec::comparer>& functionDict) {
 		auto tokenType = statement.Value->TokenType;
 		if (tokenType == Base::TokenTypeEnum::ConstantInt) {
 			_program.Instructions.push_back(InstructionEnums::PushConst);
-			++count;
 			_program.Instructions.push_back(statement.Value->ByteCode());
-			delete statement.Value;
-			++count;
+			count += 2;
 		}
 		else if (tokenType == Base::TokenTypeEnum::Label) {
 			if (dynamic_cast<Label*>(statement.Value)->Kind == Label::Function) {
@@ -170,25 +170,31 @@ namespace charlie {
 				auto argTypes = std::list<VariableDec>();
 				for (auto it = statement.Arguments.begin(); it != statement.Arguments.end(); ++it)
 				{
-					argTypes.push_back(it->Value->Type);
-					if (!enroleStatement(*it, count))
+					if (!enroleStatement(*it, count, functionDict))
 						return false;
+					argTypes.push_back(it->Value->Type);
 				}
 				auto dec = FunctionDec(label->LabelString, VariableDec::Length, argTypes);
-				delete statement.Value;
 
 				int id = ExternalFunctionManager.GetId(dec);
 				if (id > -1) {
 					_program.Instructions.push_back(InstructionEnums::CallEx);
-					++count;
 					_program.Instructions.push_back(id);
-					++count;
+					count += 2;
 				}
 				else {
-					stringstream st;
-					st << "Can not find function " << dec;
-					logging(st, label->Position);
-					return false;
+					auto it = functionDict.find(dec);
+					if (it == functionDict.end())
+					{
+						stringstream st;
+						st << "Can not find function " << dec;
+						logging(st, label->Position);
+						return false;
+					}
+					label->Type = it->first.ImageType;
+					_program.Instructions.push_back(InstructionEnums::Call);
+					_program.Instructions.push_back(it->second);
+					count += 2;
 				}
 			}
 			else if(dynamic_cast<Label*>(statement.Value)->Kind == Label::Variable)
@@ -198,7 +204,7 @@ namespace charlie {
 				if (address > -1) {
 					_program.Instructions.push_back(InstructionEnums::Push);
 					_program.Instructions.push_back(address);
-					delete statement.Value;
+					count += 2;
 				}
 				else 
 				{
@@ -215,21 +221,27 @@ namespace charlie {
 				assert(itAddress->Value->TokenType == Base::TokenTypeEnum::Label);
 				
 				int address = dynamic_cast<Label*>(itAddress->Value)->RegAddress();
-				if (!enroleStatement(*++itAddress, count))
+				if (!enroleStatement(*++itAddress, count, functionDict))
 					return false;
 				_program.Instructions.push_back(InstructionEnums::IntCopy);
 				_program.Instructions.push_back(address);
+				count += 2;
+			}
+			else if (op->Kind == Operator::Pop)
+			{
+				_program.Instructions.push_back(InstructionEnums::IntPop);
+				_program.Instructions.push_back(dynamic_cast<Label*>(statement.Arguments.begin()->Value)->RegAddress());
+				count += 2;
 			}
 			else {
 				for (auto it = statement.Arguments.begin(); it != statement.Arguments.end(); ++it)
 				{
-					if (!enroleStatement(*it, count))
+					if (!enroleStatement(*it, count, functionDict))
 						return false;
 				}
 				_program.Instructions.push_back(statement.Value->ByteCode());
+				++count;
 			}
-			delete statement.Value;
-			++count;
 		}
 		return true;
 	}
