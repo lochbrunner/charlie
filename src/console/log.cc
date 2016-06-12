@@ -27,9 +27,13 @@
 
 #include "log.h"
 
-#include <iostream> 
+#include <iostream>
 
-using namespace std;
+using std::string;
+using std::stringstream;
+using std::ofstream;
+using std::cout;
+using std::endl;
 
 stringstream Log::buffer = stringstream();
 

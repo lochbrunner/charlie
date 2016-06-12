@@ -25,13 +25,14 @@
 * SUCH DAMAGE.
 */
 
-#ifndef CHARLIE_API_EXTERNALFUNCTION_H
-#define CHARLIE_API_EXTERNALFUNCTION_H
+#ifndef CHARLIE_API_EXTERNAL_FUNCTION_MANAGER_H_
+#define CHARLIE_API_EXTERNAL_FUNCTION_MANAGER_H_
 
 #include <map>
 #include <set>
 #include <string>
 #include <stack>
+#include <list>
 #include <functional>
 
 #include "..\common\exportDefs.h"
@@ -39,53 +40,53 @@
 #include "..\program\function_declaration.h"
 
 namespace charlie {
-  namespace api {
-    // Registrates external functions to compiler and VM.
-    // If you do not modify this library, you only need to use the Add(...) methods
-    // Note: registrate the function in the same order when compiling and running the code.
-    //	Example:
-    //		  auto manager = ExternalFunctionManager();
-    //		  manager.Add("print", [](int message){
-    //		  	std::cout << message;
-    //		  });
-    //      
-    //      std::list<VariableDeclaration> arguments = { VariableDeclaration(VariableDeclaration::TypeEnum::Int) };
-    //		  int id = manager.GetId(FunctionDec("print", VariableDeclaration::TypeEnum::Void, arguments));
-    //      
-    //      std::list<int> call_stack = {123};
-    //      manager.Invoke(0, call_stack);          // Prints the integer 123 to the console 
-    class ExternalFunctionManager {
-    public:
-      // Creates the empty manager
-      xprt ExternalFunctionManager();
-      // Adds the function pointer to the registry
-      xprt void AddFunction(std::string funcName, std::function<void(void)> funcPointer);
-      xprt void AddFunction(std::string funcName, std::function<void(int)> funcPointer);
-      xprt void AddFunction(std::string funcName, std::function<void(const char*)> funcPointer);
-      // Returns the id of the specified function declaration if found. Otherwise returns -1. 
-      xprt int GetId(program::FunctionDeclaration &dec);
-      // Invokes the function with the specified id. The arguments are stored in "call_stack"
-      xprt void Invoke(int id, std::stack<int> &call_stack);
+namespace api {
+// Registrates external functions to compiler and VM.
+// If you do not modify this library, you only need to use the Add(...) methods
+// Note: registrate the function in the same order when compiling and running the code.
+//  Example:
+//      auto manager = ExternalFunctionManager();
+//      manager.Add("print", [](int message){
+//        std::cout << message;
+//      });
+//
+//      std::list<VariableDeclaration> arguments = { VariableDeclaration(VariableDeclaration::TypeEnum::Int) };
+//      int id = manager.GetId(FunctionDec("print", VariableDeclaration::TypeEnum::Void, arguments));
+//
+//      std::list<int> call_stack = {123};
+//      manager.Invoke(0, call_stack);          // Prints the integer 123 to the console
+class ExternalFunctionManager {
+ public:
+  // Creates the empty manager
+  xprt ExternalFunctionManager();
+  // Adds the function pointer to the registry
+  xprt void AddFunction(std::string funcName, std::function<void(void)> funcPointer);
+  xprt void AddFunction(std::string funcName, std::function<void(int)> funcPointer);
+  xprt void AddFunction(std::string funcName, std::function<void(const char*)> funcPointer);
+  // Returns the id of the specified function declaration if found. Otherwise returns -1.
+  xprt int GetId(program::FunctionDeclaration const& dec) const;
+  // Invokes the function with the specified id. The arguments are stored in "call_stack"
+  xprt void Invoke(int id, std::stack<int> *call_stack) const;
 
-    private:
-      // Stores all relevant informations of a function registration
-      template<class _Fty>
-      struct FunctionInfo {
-        FunctionInfo(std::function<_Fty> &pointer, program::FunctionDeclaration &declaration) :
-          pointer(pointer), declaration(declaration) {}
-        std::function<_Fty> pointer;
-        program::FunctionDeclaration declaration;
-      };
-      // Saves the function pointers to corresponing id for each function signature
-      std::map<int, FunctionInfo<void(void)>> pointers_v_v_;
-      std::map<int, FunctionInfo<void(int)>> pointers_v_i_;
-      std::map<int, FunctionInfo<void(const char*)>> pointers_v_ccp_;
-      // This map is used to get the id of an registrated function by its declaration
-      std::map<program::FunctionDeclaration, int, program::FunctionDeclaration::comparer> decs_;
-      // Counter of the ids assigned to the registrated funtion pointers
-      int id_;
-    };
-  }
-}
+ private:
+  // Stores all relevant informations of a function registration
+  template<class _Fty>
+  struct FunctionInfo {
+    FunctionInfo(std::function<_Fty> const& pointer, program::FunctionDeclaration const& declaration) :
+      pointer(pointer), declaration(declaration) {}
+    std::function<_Fty> pointer;
+    program::FunctionDeclaration declaration;
+  };
+  // Saves the function pointers to corresponing id for each function signature
+  std::map<int, FunctionInfo<void(void)>> pointers_v_v_;
+  std::map<int, FunctionInfo<void(int)>> pointers_v_i_;
+  std::map<int, FunctionInfo<void(const char*)>> pointers_v_ccp_;
+  // This map is used to get the id of an registrated function by its declaration
+  std::map<program::FunctionDeclaration, int, program::FunctionDeclaration::comparer> decs_;
+  // Counter of the ids assigned to the registrated funtion pointers
+  int id_;
+};
+}  // namespace api
+}  // namespace charlie
 
-#endif // !CHARLIE_API_EXTERNALFUNCTION_H
+#endif  // !CHARLIE_API_EXTERNAL_FUNCTION_MANAGER_H_

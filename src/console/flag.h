@@ -33,7 +33,7 @@
 
 // Manages all flags which can modify the behaivor of this console application.
 class Flag {
-public:
+ public:
   // Enum of all supported flags.
   enum FlagEnum {
     None = 0,
@@ -47,9 +47,9 @@ public:
   // Returns FlagEnum::None if no falg could be parsed.
   static int Get(const char* command);
 
-private:
+ private:
   // Map storing all flags and its corresponding char array.
   static std::map<const char*, int, charlie::common::comparer_string> dict_;
 };
 
-#endif // !CONSOLE_FLAG_H
+#endif  // !CONSOLE_FLAG_H

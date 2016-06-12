@@ -33,10 +33,9 @@
 
 // Manages all commands which can be performed by this console application.
 class Command {
-public:
+ public:
   // Enum of all supported commands.
-  enum CommandEnum
-  {
+  enum CommandEnum {
     None,
     Build
   };
@@ -46,9 +45,9 @@ public:
   // Returns CommandEnum::None if no command could be parsed.
   static CommandEnum Get(const char* command);
 
-private:
+ private:
   // Map storing all commands and its corresponding char array.
   static std::map<const char*, CommandEnum, charlie::common::comparer_string> dict_;
 };
 
-#endif // !CONSOLE_COMMAND_H
+#endif  // !CONSOLE_COMMAND_H

@@ -42,41 +42,41 @@
 
 
 namespace charlie {
-  // This is the central class where as for now all APIs of this library can be called.
-  // Example:
-  //    auto compiler = Compiler([](std::string const &message){
-  //      std::cout << message << std::endl;
-  //    });
-  //    if(compiler.Build("main.cc"))
-  //      compiler.Run();
-  //
-  class Compiler : public common::LoggingComponent {
-  public:
-    // Creates an object without message delegate.
-    xprt Compiler();
-    // Creates an object with the specified message delegate.
-    xprt Compiler(std::function<void(std::string const &message)> messageDelegate);
-    // Compiles the speciefed C source file to bytecode. Returns true if succeeded.
-    xprt bool Build(std::string const &filename);
-    // Saves the current porgram to the file. Optional binary or as readable textfile.
-    // Returns true if succeeded.
-    xprt bool SaveProgram(std::string const &filename, bool binary = true);
-    // Runs the current program. Returns the program exit code.
-    // Optional with console arguments. (Not supported yet!)
-    xprt int Run();
-    xprt int Run(int argn, char** argv);
-    // External function manager 
-    api::ExternalFunctionManager external_function_manager;
+// This is the central class where as for now all APIs of this library can be called.
+// Example:
+//    auto compiler = Compiler([](std::string const &message){
+//      std::cout << message << std::endl;
+//    });
+//    if(compiler.Build("main.cc"))
+//      compiler.Run();
+//
+class Compiler : public common::LoggingComponent {
+ public:
+  // Creates an object without message delegate.
+  xprt Compiler();
+  // Creates an object with the specified message delegate.
+  xprt Compiler(std::function<void(std::string const &message)> messageDelegate);
+  // Compiles the speciefed C source file to bytecode. Returns true if succeeded.
+  xprt bool Build(std::string const &filename);
+  // Saves the current porgram to the file. Optional binary or as readable textfile.
+  // Returns true if succeeded.
+  xprt bool SaveProgram(std::string const &filename, bool binary = true) const;
+  // Runs the current program. Returns the program exit code.
+  // Optional with console arguments. (Not supported yet!)
+  xprt int Run() const;
+  xprt int Run(int argn, char** argv) const;
+  // External function manager
+  api::ExternalFunctionManager external_function_manager;
 
-  private:
-    // Compiles the syntax tree to bytecode.
-    bool compile();
-    // Enroles a statement of the syntax tree to bytecode.
-    bool enroleStatement(program::Statement& statement, int& count, std::map<program::FunctionDeclaration, int, program::FunctionDeclaration::comparer>& functionDict);
-    // The current program data.
-    program::UnresolvedProgram program_;
-  };
+ private:
+  // Compiles the syntax tree to bytecode.
+  bool compile();
+  // Enroles a statement of the syntax tree to bytecode.
+  bool enroleStatement(std::map<program::FunctionDeclaration, int, program::FunctionDeclaration::comparer> const& functionDict,
+    program::Statement *statement, int *count);
+  // The current program data.
+  program::UnresolvedProgram program_;
+};
+}  // namespace charlie
 
-}
-
-#endif // ! CHARLIE_COMPILER_H
+#endif  // ! CHARLIE_COMPILER_H

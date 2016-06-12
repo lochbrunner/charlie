@@ -36,31 +36,30 @@
 
 namespace charlie {
 
-  TEST(ScannerTest, getNextWord)
-  {
-    auto program = program::UnresolvedProgram();
-    auto funcManager = api::ExternalFunctionManager();
+TEST(ScannerTest, getNextWord) {
+  auto program = program::UnresolvedProgram();
+  auto funcManager = api::ExternalFunctionManager();
 
-    std::string const code = " a 12 ()";
+  std::string const code = " a 12 ()";
 
-    std::string word;
-    Scanner::WordType type;
+  std::string word;
+  Scanner::WordType type;
 
-    Scanner scanner = Scanner(&program, &funcManager);
+  Scanner scanner = Scanner(&program, &funcManager);
 
-    scanner.codeInfo_.set(&code);
+  scanner.codeInfo_.set(&code);
 
-    scanner.getNextWord(word, type);
-    EXPECT_EQ(word, "a");
-    EXPECT_EQ(type, Scanner::WordType::Name);
+  scanner.getNextWord(&word, &type);
+  EXPECT_EQ(word, "a");
+  EXPECT_EQ(type, Scanner::WordType::Name);
 
-    scanner.getNextWord(word, type);
-    EXPECT_EQ(word, "12");
-    EXPECT_EQ(type, Scanner::WordType::Number);
+  scanner.getNextWord(&word, &type);
+  EXPECT_EQ(word, "12");
+  EXPECT_EQ(type, Scanner::WordType::Number);
 
-    scanner.getNextWord(word, type);
-    EXPECT_EQ(code[scanner.codeInfo_.pos], '(');
-    EXPECT_EQ(type, Scanner::WordType::Bracket);
-  }
-
+  scanner.getNextWord(&word, &type);
+  EXPECT_EQ(code[scanner.codeInfo_.pos], '(');
+  EXPECT_EQ(type, Scanner::WordType::Bracket);
 }
+
+}  // namespace charlie

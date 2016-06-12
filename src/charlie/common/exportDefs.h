@@ -30,14 +30,14 @@
 
 #ifdef  WIN32
 // Used to export functions to the libraray
-// "Microsoft introduced __export in the 16-bit compiler version of Visual C++ 
-//  to allow the compiler to generate the export names automatically and place 
-//  them in a .lib file. This .lib file can then be used just like a static .lib 
+// "Microsoft introduced __export in the 16-bit compiler version of Visual C++
+//  to allow the compiler to generate the export names automatically and place
+//  them in a .lib file. This .lib file can then be used just like a static .lib
 //  to link with a DLL."
 //  See: https://msdn.microsoft.com/en-us/library/a90k134d.aspx
 #define xprt __declspec(dllexport)
 #else
 #define xprt
-#endif //  _WINDOWS
+#endif  //  _WINDOWS
 
-#endif // !CHARLIE_EXPORTDEF_H
+#endif  // !CHARLIE_EXPORTDEF_H

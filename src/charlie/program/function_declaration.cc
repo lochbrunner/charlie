@@ -31,57 +31,55 @@
 
 namespace charlie {
 
-  namespace program {
+namespace program {
 
-    using namespace std;
+using std::list;
 
-    FunctionDeclaration::FunctionDeclaration(std::string &label, VariableDeclaration::TypeEnum image_type, std::list<VariableDeclaration> &argument_type, Scope* parent)
-      : label(label), image_type(image_type), argument_types(argument_type), has_definition(false), definition(parent) {}
-    FunctionDeclaration::FunctionDeclaration(std::string &label, VariableDeclaration::TypeEnum image_type, Scope* parent)
-      : label(label), image_type(image_type), has_definition(false), definition(parent)
-    {
-      argument_types = std::list<VariableDeclaration>();
-    }
-
-    void FunctionDeclaration::Dispose() {
-      definition.Dispose();
-    }
-    std::ostream& operator<<(std::ostream & stream, const FunctionDeclaration &dec)
-    {
-      // See: http://stackoverflow.com/questions/476272/how-to-properly-overload-the-operator-for-an-ostream
-      stream << VariableDeclaration::TypeString(dec.image_type) << '@' << dec.label << '(';
-      bool first = true;
-      for (list<VariableDeclaration>::const_iterator it = dec.argument_types.begin(); it != dec.argument_types.end(); ++it) {
-        if (!first)
-          stream << '@';
-        else
-          first = false;
-        stream << VariableDeclaration::TypeString(it->image_type);
-      }
-      stream << ')';
-      return stream;
-    }
-    // Is a "smaller" than b
-    bool FunctionDeclaration::comparer::operator()(const FunctionDeclaration & a, const FunctionDeclaration & b)
-    {
-      // See: http://stackoverflow.com/questions/5733254/create-an-own-comparator-for-map
-      int name = strcmp(a.label.c_str(), b.label.c_str());
-      if (name != 0)
-        return name < 0;
-
-      list<VariableDeclaration>::const_iterator itA = a.argument_types.begin();
-      list<VariableDeclaration>::const_iterator itB = b.argument_types.begin();
-      while (itA != a.argument_types.end() && itB != b.argument_types.end())
-      {
-        if (itA->image_type != itB->image_type)
-          return itA->image_type - itB->image_type < 0;
-        ++itA;
-        ++itB;
-      }
-      if (itB != b.argument_types.end())
-        return true;
-
-      return false;
-    }
-  }
+FunctionDeclaration::FunctionDeclaration(std::string const& label, VariableDeclaration::TypeEnum image_type,
+                                         std::list<VariableDeclaration> const& argument_type, Scope* parent)
+  : label(label), image_type(image_type), argument_types(argument_type), has_definition(false), definition(parent) {
 }
+FunctionDeclaration::FunctionDeclaration(std::string const& label, VariableDeclaration::TypeEnum image_type, Scope* parent)
+  : label(label), image_type(image_type), has_definition(false), definition(parent) {
+  argument_types = std::list<VariableDeclaration>();
+}
+
+void FunctionDeclaration::Dispose() {
+  definition.Dispose();
+}
+std::ostream& operator<<(std::ostream & stream, const FunctionDeclaration &dec) {
+  // See: http://stackoverflow.com/questions/476272/how-to-properly-overload-the-operator-for-an-ostream
+  stream << VariableDeclaration::TypeString(dec.image_type) << '@' << dec.label << '(';
+  bool first = true;
+  for (list<VariableDeclaration>::const_iterator it = dec.argument_types.begin(); it != dec.argument_types.end(); ++it) {
+    if (!first)
+      stream << '@';
+    else
+      first = false;
+    stream << VariableDeclaration::TypeString(it->image_type);
+  }
+  stream << ')';
+  return stream;
+}
+// Is a "smaller" than b
+bool FunctionDeclaration::comparer::operator()(const FunctionDeclaration & a, const FunctionDeclaration & b) const {
+  // See: http://stackoverflow.com/questions/5733254/create-an-own-comparator-for-map
+  int name = strcmp(a.label.c_str(), b.label.c_str());
+  if (name != 0)
+    return name < 0;
+
+  list<VariableDeclaration>::const_iterator itA = a.argument_types.begin();
+  list<VariableDeclaration>::const_iterator itB = b.argument_types.begin();
+  while (itA != a.argument_types.end() && itB != b.argument_types.end()) {
+    if (itA->image_type != itB->image_type)
+      return itA->image_type - itB->image_type < 0;
+    ++itA;
+    ++itB;
+  }
+  if (itB != b.argument_types.end())
+    return true;
+
+  return false;
+}
+}  // namespace program
+}  // namespace charlie

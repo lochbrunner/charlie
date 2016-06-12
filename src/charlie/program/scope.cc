@@ -28,52 +28,47 @@
 #include "scope.h"
 
 namespace charlie {
-  namespace program {
-    using namespace std;
+namespace program {
 
-    Scope::Scope(Scope* parent) :
-      statements(), variable_declarations_(), num_variable_declarations(0), parent_(parent)
-    {
-    }
-    Scope::VariableInfo Scope::GetVariableInfo(VariableDeclaration & dec) const
-    {
-      auto it = variable_declarations_.find(dec);
-      if (it == variable_declarations_.end())
-      {
-        if (parent_ == 0)
-          return VariableInfo(0, VariableDeclaration::TypeEnum::Length);
-        return parent_->GetVariableInfo(dec);
-      }
-      int pos = it->second;
-      auto par = parent_;
+using std::function;
+using std::make_pair;
 
-      return VariableInfo([=]() {
-        if (par == 0)
-          return pos;
-        return pos + par->ParentOffset() + par->num_variable_declarations;
-      }, it->first.image_type);
-    }
-    int Scope::AddVariableDec(VariableDeclaration& dec)
-    {
-      variable_declarations_.insert(make_pair(dec, num_variable_declarations++));
-      return num_variable_declarations;
-    }
-
-    int Scope::ParentOffset() const
-    {
-      if (parent_ == 0)
-        return 0;
-      return parent_->ParentOffset() + parent_->num_variable_declarations;
-    }
-
-    void Scope::Dispose()
-    {
-      for (auto it = statements.begin(); it != statements.end(); ++it)
-        it->Dispose();
-    }
-
-    Scope::VariableInfo::VariableInfo(std::function<int()> offset, VariableDeclaration::TypeEnum type) : offset(offset), type(type)
-    {
-    }
-  }
+Scope::Scope(Scope* parent) :
+  statements(), variable_declarations_(), num_variable_declarations(0), parent_(parent) {
 }
+Scope::VariableInfo Scope::GetVariableInfo(VariableDeclaration const& dec) const {
+  auto it = variable_declarations_.find(dec);
+  if (it == variable_declarations_.end()) {
+    if (parent_ == nullptr)
+      return VariableInfo(nullptr, VariableDeclaration::TypeEnum::Length);
+    return parent_->GetVariableInfo(dec);
+  }
+  int pos = it->second;
+  auto par = parent_;
+
+  return VariableInfo([=]() {
+    if (par == 0)
+      return pos;
+    return pos + par->ParentOffset() + par->num_variable_declarations;
+  }, it->first.image_type);
+}
+int Scope::AddVariableDec(VariableDeclaration const& dec) {
+  variable_declarations_.insert(make_pair(dec, num_variable_declarations++));
+  return num_variable_declarations;
+}
+
+int Scope::ParentOffset() const {
+  if (parent_ == nullptr)
+    return 0;
+  return parent_->ParentOffset() + parent_->num_variable_declarations;
+}
+
+void Scope::Dispose() {
+  for (auto it = statements.begin(); it != statements.end(); ++it)
+    it->Dispose();
+}
+
+Scope::VariableInfo::VariableInfo(function<int()> offset, VariableDeclaration::TypeEnum type) : offset(offset), type(type) {
+}
+}  // namespace program
+}  // namespace charlie

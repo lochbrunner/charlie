@@ -32,52 +32,52 @@
 
 namespace charlie {
 
-  namespace program {
-    // Stores the name and the type of a variable declaration.
-    class VariableDeclaration {
-    public:
-      // All supported primitive types.
-      enum TypeEnum {
-        Int,
-        Long,
-        Float,
-        Double,
-        Boolean,
-        Char,
-        ConstCharPointer,
-        Void,
-        // Used the get the lenght of this enum and to indicate invalid or unknown type.
-        // Depending on the context
-        Length
-      };
-      // Use this struct when using a hash function for 
-      // std::map<VariableDeclaration, T, VariableDeclaration::comparer> or
-      // std::set<VariableDeclaration, VariableDeclaration::comparer> 
-      //
-      // Name and type of the variable declaration is important.
-      struct comparer {
-        bool operator()(const VariableDeclaration& a, const VariableDeclaration& b);
-      };
-      // Only the type is important. Ignores the name.
-      struct comparer_only_type {
-        bool operator()(const VariableDeclaration& a, const VariableDeclaration& b);
-      };
-      // Only the name is important. Ignores the type.
-      struct comparer_only_name {
-        bool operator()(const VariableDeclaration& a, const VariableDeclaration& b);
-      };
-      // Creates an object. Needs type of object.
-      // The name is optional.
-      VariableDeclaration(TypeEnum imageType);
-      VariableDeclaration(std::string name, TypeEnum imageType);
-      // Converts a type into a string.
-      static const char* TypeString(TypeEnum type);
-      // The name of the variable
-      std::string name;
-      // The type of the variable
-      TypeEnum image_type;
-    };
-  }
-}
+namespace program {
+// Stores the name and the type of a variable declaration.
+class VariableDeclaration {
+ public:
+  // All supported primitive types.
+  enum TypeEnum {
+    Int,
+    Long,
+    Float,
+    Double,
+    Boolean,
+    Char,
+    ConstCharPointer,
+    Void,
+    // Used the get the lenght of this enum and to indicate invalid or unknown type.
+    // Depending on the context
+    Length
+  };
+  // Use this struct when using a hash function for
+  // std::map<VariableDeclaration, T, VariableDeclaration::comparer> or
+  // std::set<VariableDeclaration, VariableDeclaration::comparer>
+  //
+  // Name and type of the variable declaration is important.
+  struct comparer {
+    bool operator()(const VariableDeclaration& a, const VariableDeclaration& b) const;
+  };
+  // Only the type is important. Ignores the name.
+  struct comparer_only_type {
+    bool operator()(const VariableDeclaration& a, const VariableDeclaration& b) const;
+  };
+  // Only the name is important. Ignores the type.
+  struct comparer_only_name {
+    bool operator()(const VariableDeclaration& a, const VariableDeclaration& b) const;
+  };
+  // Creates an object. Needs type of object.
+  // The name is optional.
+  VariableDeclaration(TypeEnum imageType);
+  VariableDeclaration(std::string name, TypeEnum imageType);
+  // Converts a type into a string.
+  static const char* TypeString(TypeEnum type);
+  // The name of the variable
+  std::string name;
+  // The type of the variable
+  TypeEnum image_type;
+};
+}  // namespace program
+}  // namespace charlie
 
-#endif // ! CHARLIE_TOKEN_VARIABLE_DECLARATION_H
+#endif  // ! CHARLIE_TOKEN_VARIABLE_DECLARATION_H

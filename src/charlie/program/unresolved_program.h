@@ -38,24 +38,24 @@
 #include "..\common\exportDefs.h"
 
 namespace charlie {
-  namespace program {
-    // Stores on the one hand the whole syntax tree and function definitions and on the other hand the 
-    // linear bytecode
-    class UnresolvedProgram {
-    public:
-      // Creates an object
-      xprt UnresolvedProgram();
-      // Deletes all the hidden pointers of this and member instances.
-      xprt void Dispose();
-      // The bytecode
-      std::list<int> instructions;
-      // All function declarations
-      std::list<FunctionDeclaration> function_declarations;
-      // The root scope for the syntax tree
-      Scope root;
-    };
-  }
-}
+namespace program {
+// Stores on the one hand the whole syntax tree and function definitions and on the other hand the
+// linear bytecode
+class UnresolvedProgram {
+ public:
+  // Creates an object
+  xprt UnresolvedProgram();
+  // Deletes all the hidden pointers of this and member instances.
+  xprt void Dispose();
+  // The bytecode
+  std::list<int> instructions;
+  // All function declarations
+  std::list<FunctionDeclaration> function_declarations;
+  // The root scope for the syntax tree
+  Scope root;
+};
+}  // namespace program
+}  // namespace charlie
 
 
-#endif // !CHARLIE_PROGRAM_UNRESOLVEDPROGRAM_H
+#endif  // !CHARLIE_PROGRAM_UNRESOLVEDPROGRAM_H

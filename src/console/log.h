@@ -26,16 +26,16 @@
 */
 
 #ifndef CONSOLE_LOG_H
-#define CONSOLE_LOG_H 
+#define CONSOLE_LOG_H
 
 #include <fstream>
 #include <string>
 #include <sstream>
 
-// Global class which is used to log messages and save them 
+// Global class which is used to log messages and save them
 // later into a text file.
 class Log {
-public:
+ public:
   // Saves log into the specified file.
   static bool Save(const std::string &filename);
   // Clears the storing std::stringstream buffer
@@ -44,4 +44,4 @@ public:
   static std::stringstream buffer;
 };
 
-#endif // !CONSOLE_LOG_H
+#endif  // !CONSOLE_LOG_H

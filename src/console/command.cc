@@ -27,18 +27,16 @@
 
 #include "command.h"
 
-using namespace std;
-using namespace charlie::common;
+using std::map;
+using charlie::common::comparer_string;
 
-void Command::Create()
-{
+void Command::Create() {
   dict_ = map<const char*, CommandEnum, comparer_string>();
   dict_["build"] = CommandEnum::Build;
   dict_["Build"] = CommandEnum::Build;
 }
 
-Command::CommandEnum Command::Get(const char* command)
-{
+Command::CommandEnum Command::Get(const char* command) {
   auto it = dict_.find(command);
   if (it == dict_.end())
     return CommandEnum::None;

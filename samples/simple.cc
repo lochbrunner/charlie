@@ -15,7 +15,8 @@ int main()
 
   println(cubic(4 - 1) - 12);
 
-  //if (1) {
+  //if (1) 
+  //{
   //	println(1);
   //}
 }

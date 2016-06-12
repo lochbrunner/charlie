@@ -27,11 +27,10 @@
 
 #include "flag.h"
 
-using namespace std;
-using namespace charlie::common;
+using std::map;
+using charlie::common::comparer_string;
 
-void Flag::Create()
-{
+void Flag::Create() {
   dict_ = map<const char*, int, comparer_string>();
   dict_["binary"] = FlagEnum::Binary;
   dict_["-b"] = FlagEnum::Binary;
@@ -41,8 +40,7 @@ void Flag::Create()
   dict_["-lo"] = FlagEnum::LogOutput;
 }
 
-int Flag::Get(const char* command)
-{
+int Flag::Get(const char* command) {
   auto it = dict_.find(command);
   if (it == dict_.end())
     return FlagEnum::None;

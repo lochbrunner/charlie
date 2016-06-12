@@ -38,66 +38,65 @@
 #include "..\api\external_function_manager.h"
 
 namespace charlie {
-  namespace vm {
-    // Represents the state of the VM
-    struct State {
-      // Creates an object
-      State();
-      // The ALU stack is used for current calculations.
-      std::stack<int> alu_stack;
-      // Stores each position where a currently running function call was made.
-      // Need to jump back, when the function finished.
-      std::stack<int> call_stack;
-      // Register stores all current variables.
-      std::vector<int> reg;
-      // The bytecode of the program.
-      std::vector<int> program;
-      // The current position in the programs bytecode.
-      int pos;
-      // Pointer to the external function manager.
-      api::ExternalFunctionManager *external_function_manager;
-    };
+namespace vm {
+// Represents the state of the VM
+struct State {
+  // Creates an object
+  State();
+  // The ALU stack is used for current calculations.
+  std::stack<int> alu_stack;
+  // Stores each position where a currently running function call was made.
+  // Need to jump back, when the function finished.
+  std::stack<int> call_stack;
+  // Register stores all current variables.
+  std::vector<int> reg;
+  // The bytecode of the program.
+  std::vector<int> program;
+  // The current position in the programs bytecode.
+  int pos;
+  // Pointer to the external function manager.
+  const api::ExternalFunctionManager *external_function_manager;
+};
 
-    // Enum of all kind of bytecodes
-    enum InstructionEnums
-    {
-      IncreaseRegister,
-      DecreaseRegister,
-      Push,
-      PushConst,
-      IntPop,
-      Call,
-      CallEx,
-      Jump,
-      Return,
-      IntCopy,
-      IntAdd,
-      IntSubstract,
-      IntMultiply,
-      IntDivide,
-      IntModulo,
-      Exit,
-      Length
-    };
-    // Type of callback function of each instruction
-    typedef std::function<int(State&)> functionType;
-    // The instruction manager does the mass of work
-    // of the VM: It manages all the instructions which
-    // get "called" by the bytecode.
-    class InstructionManager {
-    public:
-      // creates the instruction array.
-      static std::array<functionType, InstructionEnums::Length> Create();
-      // Returns the instruction to the specified bytecode.
-      static functionType Get(InstructionEnums bc);
-      // Returns the legend to the specified bytecode.
-      // Used when saving the program as a textfile.
-      static void GetLegend(int instruction, std::queue<const char*> &comments);
-      // Stores all the instructions.
-      static const std::array<functionType, InstructionEnums::Length> Instructions;
-    };
-  }
-}
+// Enum of all kind of bytecodes
+enum InstructionEnums {
+  IncreaseRegister,
+  DecreaseRegister,
+  Push,
+  PushConst,
+  IntPop,
+  Call,
+  CallEx,
+  Jump,
+  Return,
+  IntCopy,
+  IntAdd,
+  IntSubstract,
+  IntMultiply,
+  IntDivide,
+  IntModulo,
+  Exit,
+  Length
+};
+// Type of callback function of each instruction
+typedef std::function<int(State&)> functionType;
+// The instruction manager does the mass of work
+// of the VM: It manages all the instructions which
+// get "called" by the bytecode.
+class InstructionManager {
+ public:
+  // creates the instruction array.
+  static std::array<functionType, InstructionEnums::Length> Create();
+  // Returns the instruction to the specified bytecode.
+  static functionType Get(InstructionEnums bc);
+  // Returns the legend to the specified bytecode.
+  // Used when saving the program as a textfile.
+  static void GetLegend(int instruction, std::queue<const char*> *comments);
+  // Stores all the instructions.
+  static const std::array<functionType, InstructionEnums::Length> Instructions;
+};
+}  // namespace vm
+}  // namespace charlie
 
 
-#endif // !CHARLIE_PROGRAM_INSTRUCTION_H
+#endif  // !CHARLIE_PROGRAM_INSTRUCTION_H

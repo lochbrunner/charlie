@@ -37,37 +37,38 @@
 
 namespace charlie {
 
-  namespace program {
-    // Stores the signature and definition of a function.
-    class FunctionDeclaration {
-    public:
-      // Use this struct when using a hash function for 
-      // std::map<FunctionDeclaration, T, FunctionDeclaration::comparer> or
-      // std::set<FunctionDeclaration, FunctionDeclaration::comparer> 
-      struct comparer {
-        bool operator()(const FunctionDeclaration &a, const FunctionDeclaration &b);
-      };
-      // Creates an object. You have to specify the label of the function, the image type, 
-      // optional the argument type list and the scope where this function gets declared.
-      FunctionDeclaration(std::string &label, VariableDeclaration::TypeEnum image_type, std::list<VariableDeclaration> &argument_type, Scope* parent = 0);
-      FunctionDeclaration(std::string &label, VariableDeclaration::TypeEnum image_type, Scope* parent = 0);
-      // Disposes all elements and child elments of this instance.
-      void Dispose();
-      // Prints a the signature of the specified function into the specified declaration.
-      friend std::ostream& operator<<(std::ostream &stream, const FunctionDeclaration &dec);
-      // The image type of the function
-      VariableDeclaration::TypeEnum image_type;
-      // The argument type list of the function
-      std::list<program::VariableDeclaration> argument_types;
-      // The label of the function.
-      std::string label;
-      // Stores if the functions definition is already found and parsed.
-      bool has_definition;
-      // Stores the definition of the function. Empty if not found yet.
-      Scope definition;
-    };
-  }
-}
+namespace program {
+// Stores the signature and definition of a function.
+class FunctionDeclaration {
+ public:
+  // Use this struct when using a hash function for
+  // std::map<FunctionDeclaration, T, FunctionDeclaration::comparer> or
+  // std::set<FunctionDeclaration, FunctionDeclaration::comparer>
+  struct comparer {
+    bool operator()(const FunctionDeclaration &a, const FunctionDeclaration &b) const;
+  };
+  // Creates an object. You have to specify the label of the function, the image type,
+  // optional the argument type list and the scope where this function gets declared.
+  FunctionDeclaration(std::string const& label, VariableDeclaration::TypeEnum image_type,
+    std::list<VariableDeclaration> const& argument_type, Scope* parent = nullptr);
+  FunctionDeclaration(std::string const& label, VariableDeclaration::TypeEnum image_type, Scope* parent = nullptr);
+  // Disposes all elements and child elments of this instance.
+  void Dispose();
+  // Prints a the signature of the specified function into the specified declaration.
+  friend std::ostream& operator<<(std::ostream &stream, const FunctionDeclaration &dec);
+  // The image type of the function
+  VariableDeclaration::TypeEnum image_type;
+  // The argument type list of the function
+  std::list<program::VariableDeclaration> argument_types;
+  // The label of the function.
+  std::string label;
+  // Stores if the functions definition is already found and parsed.
+  bool has_definition;
+  // Stores the definition of the function. Empty if not found yet.
+  Scope definition;
+};
+}  // namespace program
+}  // namespace charlie
 
 
-#endif // !CHARLIE_TOKEN_FUNCTIONDEC_H
+#endif  // !CHARLIE_TOKEN_FUNCTIONDEC_H

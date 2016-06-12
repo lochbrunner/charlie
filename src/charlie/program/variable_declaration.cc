@@ -29,48 +29,45 @@
 
 
 namespace charlie {
+namespace program {
 
-  namespace program {
-    VariableDeclaration::VariableDeclaration(TypeEnum imageType) : image_type(imageType) {
-      name = "";
-    }
-    VariableDeclaration::VariableDeclaration(std::string name, TypeEnum imageType)
-      : name(name), image_type(imageType) {}
-
-
-    const char* typeStringArray[VariableDeclaration::TypeEnum::Length] = {
-      "Int",
-      "Long",
-      "Float",
-      "Double",
-      "Boolean",
-      "Char",
-      "ConstCharPointer",
-      "Void"
-    };
-
-    const char* undefined = "undefined";
-
-    const char * VariableDeclaration::TypeString(TypeEnum type)
-    {
-      if (type > VariableDeclaration::TypeEnum::Length - 2)
-        return undefined;
-      return typeStringArray[type];
-    }
-
-    bool VariableDeclaration::comparer::operator()(const VariableDeclaration& a, const VariableDeclaration& b) {
-      if (a.image_type == b.image_type)
-        return std::strcmp(a.name.c_str(), b.name.c_str()) < 0;
-      return  a.image_type < b.image_type;
-    }
-    bool VariableDeclaration::comparer_only_type::operator()(const VariableDeclaration& a, const VariableDeclaration& b)
-    {
-      return a.image_type < b.image_type;
-    }
-
-    bool VariableDeclaration::comparer_only_name::operator()(const VariableDeclaration& a, const VariableDeclaration& b)
-    {
-      return std::strcmp(a.name.c_str(), b.name.c_str()) < 0;
-    }
-  }
+VariableDeclaration::VariableDeclaration(TypeEnum imageType) : image_type(imageType) {
+  name = "";
 }
+VariableDeclaration::VariableDeclaration(std::string name, TypeEnum imageType)
+  : name(name), image_type(imageType) {
+}
+
+const char* typeStringArray[VariableDeclaration::TypeEnum::Length] = {
+  "Int",
+  "Long",
+  "Float",
+  "Double",
+  "Boolean",
+  "Char",
+  "ConstCharPointer",
+  "Void"
+};
+
+const char* undefined = "undefined";
+
+const char * VariableDeclaration::TypeString(TypeEnum type) {
+  if (type > VariableDeclaration::TypeEnum::Length - 2)
+    return undefined;
+  return typeStringArray[type];
+}
+
+bool VariableDeclaration::comparer::operator()(const VariableDeclaration& a, const VariableDeclaration& b) const {
+  if (a.image_type == b.image_type)
+    return std::strcmp(a.name.c_str(), b.name.c_str()) < 0;
+  return  a.image_type < b.image_type;
+}
+bool VariableDeclaration::comparer_only_type::operator()(const VariableDeclaration& a, const VariableDeclaration& b) const {
+  return a.image_type < b.image_type;
+}
+
+bool VariableDeclaration::comparer_only_name::operator()(const VariableDeclaration& a, const VariableDeclaration& b) const {
+  return std::strcmp(a.name.c_str(), b.name.c_str()) < 0;
+}
+}  // namespace program
+}  // namespace charlie

@@ -28,21 +28,17 @@
 #include "unresolved_program.h"
 
 namespace charlie {
-  namespace program {
+namespace program {
 
-    using namespace std;
-
-    UnresolvedProgram::UnresolvedProgram() :
-      instructions(), root(nullptr), function_declarations()
-    {
-    }
-
-    void UnresolvedProgram::Dispose()
-    {
-      for (auto it = function_declarations.begin(); it != function_declarations.end(); ++it)
-        it->Dispose();
-      function_declarations.clear();
-      root.Dispose();
-    }
-  }
+UnresolvedProgram::UnresolvedProgram() :
+  instructions(), root(nullptr), function_declarations() {
 }
+
+void UnresolvedProgram::Dispose() {
+  for (auto it = function_declarations.begin(); it != function_declarations.end(); ++it)
+    it->Dispose();
+  function_declarations.clear();
+  root.Dispose();
+}
+}  // namespace program
+}  // namespace charlie

@@ -25,8 +25,9 @@
 * SUCH DAMAGE.
 */
 
-#include <iostream>
 #include <map>
+#include <string>
+#include <iostream>
 
 #include "flag.h"
 #include "command.h"
@@ -35,30 +36,28 @@
 #include "compiler.h"
 #include "common\comparer_string.h"
 
-using namespace std;
-using namespace charlie;
+using std::string;
+using std::cout;
+using std::endl;
+
+using charlie::Compiler;
 
 
 // Adds console output functions to the compiler
-void addExternalFunctions(Compiler &compiler)
-{
-  compiler.external_function_manager.AddFunction("print", [](const char* message)
-  {
+void addExternalFunctions(Compiler *compiler) {
+  compiler->external_function_manager.AddFunction("print", [](const char* message) {
     cout << message;
     Log::buffer << message;
   });
-  compiler.external_function_manager.AddFunction("println", [](const char* message)
-  {
+  compiler->external_function_manager.AddFunction("println", [](const char* message) {
     cout << message << endl;
     Log::buffer << message << endl;
   });
-  compiler.external_function_manager.AddFunction("println", [](int number)
-  {
+  compiler->external_function_manager.AddFunction("println", [](int number) {
     cout << number << endl;
     Log::buffer << number << endl;
   });
-  compiler.external_function_manager.AddFunction("print", [](int number)
-  {
+  compiler->external_function_manager.AddFunction("print", [](int number) {
     cout << number;
     Log::buffer << number;
   });
@@ -66,8 +65,7 @@ void addExternalFunctions(Compiler &compiler)
 
 
 // <command> <filename> <options>
-int main(int argn, char** argv)
-{
+int main(int argn, char** argv) {
   Command::CommandEnum command = Command::None;
   int flag = Flag::None;
   char* entry = NULL;
@@ -77,49 +75,41 @@ int main(int argn, char** argv)
 
 
 #ifdef _DEBUG
-  if (argn > 2)
-  {
+  if (argn > 2) {
     command = Command::Get(argv[1]);
     entry = argv[2];
   }
-  for (int i = 3; i < argn; ++i)
-  {
+  for (int i = 3; i < argn; ++i) {
     flag |= Flag::Get(argv[i]);
   }
 #else
-  if (argn > 1)
-  {
+  if (argn > 1) {
     command = Commands::Get(argv[0]);
     entry = argv[1];
   }
-  for (int i = 2; i < argn; ++i)
-  {
+  for (int i = 2; i < argn; ++i) {
     flag |= Flags::Get(argv[i]);
   }
-#endif // _DEBUG
+#endif  // _DEBUG
 
-  if (command == Command::None)
-  {
+  if (command == Command::None) {
     cout << "Please specify a command";
     return -1;
   }
 
-  if (entry == NULL)
-  {
+  if (entry == NULL) {
     cout << "Please specify an entry point";
     return -1;
   }
 
   int result = 0;
-  if (command == Command::Build)
-  {
+  if (command == Command::Build) {
     Compiler compiler = Compiler([](string const &message) {
       cout << message << endl;
     });
 
-    addExternalFunctions(compiler);
-    if (compiler.Build(entry))
-    {
+    addExternalFunctions(&compiler);
+    if (compiler.Build(entry)) {
       if (compiler.SaveProgram(entry, flag & Flag::Binary))
         cout << "Saving program to " << entry << (flag & Flag::Binary ? ".bc" : ".bc.txt") << endl;
       cout << "Running program ..\n\n";
