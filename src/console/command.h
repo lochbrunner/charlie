@@ -31,20 +31,24 @@
 #include <map>
 #include "common\comparer_string.h"
 
+// Manages all commands which can be performed by this console application.
 class Command {
 public:
+  // Enum of all supported commands.
+  enum CommandEnum
+  {
+    None,
+    Build
+  };
+  // Creates all commands which can be performed by this console application.
+  static void Create();
+  // Parses the char array and returns the corresponding command.
+  // Returns CommandEnum::None if no command could be parsed.
+  static CommandEnum Get(const char* command);
 
-	enum CommandEnum
-	{
-		None,
-		Build
-	};
-
-	static void Create();
-
-	static CommandEnum Get(const char* command);
 private:
-	static std::map<const char*, CommandEnum, charlie::common::comparer_string> Dict;
+  // Map storing all commands and its corresponding char array.
+  static std::map<const char*, CommandEnum, charlie::common::comparer_string> dict_;
 };
 
 #endif // !CONSOLE_COMMAND_H

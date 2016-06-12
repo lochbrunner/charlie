@@ -32,73 +32,101 @@
 #include <list>
 #include <string>
 
-#include "common\LoggingComponent.h"
+#include "common\logging_component.h"
 #include "common\definitions.h"
 #include "common\exportDefs.h"
 
 #include "token\base.h"
 
-//#include "program\functionDef.h"
-#include "program\variableDec.h"
-#include "program\functionDec.h"
+#include "program\variable_declaration.h"
+#include "program\function_declaration.h"
 #include "program\scope.h"
-#include "program\unresolvedProgram.h"
+#include "program\unresolved_program.h"
 #include "program\statement.h"
 
-#include "api\externalFunctionManager.h"
+#include "api\external_function_manager.h"
 
 namespace charlie {
+  // Scans C-code and creates the corresponding syntax tree.
+  class Scanner : public common::LoggingComponent {
+  public:
+    // The used categories of each word in the C-code.
+    enum class WordType {
+      None,
+      Name,
+      Number,
+      Operator,
+      Comma,
+      Semikolon,
+      String,
+      Char,
+      Bracket
+    };
+    // Creates an object, with the specified program and external function manager.
+    // Optional message delegate. See common::LoggingComponent
+    xprt Scanner(program::UnresolvedProgram *program, api::ExternalFunctionManager *external_function_manager);
+    xprt Scanner(program::UnresolvedProgram *program, api::ExternalFunctionManager *external_function_manager, std::function<void(std::string const &message)> messageDelegate);
+    // Scans C-code and creates the corresponding syntax tree into program_.
+    // Returns true if succeeded.
+    xprt bool Scan(std::string const &code);
 
-	class Scanner : public common::LoggingComponent {
-	public:
-		xprt Scanner(program::UnresolvedProgram *pProgram, api::ExternalFunctionManager *pExternalFunctionManager);
-		xprt Scanner(program::UnresolvedProgram *pProgram, api::ExternalFunctionManager *pExternalFunctionManager, std::function<void(std::string const &message)> messageDelegate);
+  private:
+    // Scans the function argument types.
+    // Returns true if succeeded.
+    bool getFunctionDecArguments(std::list<program::VariableDeclaration> &args);
+    // Scans the function definition and adds the statements and function-scope variables to the 
+    // corresponding function declarations.
+    // Returns true if succeeded.
+    bool getFunctionDefinition(program::FunctionDeclaration& dec);
+    // Scans the beginning block and adds the statements and function-scope variables to the 
+    // corresponding function declarations.
+    // Returns true if succeeded.
+    bool getBlock(program::Scope& scope, program::FunctionDeclaration& dec);
+    // Scans the beginning statement and adds it into the current scope.
+    // Returns true if succeeded.
+    bool getStatement(program::Scope& prog, std::string& word);
+    // Scans the beginning expression and adds it into the current scope.
+    // Returns true if succeeded.
+    bool getExpression(program::Scope& prog, bool inBracket = false);
+    // Copies all tokens into the corresponding statement list untill either a semikolon or closing round bracket is found.
+    // Depending on the parameter "inBracket"
+    // Returns the number of tokens. Returns -1 iff an error occured.
+    int getStatemantTokens(program::Statement& linearStatements, bool inBracket = false);
+    // Tries to make syntax tree out of the "linearStatements" satement or expression and saves it into "statement"
+    // Returns true if succeeded.
+    bool treeifyStatement(std::list<program::Statement>& linearStatements, program::Scope& scope, program::Statement& statement);
+    // Moves the content from the beginning bracket at "itOpening" of "linearStatements" into "outList".
+    // Returns true if succeeded.
+    bool getBracket(std::list<program::Statement>& linearStatements, std::list<program::Statement>::const_iterator& itOpening, std::list<program::Statement>& outList);
+    // Search for image type and index of the specified token. 
+    //  "scope": the current scope where this variable was found.
+    // Returns true if succeeded.
+    inline bool try_get_type_of_variable(token::Base *token, program::Scope& scope);
+    // Checks wheter the specified character could be the beginning of a labe. E.g. '_' in "_foo124".
+    inline bool is_beginnging_of_label(char c);
+    // Checks wheter the specified character could be part of an operator.
+    inline bool is_operator(char c);
+    // Checks wheter the specified character could be part of a number.
+    inline bool is_numerical(char c);
+    // Checks wheter the specified character could be a bracket.
+    inline bool is_bracket(char c);
+    // Processes the controll sequences of the speciefied string. E.g. "\\" -> "\"
+    void proceess_controlsequences(std::string &text);
 
-		xprt bool Scan(std::string const &code);
-
-		enum WordType {
-			None,
-			Name,
-			Number,
-			Operator,
-			Comma,
-			Semikolon,
-			String,
-			Char,
-			Bracket
-		};
-
-	private:
-
-		api::ExternalFunctionManager *_pExternalFunctionManager;
-
-		program::UnresolvedProgram *_pProgram;
-
-		int getFunctionDecArguments(std::string const& code, int begin, int length, std::list<program::VariableDec> &args);
-		int getFunctionDefinition(std::string const& code, int length, int pos, program::FunctionDec& dec);
-
-		bool getStatement(std::string const& code, int length, int& pos, program::Scope& prog, std::string& word);
-		bool getExpression(std::string const& code, int length, int& pos, program::Scope& prog);
-		int getStatemantTokens(std::string const& code, int length, int& pos, program::Statement& linearStatements);
-		bool treeifyStatement(std::list<program::Statement>& linearStatements, program::Scope& scope, program::Statement& statement);
-
-		bool getBracket(std::list<program::Statement>& linearStatements, std::list<program::Statement>::const_iterator& itOpening, std::list<program::Statement>& outList);
-
-		inline bool tryGettingTypeOfVariable(token::Base *token, program::Scope& scope);
-
-		inline bool isLabelBeginning(char c);
-		inline bool isOperator(char c);
-		inline bool isNumerical(char c);
-		inline bool isBracket(char c);
-		void proceessControlSequences(std::string &text);
-
-		// updates word only if the result is longer than 1 char. If not use code[pos++] instead
-		FRIEND_TEST(ScannerTest, getNextWord);
-		friend class ScannerTest_getNextWord_Test;
-		__declspec(dllexport) void getNextWord(std::string const &code, int length, int &pos, std::string &word, WordType &type);
-		int endOfLineComments(std::string const &code, int length, int pos);
-		int endOfBlockComments(std::string const &code, int length, int pos);
-	};
+    // Updates the word reference only if the result is longer than 1 char. If not, use code.current_char() instead.
+    FRIEND_TEST(ScannerTest, getNextWord);
+    xprt void getNextWord(std::string &word, WordType &type);
+    // Sets the code caret to the end of the beginning line comment
+    // Returns true if succeeded.
+    bool end_of_line_comment();
+    // Sets the code caret to the end of the beginning block comment
+    // Returns true if succeeded.
+    bool end_of_block_comment();
+    // Used to check function signatures.
+    api::ExternalFunctionManager *external_function_manager_;
+    // The current program.
+    program::UnresolvedProgram *program_;
+  };
 }
 
 

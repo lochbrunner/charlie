@@ -28,30 +28,30 @@
 #include "statement.h"
 
 namespace charlie {
-	namespace program {
-		Statement::Statement(token::Base* value) : Value(value), Arguments(){}
+  namespace program {
+    Statement::Statement(token::Base* value) : value(value), arguments() {}
 
-		Statement::~Statement() {
-			//Dispose();
-		}
+    Statement::~Statement() {
+      //Dispose();
+    }
 
-		void Statement::Dispose() {
-			if (Value != 0) {
-				delete Value;
-				Value = 0;
-			}
-		}
+    void Statement::Dispose() {
+      if (value != nullptr) {
+        delete value;
+        value = nullptr;
+      }
+    }
 
-		bool Statement::Finished() {
-			if (Value == 0)
-				return false;
-			return Value->Finished;
-		}
+    bool Statement::Finished() {
+      if (value == nullptr)
+        return false;
+      return value->finished;
+    }
 
-		int Statement::Priority() {
-			if (Value == 0 || Value->Finished)
-				return 0;
-			return Value->Priority;
-		}
-	}
+    int Statement::priority() {
+      if (value == nullptr || value->finished)
+        return 0;
+      return value->priority;
+    }
+  }
 }

@@ -32,10 +32,10 @@
     <ClInclude Include="..\..\src\console\command.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\console\flag.h">
+    <ClInclude Include="..\..\src\console\log.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\console\log.h">
+    <ClInclude Include="..\..\src\console\flag.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

@@ -32,17 +32,17 @@ using namespace charlie::common;
 
 void Command::Create()
 {
-	Dict = map<const char*, CommandEnum, comparer_string>();
-	Dict["build"] = CommandEnum::Build;
-	Dict["Build"] = CommandEnum::Build;
+  dict_ = map<const char*, CommandEnum, comparer_string>();
+  dict_["build"] = CommandEnum::Build;
+  dict_["Build"] = CommandEnum::Build;
 }
 
 Command::CommandEnum Command::Get(const char* command)
 {
-	auto it = Dict.find(command);
-	if (it == Dict.end())
-		return CommandEnum::None;
-	return it->second;
+  auto it = dict_.find(command);
+  if (it == dict_.end())
+    return CommandEnum::None;
+  return it->second;
 }
 
-map<const char*, Command::CommandEnum, comparer_string> Command::Dict = map<const char*, Command::CommandEnum, comparer_string>();
+map<const char*, Command::CommandEnum, comparer_string> Command::dict_ = map<const char*, Command::CommandEnum, comparer_string>();

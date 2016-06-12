@@ -33,211 +33,295 @@
 #include <string>
 #include <functional>
 
-#include "../program/variableDec.h"
+#include "..\program\variable_declaration.h"
 
 namespace charlie {
-	namespace token {
+  namespace token {
+    // Stores the caret position.
+    struct CodePostion {
+      CodePostion(int character_position);
+      int character_position;
+    };
 
-		class CodePostion {
-		public:
-			CodePostion(int characterPosition);
-			int CharacterNumber;
-		};
+    // Base class of all tokens
+    class Base
+    {
+    public:
+      // Token type indicates which class the corresponding inherited instance is.
+      enum class TokenTypeEnum
+      {
+        Bracket,				  // (, ), {, }, ...
+        Constant,				  // "Hello", 12, ...
+        ConstantInt,
+        Operator,				  // +, -, +=, ...
+        TypeDeclarer,			// int, bool, ...
+        Label,
+        ControlFlow,			// for, while
+        List,
+        Comma
+      };
+      // Indicates where children or arguments are corresponding to this token.
+      enum class TokenChidrenPosEnum {
+        None = 0,
+        Left = 1,
+        Right = 2,
+        LeftAndRight = 3
+      };
+      // Creates an object.
+      //    tokentype:  Should be set by the inherited class constructor.
+      //    position:   Position where the token appears in the source or header code.
+      //    priorty:    (optional) the priority of this token.
+      //    finished:   (optional) indicates wheter this token is finished parsed or not.
+      //    type:       (optional) image type of this token.
+      Base(TokenTypeEnum tokentype, CodePostion& position, int priorty = 0, bool finished = false, program::VariableDeclaration::TypeEnum type = program::VariableDeclaration::Length);
+      // Returns the bytecode of this token, if possible.
+      // If not possible it returns -1;
+      virtual int ByteCode() = 0;
+      // Returns a string that represents the current object.
+      virtual std::string ToString() = 0;
+      
+      // Should be set by the inherited class constructor.
+      const TokenTypeEnum token_type;
+      // label: 9,  bracket: 8, namesep (::; .): 8,  (de)ref: 7; mul/div: 6, add/sub: 5, 
+      // comparer: 4, logic ops: 3, copy: 2 others: 1
+      int priority;
+      // Indicates wheter this token is finished parsed or not.
+      bool finished;
+      // Position of the children or arguments of the current token.
+      TokenChidrenPosEnum token_chidren_position;
+      // Caret position where the token appears in the source or header code.
+      CodePostion position;
+      // The image type of this token. E.g. int, float, ...
+      program::VariableDeclaration::TypeEnum type;
+    };
 
-		class Base
-		{
-		public:
-			enum class TokenTypeEnum
-			{
-				Bracket,				// (, ), {, }, ...
-				Constant,				// "Hello", 12, ...
-				ConstantInt,
-				Operator,				// +, -, +=, ...
-				TypeDeclarer,			// int, bool, ...
-				Label,
-				ControlFlow,			// for, while
-				List, 
-				Comma
-			};
+    // Represents all brackets as a token
+    class Bracket : public Base {
+    public:
+      // Enum of bracket kinds
+      enum class KindEnum
+      {
+        Round,		// ()
+        Curly,		// {}
+        Square,		// []
+        Triangle	// <>
+      };
+      // Enum of possible bracket directions.
+      enum class DirectionEnum {
+        Closing,
+        Opening
+      };
+      // Creates an object.
+      //    kind:       Kind of bracket
+      //    direction:  Direction of the bracket
+      //    position:   Caret position in the code of this bracket.
+      Bracket(KindEnum kind, DirectionEnum direction, CodePostion position);
+      // Returns a string that represents the current object.
+      virtual std::string ToString();
+      // Returns the bytecode of this token, if possible.
+      // If not possible it returns -1;
+      virtual int ByteCode();
+      // Kind of this bracket
+      KindEnum kind;
+      // Direction of this bracket
+      DirectionEnum direction;
+    };
+    
+    // Represents a comma as a token
+    class Comma : public Base {
+    public:
+      // Creates an object. 
+      // Needs the caret position where this token appears in the code.
+      Comma(CodePostion& position);
+      // Returns a string that represents the current object.
+      virtual std::string ToString();
+      // Returns the bytecode of this token, if possible.
+      // If not possible it returns -1;
+      virtual int ByteCode();
+    };
+    // Represents a list as a token.
+    class List : public Base {
+    public:
+      // Creates an object. 
+      // Needs the caret position where this token appears in the code.
+      List(CodePostion& position);
+      // Returns a string that represents the current object.
+      virtual std::string ToString();
+      // Returns the bytecode of this token, if possible.
+      // If not possible it returns -1;
+      virtual int ByteCode();
+    };
 
-			enum class TokenChidrenPosEnum {
-				None = 0,
-				Left = 1,
-				Right = 2,
-				LeftAndRight = 3
-			};
-			Base(TokenTypeEnum tokentype, CodePostion& position, int priorty = 0, bool finished = false, program::VariableDec::TypeEnum type = program::VariableDec::Length);
-			TokenTypeEnum TokenType;
-			// label: 9,  bracket: 8, namesep (::; .): 8,  (de)ref: 7; mul/div: 6, add/sub: 5, 
-			// comparer: 4, logic ops: 3, copy: 2 others: 1
-			int Priority;
-			bool Finished;
-			TokenChidrenPosEnum TokenChidrenPos;
-			CodePostion Position;
+    // Represents a constant as a token
+    // and stores its value.
+    // DEPRECATED!
+    class Constant : public Base {
+    public:
+      // Type of constant
+      enum class KindEnum {
+        String,			// use std::string
+        Char,			  // char
+        Decimal,		// float
+        Boolean			// bool
+      };
+      // Creates an object.
+      //    kind:     Kind/Type of this constant
+      //    pointer:  The pointer to the value which should be stored.
+      //    position: The caret position where this token appears in the code.
+      Constant(KindEnum kind, void* pointer, CodePostion& position);
+      // Deletes the stored value.
+      // Destrcutor must be virtual because the base class needs also an desctructor.
+      virtual ~Constant();
+      // Returns a string that represents the current object.
+      virtual std::string ToString();
+      // Returns the bytecode of this token, if possible.
+      // If not possible it returns -1;
+      virtual int ByteCode();
+      // Kind of this constant
+      KindEnum kind;
+      // Pointer to the value which should be stored in this token.
+      void* pointer;
+    };
 
-			program::VariableDec::TypeEnum Type;
+    // Represents a constant Integer
+    // and stores its value.
+    class ConstantInt : public Base {
+    public:
+      // Creates an object.
+      //    value:    The integer value which should be stored.
+      //    position: The caret position where this token appears in the code.
+      ConstantInt(int value, CodePostion& position);
+      // Returns a string that represents the current object.
+      virtual std::string ToString();
+      // Returns the bytecode of this token, if possible.
+      // If not possible it returns -1;
+      virtual int ByteCode();
+      // The integer value which should be stored.
+      int value;
+    };
 
-			virtual int ByteCode()=0;
-			virtual std::string ToString()=0;
-		};
+    // Represents a operator as a token
+    class Operator : public Base {
+    public:
+      // Kind enum of operators
+      enum class KindEnum		// TODO: Not complete!
+      {
+        Add,			    // +
+        Substract,		// -		// Could be also uniary
+        Multipply,		// *		// Or dereference
+        Divide,			  // /
+        Modulo,		  	// %
+        Copy,			    // =
+        Equal,			  // ==
+        NotEqual,		  // !=
+        Greater,		  // >		// Or template bracket
+        GreaterEqual,	// >=
+        Less,			    // <		// Or template bracket
+        LessEqual,		// <=
+        LogicAnd,		  // &&
+        LogicOr,		  // ||
+        BitAnd,			  // &		// Or reference
+        BitOr,			  // |
+        BitXor,			  // ^
+        AddTo,			  // +=
+        SubstractTo,	// -=
+        MultiplyTo,		// *=
+        DivideTo,		  // /=
+        ModuloTo,		  // /=
+        AndTo,			  // &=
+        OrTo,			    // |=,
+        XorTo,			  // ^=,
+        Pop
+      };
+      // Creates an object.
+      //    kind:     Kind of this operator
+      //    position: The caret position where this token appears in the code.
+      Operator(KindEnum kind, CodePostion& position);
+      // Returns a string that represents the current object.
+      virtual std::string ToString();
+      // Returns the bytecode of this token, if possible.
+      // If not possible it returns -1;
+      virtual int ByteCode();
+      // Kind of this operator
+      KindEnum kind;
+    };
 
-		class Bracket : public Base {
-		public:
+    // Represents a control flow word as a token
+    class ControlFlow : public Base {
+    public:
+      // Kind enum of control flows
+      enum class KindEnum {
+        While,
+        For,
+        Do,
+        If,
+        Else,
+        Break,
+        Continue,
+        Return,
+        Switch,
+        Case,
+        Goto
+      };
+      // Creates an object.
+      //    kind:     Kind of this control flow
+      //    position: The caret position where this token appears in the code.
+      ControlFlow(KindEnum kind, CodePostion& position);
+      // Returns a string that represents the current object.
+      virtual std::string ToString();
+      // Returns the bytecode of this token, if possible.
+      // If not possible it returns -1;
+      virtual int ByteCode();
+      // Kind of this control flow
+      KindEnum kind;
+    };
 
-			enum KindEnum
-			{
-				Round,		// ()
-				Curly,		// {}
-				Square,		// []
-				Triangle	// <>
-			};
+    // Represents a declarer as a token.
+    // E.g. "int", "float", ...
+    class Declarer : public Base
+    {
+    public:
+      // Creates an object.
+      //    kind:     Type of the following declaration
+      //    position: The caret position where this token appears in the code.
+      Declarer(program::VariableDeclaration::TypeEnum kind, CodePostion& position);
+      // Returns a string that represents the current object.
+      virtual std::string ToString();
+      // Returns the bytecode of this token, if possible.
+      // If not possible it returns -1;
+      virtual int ByteCode();
+      // Type of the following declaration
+      program::VariableDeclaration::TypeEnum kind;
+    };
 
-			enum DirectionEnum {
-				Closing,
-				Opening
-			};
-
-			Bracket(KindEnum kind, DirectionEnum direction, CodePostion position);
-			KindEnum Kind;
-			DirectionEnum Direction;
-
-			virtual std::string ToString();
-			virtual int ByteCode();
-		};
-
-		class Comma : public Base {
-		public:
-			Comma(CodePostion& position);
-			virtual std::string ToString();
-			virtual int ByteCode();
-		};
-
-		class List : public Base {
-		public:
-			List(CodePostion& position);
-			virtual std::string ToString();
-			virtual int ByteCode();
-		};
-
-		class Constant : public Base{
-		public:
-			enum KindEnum {
-				String,			// use std::string
-				Char,			// char
-				Decimal,		// float
-				Boolean			// bool
-			};
-
-			Constant(KindEnum kind, void* pointer, CodePostion& position);
-			~Constant();
-
-			KindEnum Kind;
-			void* Pointer;
-
-			virtual std::string ToString();
-			virtual int ByteCode();
-		};
-
-		class ConstantInt : public Base {
-		public:
-			ConstantInt(int value, CodePostion& position);
-			virtual std::string ToString();
-			virtual int ByteCode();
-
-			int Value;
-		};
-
-		class Operator : public Base {
-		public:
-			enum KindEnum		// TODO: Not complete!
-			{
-				Add,			// +
-				Substract,		// -		// Could be also uniary
-				Multipply,		// *		// Or dereference
-				Divide,			// /
-				Modulo,			// %
-				Copy,			// =
-				Equal,			// ==
-				NotEqual,		// !=
-				Greater,		// >		// Or template bracket
-				GreaterEqual,	// >=
-				Less,			// <		// Or template bracket
-				LessEqual,		// <=
-				LogicAnd,		// &&
-				LogicOr,		// ||
-				BitAnd,			// &		// Or reference
-				BitOr,			// |
-				BitXor,			// ^
-				AddTo,			// +=
-				SubstractTo,	// -=
-				MultiplyTo,		// *=
-				DivideTo,		// /=
-				ModuloTo,		// /=
-				AndTo,			// &=
-				OrTo,			// |=,
-				XorTo,			// ^=,
-				Pop
-			};
-			KindEnum Kind;
-
-			Operator(KindEnum kind, CodePostion& position);
-
-			virtual std::string ToString();
-			virtual int ByteCode();
-		};
-
-		class ControlFlow : public Base {
-		public:
-			enum KindEnum {
-				While,
-				For,
-				Do,
-				If,
-				Else,
-				Break,
-				Continue,
-				Return,
-				Switch,
-				Case,
-				Goto
-			};
-
-			ControlFlow(KindEnum kind, CodePostion& position);
-
-			KindEnum Kind;
-
-			virtual std::string ToString();
-			virtual int ByteCode();
-		};
-
-		class Declarer : public Base 
-		{
-		public:
-			Declarer(program::VariableDec::TypeEnum kind, CodePostion& position);
-			program::VariableDec::TypeEnum Kind;
-
-			virtual std::string ToString();
-			virtual int ByteCode();
-		};
-
-		class Label : public Base {
-		public:
-
-			enum KindEnum {
-				Function,
-				Variable,
-				Unknown
-			};
-
-			Label(std::string& labelString, CodePostion& position);
-			std::string LabelString;
-			KindEnum Kind;
-			std::function<int()> RegAddress;
-
-			virtual std::string ToString();
-			virtual int ByteCode();
-		};
-	}
+    // Represents a label as a token
+    class Label : public Base {
+    public:
+      // Usage enum of the label
+      enum class KindEnum {
+        Function,
+        Variable,
+        Unknown
+      };
+      // Creates an object. 
+      // Creates an object.
+      //    labelString:  Text of this label.
+      //    position:     The caret position where this token appears in the code.
+      Label(std::string& labelString, CodePostion& position);
+      // Returns a string that represents the current object.
+      virtual std::string ToString();
+      // Returns the bytecode of this token, if possible.
+      // If not possible it returns -1;
+      virtual int ByteCode();
+      // Text of this label.
+      std::string label_string;
+      // Specifies whether this label is used for a variable or a function name.
+      KindEnum kind;
+      // A delegate which can be used to get the register address
+      // at the end of the compiling process.
+      std::function<int()> register_address;
+    };
+  }
 }
 
 #endif // !CHARLIE_TOKEN_BASE_H

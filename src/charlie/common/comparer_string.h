@@ -32,7 +32,12 @@
 
 namespace charlie {
 	namespace common{
+    // Use this struct as hash function in std::map<K, T, comparer> or std::set<T, comparer>
+    // Example:
+    //    auto my_map = std::map<char const *a, int, comparer_string>();
+    //
 		struct comparer_string {
+      // Comparing function used by the container
 			xprt bool operator()(char const *a, char const *b);
 		};
 	}

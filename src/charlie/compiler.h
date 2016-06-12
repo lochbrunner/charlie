@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2016, Matthias Lochbrunner <matthias_lochbrunner@live.de>
  * All rights reserved.
  *
@@ -32,36 +32,50 @@
 #include <string>
 #include <functional>
 #include "common\exportDefs.h"
-#include "common\LoggingComponent.h"
+#include "common\logging_component.h"
 
-#include "program\functionDec.h"
-#include "program\unresolvedProgram.h"
+#include "program\function_declaration.h"
+#include "program\unresolved_program.h"
 #include "program\statement.h"
 
-#include "api\externalFunctionManager.h"
+#include "api\external_function_manager.h"
 
 
 namespace charlie {
+  // This is the central class where as for now all APIs of this library can be called.
+  // Example:
+  //    auto compiler = Compiler([](std::string const &message){
+  //      std::cout << message << std::endl;
+  //    });
+  //    if(compiler.Build("main.cc"))
+  //      compiler.Run();
+  //
+  class Compiler : public common::LoggingComponent {
+  public:
+    // Creates an object without message delegate.
+    xprt Compiler();
+    // Creates an object with the specified message delegate.
+    xprt Compiler(std::function<void(std::string const &message)> messageDelegate);
+    // Compiles the speciefed C source file to bytecode. Returns true if succeeded.
+    xprt bool Build(std::string const &filename);
+    // Saves the current porgram to the file. Optional binary or as readable textfile.
+    // Returns true if succeeded.
+    xprt bool SaveProgram(std::string const &filename, bool binary = true);
+    // Runs the current program. Returns the program exit code.
+    // Optional with console arguments. (Not supported yet!)
+    xprt int Run();
+    xprt int Run(int argn, char** argv);
+    // External function manager 
+    api::ExternalFunctionManager external_function_manager;
 
-	class Compiler : public common::LoggingComponent {
-	public:
-		xprt Compiler();
-		xprt Compiler(std::function<void(std::string const &message)> messageDelegate);
-		/// Compiles the speciefed file
-		xprt bool Build(std::string const &filename);
-		xprt bool SaveProgram(std::string const &filename, bool binary = true);
-
-		xprt int Run();
-		xprt int Run(int argn, char** argv);
-
-		api::ExternalFunctionManager ExternalFunctionManager;
-
-	private:
-		bool compile();
-		bool enroleStatement(program::Statement& statement, int& count, std::map<program::FunctionDec, int, program::FunctionDec::comparer>& functionDict);
-		
-		program::UnresolvedProgram _program;
-	};
+  private:
+    // Compiles the syntax tree to bytecode.
+    bool compile();
+    // Enroles a statement of the syntax tree to bytecode.
+    bool enroleStatement(program::Statement& statement, int& count, std::map<program::FunctionDeclaration, int, program::FunctionDeclaration::comparer>& functionDict);
+    // The current program data.
+    program::UnresolvedProgram program_;
+  };
 
 }
 

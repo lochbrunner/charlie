@@ -4,13 +4,18 @@ int g = 4;
 
 int cubic(int v)
 {
-	return v *v*v;
+  return v *v*v;
 }
 
 int main()
 {
-	int i = 7;
-	println(2*g+i);
+  int i = 7;
 
-	println(cubic(4));
+  println(2 * g + i);
+
+  println(cubic(4 - 1) - 12);
+
+  //if (1) {
+  //	println(1);
+  //}
 }

@@ -39,98 +39,97 @@ using namespace std;
 using namespace charlie;
 
 
-
+// Adds console output functions to the compiler
 void addExternalFunctions(Compiler &compiler)
 {
-	compiler.ExternalFunctionManager.AddFunction("print", [](const char* message) 
-	{
-		cout << message;
-		Log::Buffer << message;
-	});
-	compiler.ExternalFunctionManager.AddFunction("println", [](const char* message) 
-	{
-		cout << message << endl;
-		Log::Buffer << message << endl;
-	});
-	compiler.ExternalFunctionManager.AddFunction("println", [](int number) 
-	{
-		cout << number << endl;
-		Log::Buffer << number << endl;
-	});
-	compiler.ExternalFunctionManager.AddFunction("print", [](int number) 
-	{
-		cout << number;
-		Log::Buffer << number;
-	});
+  compiler.external_function_manager.AddFunction("print", [](const char* message)
+  {
+    cout << message;
+    Log::buffer << message;
+  });
+  compiler.external_function_manager.AddFunction("println", [](const char* message)
+  {
+    cout << message << endl;
+    Log::buffer << message << endl;
+  });
+  compiler.external_function_manager.AddFunction("println", [](int number)
+  {
+    cout << number << endl;
+    Log::buffer << number << endl;
+  });
+  compiler.external_function_manager.AddFunction("print", [](int number)
+  {
+    cout << number;
+    Log::buffer << number;
+  });
 }
-
 
 
 // <command> <filename> <options>
 int main(int argn, char** argv)
 {
-	Command::CommandEnum command = Command::None;
-	int flag = Flag::None;
-	char* entry = NULL;
+  Command::CommandEnum command = Command::None;
+  int flag = Flag::None;
+  char* entry = NULL;
 
-	Command::Create();
-	Flag::Create();
+  Command::Create();
+  Flag::Create();
 
 
 #ifdef _DEBUG
-	if (argn > 2) 
-	{
-		command = Command::Get(argv[1]);
-		entry = argv[2];
-	}
-	for (int i = 3; i < argn; ++i) 
-	{
-		flag |= Flag::Get(argv[i]);
-	}
+  if (argn > 2)
+  {
+    command = Command::Get(argv[1]);
+    entry = argv[2];
+  }
+  for (int i = 3; i < argn; ++i)
+  {
+    flag |= Flag::Get(argv[i]);
+  }
 #else
-	if (argn > 1) 
-	{
-		command = Commands::Get(argv[0]);
-		entry = argv[1];
-	}
-	for (int i = 2; i < argn; ++i)
-	{
-		flag |= Flags::Get(argv[i]);
-	}
+  if (argn > 1)
+  {
+    command = Commands::Get(argv[0]);
+    entry = argv[1];
+  }
+  for (int i = 2; i < argn; ++i)
+  {
+    flag |= Flags::Get(argv[i]);
+  }
 #endif // _DEBUG
 
-	if (command == Command::None)
-	{
-		cout << "Please specify a command";
-		return -1;
-	}
+  if (command == Command::None)
+  {
+    cout << "Please specify a command";
+    return -1;
+  }
 
-	if (entry == NULL) 
-	{
-		cout << "Please specify an entry point";
-		return -1;
-	}
+  if (entry == NULL)
+  {
+    cout << "Please specify an entry point";
+    return -1;
+  }
 
-	int result = 0;
-	if (command == Command::Build)
-	{
-		Compiler compiler = Compiler([](string const &message) {
-			cout << message << endl;
-		});
+  int result = 0;
+  if (command == Command::Build)
+  {
+    Compiler compiler = Compiler([](string const &message) {
+      cout << message << endl;
+    });
 
-		addExternalFunctions(compiler);
-		if (compiler.Build(entry))
-		{
-			if (compiler.SaveProgram(entry, flag & Flag::Binary))
-				cout << "Saving program to " << entry << (flag & Flag::Binary ? ".bc" : ".bc.txt") << endl;
-			cout << "Running program ..\n\n";
-			result = compiler.Run();
-			cout << endl;
-			if (flag & Flag::LogOutput)
-				Log::Save(entry);
-		}
-	}
+    addExternalFunctions(compiler);
+    if (compiler.Build(entry))
+    {
+      if (compiler.SaveProgram(entry, flag & Flag::Binary))
+        cout << "Saving program to " << entry << (flag & Flag::Binary ? ".bc" : ".bc.txt") << endl;
+      cout << "Running program ..\n\n";
+      result = compiler.Run();
+      cout << endl;
+      if (flag & Flag::LogOutput)
+        Log::Save(entry);
+    }
+  }
 
-    return result;
+  return result;
 }
 

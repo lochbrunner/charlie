@@ -31,25 +31,25 @@
 
 using namespace std;
 
-stringstream Log::Buffer = stringstream();
+stringstream Log::buffer = stringstream();
 
 bool Log::Save(const string &filename) {
-	string fullfilename = filename;
-	fullfilename.append(".out.txt");
-	ofstream file(fullfilename);
-	if (!file.is_open()) {
-		return false;
-	}
-	
-	Buffer.str();
+  string fullfilename = filename;
+  fullfilename.append(".out.txt");
+  ofstream file(fullfilename);
+  if (!file.is_open()) {
+    return false;
+  }
 
-	file << Buffer.str();
+  buffer.str();
 
-	file.close();
-	cout << "Saving output to " << fullfilename << endl;
-	return true;
+  file << buffer.str();
+
+  file.close();
+  cout << "Saving output to " << fullfilename << endl;
+  return true;
 }
 
 void Log::Clear() {
-	Buffer.clear();
+  buffer.clear();
 }

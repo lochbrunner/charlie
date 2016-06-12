@@ -37,70 +37,70 @@
 using namespace std;
 
 namespace charlie {
-	namespace common {
-		namespace io {
-			bool ascii2string(std::string const &filename, std::string &result) {
-				std::string fullfilename = filename;
-				fullfilename.append(".cc");
-				ifstream file(fullfilename);
-				if (!file.is_open()) {
-					return false;
-				}
+  namespace common {
+    namespace io {
+      bool ascii2string(std::string const &filename, std::string &result) {
+        std::string fullfilename = filename;
+        fullfilename.append(".cc");
+        ifstream file(fullfilename);
+        if (!file.is_open()) {
+          return false;
+        }
 
-				std::stringstream buffer;
-				buffer << file.rdbuf();
-				file.close();
-				result = buffer.str();
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        file.close();
+        result = buffer.str();
 
-				return true;
-			}
-			bool saveProgramAscii(std::string const &filename, program::UnresolvedProgram & program)
-			{
-				list<int>::const_iterator it = program.Instructions.begin();
-				if (it == program.Instructions.end())
-					return false;
-				
-				std::string fullfilename = filename;
-				fullfilename.append(".bc.txt");
-				ofstream file(fullfilename);
-				if (!file.is_open()) {
-					return false;
-				}
-				file << (*it) << "\t// Version\n";
-				auto comments = queue<const char*>();
-				for (++it; it != program.Instructions.end(); ++it) {
-					if (comments.empty())
-						vm::InstructionManager::GetLegend((*it), comments);
-					file << (*it);
-					if (!comments.empty()) {
-						file << "\t// " << comments.front();
-						comments.pop();
-					}
-					file << "\n";
+        return true;
+      }
+      bool saveProgramAscii(std::string const &filename, program::UnresolvedProgram & program)
+      {
+        list<int>::const_iterator it = program.instructions.begin();
+        if (it == program.instructions.end())
+          return false;
 
-					
-				}
+        std::string fullfilename = filename;
+        fullfilename.append(".bc.txt");
+        ofstream file(fullfilename);
+        if (!file.is_open()) {
+          return false;
+        }
+        file << (*it) << "\t// Version\n";
+        auto comments = queue<const char*>();
+        for (++it; it != program.instructions.end(); ++it) {
+          if (comments.empty())
+            vm::InstructionManager::GetLegend((*it), comments);
+          file << (*it);
+          if (!comments.empty()) {
+            file << "\t// " << comments.front();
+            comments.pop();
+          }
+          file << "\n";
 
 
-				file.close();
-				return true;
-			}
-			bool saveProgramBinary(std::string const & filename, program::UnresolvedProgram & program)
-			{
-				std::string fullfilename = filename;
-				fullfilename.append(".bc");
-				ofstream file(fullfilename, ios::binary | ios::out | ios::trunc);
-				if (!file.is_open()) {
-					return false;
-				}
-				list<int>::const_iterator it = program.Instructions.begin();
-				for (; it != program.Instructions.end(); ++it) {
-					file << (*it);
-				}
+        }
 
-				file.close();
-				return true;
-			}
-		}
-	}
+
+        file.close();
+        return true;
+      }
+      bool saveProgramBinary(std::string const & filename, program::UnresolvedProgram & program)
+      {
+        std::string fullfilename = filename;
+        fullfilename.append(".bc");
+        ofstream file(fullfilename, ios::binary | ios::out | ios::trunc);
+        if (!file.is_open()) {
+          return false;
+        }
+        list<int>::const_iterator it = program.instructions.begin();
+        for (; it != program.instructions.end(); ++it) {
+          file << (*it);
+        }
+
+        file.close();
+        return true;
+      }
+    }
+  }
 }

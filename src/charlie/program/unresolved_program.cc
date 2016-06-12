@@ -25,50 +25,24 @@
 * SUCH DAMAGE.
 */
 
-#ifndef  CHARLIE_TOKEN_VARIABLEDEC_H
-#define CHARLIE_TOKEN_VARIABLEDEC_H
-
-#include <string>
+#include "unresolved_program.h"
 
 namespace charlie {
+  namespace program {
 
-	namespace program {
+    using namespace std;
 
-		class VariableDec {
-		public:
-			enum TypeEnum {
-				Int,
-				Long,
-				Float,
-				Double,
-				Boolean,
-				Char,
-				ConstCharPointer,
-				Void,
-				Length
-			};
+    UnresolvedProgram::UnresolvedProgram() :
+      instructions(), root(nullptr), function_declarations()
+    {
+    }
 
-			struct comparer {
-				bool operator()(const VariableDec& a, const VariableDec& b);
-			};
-
-			struct comparer_only_type {
-				bool operator()(const VariableDec& a, const VariableDec& b);
-			};
-
-			struct comparer_only_name {
-				bool operator()(const VariableDec& a, const VariableDec& b);
-			};
-
-			std::string Name;
-			TypeEnum ImageType;
-
-			VariableDec(TypeEnum imageType);
-			VariableDec(std::string name, TypeEnum imageType);
-
-			static const char* TypeString(TypeEnum type);
-		};
-	}
+    void UnresolvedProgram::Dispose()
+    {
+      for (auto it = function_declarations.begin(); it != function_declarations.end(); ++it)
+        it->Dispose();
+      function_declarations.clear();
+      root.Dispose();
+    }
+  }
 }
-
-#endif // ! CHARLIE_TOKEN_VARIABLEDEC_H

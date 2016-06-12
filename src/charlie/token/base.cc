@@ -29,222 +29,222 @@
 #include "..\vm\instruction.h"
 
 namespace charlie {
-	namespace token {
+  namespace token {
 
-		using namespace std;
-		using namespace program;
+    using namespace std;
+    using namespace program;
 
-		CodePostion::CodePostion(int characterPosition) : CharacterNumber(characterPosition) {}
+    CodePostion::CodePostion(int character_position) : character_position(character_position) {}
 
-		Base::Base(TokenTypeEnum tokentype, CodePostion& position, int priorty, bool finished, VariableDec::TypeEnum type) :
-			TokenType(tokentype), Position(position), Priority(priorty), Finished(finished), Type(type), TokenChidrenPos(TokenChidrenPosEnum::None){}
+    Base::Base(TokenTypeEnum tokentype, CodePostion& position, int priorty, bool finished, VariableDeclaration::TypeEnum type) :
+      token_type(tokentype), position(position), priority(priorty), finished(finished), type(type), token_chidren_position(TokenChidrenPosEnum::None) {}
 
-		Bracket::Bracket(KindEnum kind, DirectionEnum direction, CodePostion position) :
-			Base(TokenTypeEnum::Bracket, position,8), Kind(kind), Direction(direction) {}
-		std::string Bracket::ToString() 
-		{
-			return string();
-		}
-		int Bracket::ByteCode() 
-		{
-			return -1;
-		}
+    Bracket::Bracket(KindEnum kind, DirectionEnum direction, CodePostion position) :
+      Base(TokenTypeEnum::Bracket, position, 8), kind(kind), direction(direction) {}
+    std::string Bracket::ToString()
+    {
+      return string();
+    }
+    int Bracket::ByteCode()
+    {
+      return -1;
+    }
 
-		Comma::Comma(CodePostion& position) : Base(TokenTypeEnum::Comma, position, 1) {}
-		std::string Comma::ToString() 
-		{
-			return string();
-		}
-		int Comma::ByteCode()
-		{
-			return -1;
-		}
+    Comma::Comma(CodePostion& position) : Base(TokenTypeEnum::Comma, position, 1) {}
+    std::string Comma::ToString()
+    {
+      return string();
+    }
+    int Comma::ByteCode()
+    {
+      return -1;
+    }
 
-		List::List(CodePostion& position) : Base(TokenTypeEnum::List, position, 1) {}
-		std::string List::ToString()
-		{
-			return string();
-		}
-		int List::ByteCode()
-		{
-			return -1;
-		}
+    List::List(CodePostion& position) : Base(TokenTypeEnum::List, position, 1) {}
+    std::string List::ToString()
+    {
+      return string();
+    }
+    int List::ByteCode()
+    {
+      return -1;
+    }
 
-		Constant::Constant(KindEnum kind, void* pointer, CodePostion& position) : Base(TokenTypeEnum::Constant, position, 1, true), Kind(kind), Pointer(pointer){}
-		Constant::~Constant() {
-			if (Pointer != 0) {
-				delete Pointer;
-			}
-		}
-		std::string Constant::ToString()
-		{
-			return string();
-		}
-		int Constant::ByteCode()
-		{
-			return -1;
-		}
+    Constant::Constant(KindEnum kind, void* pointer, CodePostion& position) : Base(TokenTypeEnum::Constant, position, 1, true), kind(kind), pointer(pointer) {}
+    Constant::~Constant() {
+      if (pointer != nullptr) {
+        delete pointer;
+      }
+    }
+    std::string Constant::ToString()
+    {
+      return string();
+    }
+    int Constant::ByteCode()
+    {
+      return -1;
+    }
 
-		ConstantInt::ConstantInt(int value, CodePostion& position) : Base(TokenTypeEnum::ConstantInt, position, 1, true, VariableDec::Int), Value(value){}
-		std::string ConstantInt::ToString()
-		{
-			return string();
-		}
-		int ConstantInt::ByteCode()
-		{
-			return Value;
-		}
+    ConstantInt::ConstantInt(int value, CodePostion& position) : Base(TokenTypeEnum::ConstantInt, position, 1, true, VariableDeclaration::Int), value(value) {}
+    std::string ConstantInt::ToString()
+    {
+      return string();
+    }
+    int ConstantInt::ByteCode()
+    {
+      return value;
+    }
 
-		Operator::Operator(KindEnum kind, CodePostion& postion) : Base(TokenTypeEnum::Operator, postion), Kind(kind)
-		{
-			switch (kind)
-			{
-			case charlie::token::Operator::Add:
-			case charlie::token::Operator::Substract:
-				Priority = 5;
-				TokenChidrenPos = TokenChidrenPosEnum::LeftAndRight;
-				break;
-			case charlie::token::Operator::Multipply:
-			case charlie::token::Operator::Divide:
-			case charlie::token::Operator::Modulo:
-				Priority = 6;
-				TokenChidrenPos = TokenChidrenPosEnum::LeftAndRight;
-				break;
-			case charlie::token::Operator::Copy:
-				Priority = 2;
-				TokenChidrenPos = TokenChidrenPosEnum::LeftAndRight;
-				break;
-			case charlie::token::Operator::Equal:
-			case charlie::token::Operator::NotEqual:
-			case charlie::token::Operator::Greater:
-			case charlie::token::Operator::GreaterEqual:
-			case charlie::token::Operator::Less:
-			case charlie::token::Operator::LessEqual:
-				Priority = 4;
-				TokenChidrenPos = TokenChidrenPosEnum::LeftAndRight;
-				break;
-			case charlie::token::Operator::LogicAnd:
-			case charlie::token::Operator::LogicOr:
-				Priority = 3;
-				TokenChidrenPos = TokenChidrenPosEnum::LeftAndRight;
-				break;
-			case charlie::token::Operator::BitAnd:
-			case charlie::token::Operator::BitOr:
-			case charlie::token::Operator::BitXor:
-				Priority = 6;
-				TokenChidrenPos = TokenChidrenPosEnum::LeftAndRight;
-				break;
-			case charlie::token::Operator::AddTo:
-			case charlie::token::Operator::SubstractTo:
-			case charlie::token::Operator::MultiplyTo:
-			case charlie::token::Operator::DivideTo:
-			case charlie::token::Operator::ModuloTo:
-			case charlie::token::Operator::AndTo:
-			case charlie::token::Operator::OrTo:
-			case charlie::token::Operator::XorTo:
-				Priority = 2;
-				TokenChidrenPos = TokenChidrenPosEnum::LeftAndRight;
-				break;
-			default:
-				break;
-			}
-		}
-		std::string Operator::ToString() {
-			return string();
-		}
-		int Operator::ByteCode()
-		{
-			switch (Kind)
-			{
-			case charlie::token::Operator::Add:
-				if(Type == VariableDec::Int)
-					return vm::IntAdd;
-				return -1;
-			case charlie::token::Operator::Substract:
-				if (Type == VariableDec::Int)
-					return vm::IntSubstract;
-				return -1;
-			case charlie::token::Operator::Multipply:
-				if (Type == VariableDec::Int)
-					return vm::IntMultiply;
-				return -1;
-			case charlie::token::Operator::Divide:
-				if (Type == VariableDec::Int)
-					return vm::IntDivide;
-				return -1;
-			case charlie::token::Operator::Copy:
-				if (Type == VariableDec::Int)
-					return vm::IntCopy;
-				return -1;
-			case charlie::token::Operator::Equal:
-				break;
-			case charlie::token::Operator::NotEqual:
-				break;
-			case charlie::token::Operator::Greater:
-				break;
-			case charlie::token::Operator::GreaterEqual:
-				break;
-			case charlie::token::Operator::Less:
-				break;
-			case charlie::token::Operator::LessEqual:
-				break;
-			case charlie::token::Operator::LogicAnd:
-				break;
-			case charlie::token::Operator::LogicOr:
-				break;
-			case charlie::token::Operator::BitAnd:
-				break;
-			case charlie::token::Operator::BitOr:
-				break;
-			case charlie::token::Operator::BitXor:
-				break;
-			case charlie::token::Operator::AddTo:
-				break;
-			case charlie::token::Operator::SubstractTo:
-				break;
-			case charlie::token::Operator::MultiplyTo:
-				break;
-			case charlie::token::Operator::DivideTo:
-				break;
-			case charlie::token::Operator::AndTo:
-				break;
-			case charlie::token::Operator::OrTo:
-				break;
-			case charlie::token::Operator::XorTo:
-				break;
-			default:
-				break;
-			}
-			return -1;
-		}
-		Declarer::Declarer(program::VariableDec::TypeEnum kind, CodePostion& position) : Base(TokenTypeEnum::TypeDeclarer, position,  1), Kind(kind) {}
-		std::string Declarer::ToString() {
-			return string();
-		}
-		int Declarer::ByteCode()
-		{
-			return -1;
-		}
-		Label::Label(string& labelString, CodePostion& position) :
-			Base(TokenTypeEnum::Label, position, 9), LabelString(labelString), Kind(Unknown), RegAddress(0) {}
-		std::string Label::ToString()
-		{
-			return LabelString;
-		}
-		int Label::ByteCode()
-		{
-			return -1;
-		}
-		ControlFlow::ControlFlow(KindEnum kind, CodePostion& position) : Base(TokenTypeEnum::ControlFlow, position), Kind(kind) {}
-		std::string ControlFlow::ToString()
-		{
-			return string();
-		}
-		int ControlFlow::ByteCode()
-		{
-			return -1;
-		}
-	}
+    Operator::Operator(KindEnum kind, CodePostion& postion) : Base(TokenTypeEnum::Operator, postion), kind(kind)
+    {
+      switch (kind)
+      {
+      case Operator::KindEnum::Add:
+      case Operator::KindEnum::Substract:
+        priority = 5;
+        token_chidren_position = TokenChidrenPosEnum::LeftAndRight;
+        break;
+      case Operator::KindEnum::Multipply:
+      case Operator::KindEnum::Divide:
+      case Operator::KindEnum::Modulo:
+        priority = 6;
+        token_chidren_position = TokenChidrenPosEnum::LeftAndRight;
+        break;
+      case Operator::KindEnum::Copy:
+        priority = 2;
+        token_chidren_position = TokenChidrenPosEnum::LeftAndRight;
+        break;
+      case Operator::KindEnum::Equal:
+      case Operator::KindEnum::NotEqual:
+      case Operator::KindEnum::Greater:
+      case Operator::KindEnum::GreaterEqual:
+      case Operator::KindEnum::Less:
+      case Operator::KindEnum::LessEqual:
+        priority = 4;
+        token_chidren_position = TokenChidrenPosEnum::LeftAndRight;
+        break;
+      case Operator::KindEnum::LogicAnd:
+      case Operator::KindEnum::LogicOr:
+        priority = 3;
+        token_chidren_position = TokenChidrenPosEnum::LeftAndRight;
+        break;
+      case Operator::KindEnum::BitAnd:
+      case Operator::KindEnum::BitOr:
+      case Operator::KindEnum::BitXor:
+        priority = 6;
+        token_chidren_position = TokenChidrenPosEnum::LeftAndRight;
+        break;
+      case Operator::KindEnum::AddTo:
+      case Operator::KindEnum::SubstractTo:
+      case Operator::KindEnum::MultiplyTo:
+      case Operator::KindEnum::DivideTo:
+      case Operator::KindEnum::ModuloTo:
+      case Operator::KindEnum::AndTo:
+      case Operator::KindEnum::OrTo:
+      case Operator::KindEnum::XorTo:
+        priority = 2;
+        token_chidren_position = TokenChidrenPosEnum::LeftAndRight;
+        break;
+      default:
+        break;
+      }
+    }
+    std::string Operator::ToString() {
+      return string();
+    }
+    int Operator::ByteCode()
+    {
+      switch (kind)
+      {
+      case Operator::KindEnum::Add:
+        if (type == VariableDeclaration::Int)
+          return vm::IntAdd;
+        return -1;
+      case Operator::KindEnum::Substract:
+        if (type == VariableDeclaration::Int)
+          return vm::IntSubstract;
+        return -1;
+      case Operator::KindEnum::Multipply:
+        if (type == VariableDeclaration::Int)
+          return vm::IntMultiply;
+        return -1;
+      case Operator::KindEnum::Divide:
+        if (type == VariableDeclaration::Int)
+          return vm::IntDivide;
+        return -1;
+      case Operator::KindEnum::Copy:
+        if (type == VariableDeclaration::Int)
+          return vm::IntCopy;
+        return -1;
+      case Operator::KindEnum::Equal:
+        break;
+      case Operator::KindEnum::NotEqual:
+        break;
+      case Operator::KindEnum::Greater:
+        break;
+      case Operator::KindEnum::GreaterEqual:
+        break;
+      case Operator::KindEnum::Less:
+        break;
+      case Operator::KindEnum::LessEqual:
+        break;
+      case Operator::KindEnum::LogicAnd:
+        break;
+      case Operator::KindEnum::LogicOr:
+        break;
+      case Operator::KindEnum::BitAnd:
+        break;
+      case Operator::KindEnum::BitOr:
+        break;
+      case Operator::KindEnum::BitXor:
+        break;
+      case Operator::KindEnum::AddTo:
+        break;
+      case Operator::KindEnum::SubstractTo:
+        break;
+      case Operator::KindEnum::MultiplyTo:
+        break;
+      case Operator::KindEnum::DivideTo:
+        break;
+      case Operator::KindEnum::AndTo:
+        break;
+      case Operator::KindEnum::OrTo:
+        break;
+      case Operator::KindEnum::XorTo:
+        break;
+      default:
+        break;
+      }
+      return -1;
+    }
+    Declarer::Declarer(program::VariableDeclaration::TypeEnum kind, CodePostion& position) : Base(TokenTypeEnum::TypeDeclarer, position, 1), kind(kind) {}
+    std::string Declarer::ToString() {
+      return string();
+    }
+    int Declarer::ByteCode()
+    {
+      return -1;
+    }
+    Label::Label(string& labelString, CodePostion& position) :
+      Base(TokenTypeEnum::Label, position, 9), label_string(labelString), kind(Label::KindEnum::Unknown), register_address(0) {}
+    std::string Label::ToString()
+    {
+      return label_string;
+    }
+    int Label::ByteCode()
+    {
+      return -1;
+    }
+    ControlFlow::ControlFlow(KindEnum kind, CodePostion& position) : Base(TokenTypeEnum::ControlFlow, position), kind(kind) {}
+    std::string ControlFlow::ToString()
+    {
+      return string();
+    }
+    int ControlFlow::ByteCode()
+    {
+      return -1;
+    }
+  }
 }
 
 

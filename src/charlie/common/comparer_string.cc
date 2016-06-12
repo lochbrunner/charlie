@@ -30,10 +30,10 @@
 #include <cstring>
 
 namespace charlie {
-	namespace common {
-		bool comparer_string::operator()(char const *a, char const *b)
-		{
-			return std::strcmp(a, b) < 0;
-		}
-	}
+  namespace common {
+    bool comparer_string::operator()(char const *a, char const *b)
+    {
+      return std::strcmp(a, b) < 0;
+    }
+  }
 }

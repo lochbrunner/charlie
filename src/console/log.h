@@ -32,12 +32,16 @@
 #include <string>
 #include <sstream>
 
+// Global class which is used to log messages and save them 
+// later into a text file.
 class Log {
 public:
-
-	static std::stringstream Buffer;
-	static bool Save(const std::string &filename);
-	static void Clear();
+  // Saves log into the specified file.
+  static bool Save(const std::string &filename);
+  // Clears the storing std::stringstream buffer
+  static void Clear();
+  // Buffer stores the message untill it got saves to file.
+  static std::stringstream buffer;
 };
 
 #endif // !CONSOLE_LOG_H

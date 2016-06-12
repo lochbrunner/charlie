@@ -25,41 +25,37 @@
 * SUCH DAMAGE.
 */
 
-#ifndef CHARLIE_TOKEN_FUNCTIONDEC_H
-#define CHARLIE_TOKEN_FUNCTIONDEC_H
+#ifndef CHARLIE_PROGRAM_UNRESOLVEDPROGRAM_H
+#define CHARLIE_PROGRAM_UNRESOLVEDPROGRAM_H
 
 #include <list>
-#include <string>
-#include <sstream>
+#include <map>
 
-#include "variableDec.h"
+#include "function_declaration.h"
+#include "variable_declaration.h"
 #include "scope.h"
 
+#include "..\common\exportDefs.h"
+
 namespace charlie {
-
-	namespace program {
-
-		class FunctionDec {
-		public:
-			VariableDec::TypeEnum ImageType;
-			std::list<program::VariableDec> ArgumentType;
-			std::string Label;
-			bool HasDefinition;
-			Scope Definition;
-
-			FunctionDec(std::string &label, VariableDec::TypeEnum imageType, std::list<VariableDec> &argumentType, Scope* pParent=0);
-			FunctionDec(std::string &label, VariableDec::TypeEnum imageType, Scope* pParent=0);
-
-			void Dispose();
-
-			struct comparer {
-				bool operator()(const FunctionDec &a, const FunctionDec &b);
-			};
-
-			friend std::ostream& operator<<(std::ostream &stream, const FunctionDec &dec);
-		};
-	}
+  namespace program {
+    // Stores on the one hand the whole syntax tree and function definitions and on the other hand the 
+    // linear bytecode
+    class UnresolvedProgram {
+    public:
+      // Creates an object
+      xprt UnresolvedProgram();
+      // Deletes all the hidden pointers of this and member instances.
+      xprt void Dispose();
+      // The bytecode
+      std::list<int> instructions;
+      // All function declarations
+      std::list<FunctionDeclaration> function_declarations;
+      // The root scope for the syntax tree
+      Scope root;
+    };
+  }
 }
 
 
-#endif // !CHARLIE_TOKEN_FUNCTIONDEC_H
+#endif // !CHARLIE_PROGRAM_UNRESOLVEDPROGRAM_H

@@ -25,42 +25,52 @@
 * SUCH DAMAGE.
 */
 
-#include "gtest\gtest.h"
-#include "compiler.h"
-#include "scanner.h"
-
-#include "program\unresolved_program.h"
-
-#include "api\external_function_manager.h"
+#include "variable_declaration.h"
 
 
 namespace charlie {
 
-  TEST(ScannerTest, getNextWord)
-  {
-    auto program = program::UnresolvedProgram();
-    auto funcManager = api::ExternalFunctionManager();
+  namespace program {
+    VariableDeclaration::VariableDeclaration(TypeEnum imageType) : image_type(imageType) {
+      name = "";
+    }
+    VariableDeclaration::VariableDeclaration(std::string name, TypeEnum imageType)
+      : name(name), image_type(imageType) {}
 
-    std::string const code = " a 12 ()";
 
-    std::string word;
-    Scanner::WordType type;
+    const char* typeStringArray[VariableDeclaration::TypeEnum::Length] = {
+      "Int",
+      "Long",
+      "Float",
+      "Double",
+      "Boolean",
+      "Char",
+      "ConstCharPointer",
+      "Void"
+    };
 
-    Scanner scanner = Scanner(&program, &funcManager);
+    const char* undefined = "undefined";
 
-    scanner.codeInfo_.set(&code);
+    const char * VariableDeclaration::TypeString(TypeEnum type)
+    {
+      if (type > VariableDeclaration::TypeEnum::Length - 2)
+        return undefined;
+      return typeStringArray[type];
+    }
 
-    scanner.getNextWord(word, type);
-    EXPECT_EQ(word, "a");
-    EXPECT_EQ(type, Scanner::WordType::Name);
+    bool VariableDeclaration::comparer::operator()(const VariableDeclaration& a, const VariableDeclaration& b) {
+      if (a.image_type == b.image_type)
+        return std::strcmp(a.name.c_str(), b.name.c_str()) < 0;
+      return  a.image_type < b.image_type;
+    }
+    bool VariableDeclaration::comparer_only_type::operator()(const VariableDeclaration& a, const VariableDeclaration& b)
+    {
+      return a.image_type < b.image_type;
+    }
 
-    scanner.getNextWord(word, type);
-    EXPECT_EQ(word, "12");
-    EXPECT_EQ(type, Scanner::WordType::Number);
-
-    scanner.getNextWord(word, type);
-    EXPECT_EQ(code[scanner.codeInfo_.pos], '(');
-    EXPECT_EQ(type, Scanner::WordType::Bracket);
+    bool VariableDeclaration::comparer_only_name::operator()(const VariableDeclaration& a, const VariableDeclaration& b)
+    {
+      return std::strcmp(a.name.c_str(), b.name.c_str()) < 0;
+    }
   }
-
 }

@@ -29,259 +29,259 @@
 
 
 namespace charlie {
-	namespace vm {
+  namespace vm {
 
-		using namespace std;
+    using namespace std;
 
-		array<functionType, InstructionEnums::Length> InstructionManager::Create() {
+    array<functionType, InstructionEnums::Length> InstructionManager::Create() {
 
-			array<functionType, InstructionEnums::Length> types = array<functionType, InstructionEnums::Length>();
-			types[InstructionEnums::IncreaseRegister] = [](State& state)
-			{
-				int addition = state.program[++state.pos];
-				if (addition > 0)
-				{
-					int currentSize = state.reg.size();
-					state.reg.resize(currentSize + addition);
-				}
-				++state.pos;
-				return 0;
-			};
-			types[InstructionEnums::DecreaseRegister] = [](State& state)
-			{
-				int remove = state.program[++state.pos];
-				if (remove > 0)
-				{
-					int currentSize = state.reg.size();
-					state.reg.resize(currentSize - remove);
-				}
-				++state.pos;
-				return 0;
-			};
-			types[InstructionEnums::Push] = [](State& state)
-			{
-				int address = state.program[++state.pos];
-				if (static_cast<int>(state.reg.size()) > address) {
-					state.aluStack.push(state.reg[address]);
-					++state.pos;
-					return 0;
-				}
-				else
-				{
-					state.pos = -2;
-					return -1;
-				}
-			};
-			types[InstructionEnums::PushConst] = [](State& state) 
-			{
-				int i = state.program[++state.pos];
-				state.aluStack.push(i);
-				++state.pos;
-				return 0;
-			};
-			types[InstructionEnums::IntPop] = [](State& state)
-			{
-				int address = state.program[++state.pos];
-				if (static_cast<int>(state.reg.size()) > address)
-				{
-					int value = state.aluStack.top();
-					state.aluStack.pop();
-					state.reg[address] = value;
-					++state.pos;
-					return 0;
-				}
-				else
-				{
-					state.pos = -2;
-					return -1;
-				}
-			};
-			types[InstructionEnums::Call] = [](State& state) 
-			{
-				state.callStack.push(state.pos+2);
-				int address = state.program[++state.pos];
-				state.pos = address;
-				return 0;
-			};
-			types[InstructionEnums::Return] = [](State& state) 
-			{
-				// Only for testing
-				if (state.callStack.empty())
-				{
-					state.pos = -2;
-					return -1;
-				}
-				else
-					state.pos = state.callStack.top();
-				state.callStack.pop();
-				return 0;
-			};
-			types[InstructionEnums::CallEx] = [](State& state) 
-			{
-				int id = state.program[++state.pos];
-				if(state.pExternalFunctionManager != 0)
-					state.pExternalFunctionManager->Invoke(id, state.aluStack);
-				++state.pos;
-				return 0;
-			};
-			types[InstructionEnums::Exit] = [](State& state)
-			{
-				state.pos = -1;
-				return 0;
-			};
-			types[InstructionEnums::IntCopy] = [](State& state) {
-				int value = state.aluStack.top();
-				state.aluStack.pop();
-				int address = state.program[++state.pos];
-				
-				if (state.reg.size() > static_cast<size_t>(address))
-				{
-					state.reg[address] = value;
-					++state.pos;
-					return 0;
-				}
-				else 
-					return -1;
-			};
-			types[InstructionEnums::IntPop] = [](State& state) {
-				int value = state.aluStack.top();
-				state.aluStack.pop();
-				int address = state.program[++state.pos];
+      array<functionType, InstructionEnums::Length> types = array<functionType, InstructionEnums::Length>();
+      types[InstructionEnums::IncreaseRegister] = [](State& state)
+      {
+        int addition = state.program[++state.pos];
+        if (addition > 0)
+        {
+          int currentSize = state.reg.size();
+          state.reg.resize(currentSize + addition);
+        }
+        ++state.pos;
+        return 0;
+      };
+      types[InstructionEnums::DecreaseRegister] = [](State& state)
+      {
+        int remove = state.program[++state.pos];
+        if (remove > 0)
+        {
+          int currentSize = state.reg.size();
+          state.reg.resize(currentSize - remove);
+        }
+        ++state.pos;
+        return 0;
+      };
+      types[InstructionEnums::Push] = [](State& state)
+      {
+        int address = state.program[++state.pos];
+        if (static_cast<int>(state.reg.size()) > address) {
+          state.alu_stack.push(state.reg[address]);
+          ++state.pos;
+          return 0;
+        }
+        else
+        {
+          state.pos = -2;
+          return -1;
+        }
+      };
+      types[InstructionEnums::PushConst] = [](State& state)
+      {
+        int i = state.program[++state.pos];
+        state.alu_stack.push(i);
+        ++state.pos;
+        return 0;
+      };
+      types[InstructionEnums::IntPop] = [](State& state)
+      {
+        int address = state.program[++state.pos];
+        if (static_cast<int>(state.reg.size()) > address)
+        {
+          int value = state.alu_stack.top();
+          state.alu_stack.pop();
+          state.reg[address] = value;
+          ++state.pos;
+          return 0;
+        }
+        else
+        {
+          state.pos = -2;
+          return -1;
+        }
+      };
+      types[InstructionEnums::Call] = [](State& state)
+      {
+        state.call_stack.push(state.pos + 2);
+        int address = state.program[++state.pos];
+        state.pos = address;
+        return 0;
+      };
+      types[InstructionEnums::Return] = [](State& state)
+      {
+        // Only for testing
+        if (state.call_stack.empty())
+        {
+          state.pos = -2;
+          return -1;
+        }
+        else
+          state.pos = state.call_stack.top();
+        state.call_stack.pop();
+        return 0;
+      };
+      types[InstructionEnums::CallEx] = [](State& state)
+      {
+        int id = state.program[++state.pos];
+        if (state.external_function_manager != 0)
+          state.external_function_manager->Invoke(id, state.alu_stack);
+        ++state.pos;
+        return 0;
+      };
+      types[InstructionEnums::Exit] = [](State& state)
+      {
+        state.pos = -1;
+        return 0;
+      };
+      types[InstructionEnums::IntCopy] = [](State& state) {
+        int value = state.alu_stack.top();
+        state.alu_stack.pop();
+        int address = state.program[++state.pos];
 
-				if (state.reg.size() > static_cast<size_t>(address))
-				{
-					state.reg[address] = value;
-					++state.pos;
-					return 0;
-				}
-				else
-					return -1;
-			};
-			types[InstructionEnums::IntAdd] = [](State& state) 
-			{
-				int a = state.aluStack.top();
-				state.aluStack.pop();
-				int b = state.aluStack.top();
-				state.aluStack.pop();
-				state.aluStack.push(a+b);
-				++state.pos;
-				return 0;
-			};
-			types[InstructionEnums::IntSubstract] = [](State& state)
-			{
-				int b = state.aluStack.top();
-				state.aluStack.pop();
-				int a = state.aluStack.top();
-				state.aluStack.pop();
-				state.aluStack.push(a - b);
-				++state.pos;
-				return 0;
-			};
-			types[InstructionEnums::IntMultiply] = [](State& state) 
-			{
-				int a = state.aluStack.top();
-				state.aluStack.pop();
-				int b = state.aluStack.top();
-				state.aluStack.pop();
-				state.aluStack.push(a * b);
-				++state.pos;
-				return 0;
-			};
-			types[InstructionEnums::IntDivide] = [](State& state)
-			{
-				int b = state.aluStack.top();
-				state.aluStack.pop();
-				int a = state.aluStack.top();
-				state.aluStack.pop();
-				state.aluStack.push(a / b);
-				++state.pos;
-				return 0;
-			};
-			types[InstructionEnums::IntModulo] = [](State& state)
-			{
-				int b = state.aluStack.top();
-				state.aluStack.pop();
-				int a = state.aluStack.top();
-				state.aluStack.pop();
-				state.aluStack.push(a % b);
-				++state.pos;
-				return 0;
-			};
+        if (state.reg.size() > static_cast<size_t>(address))
+        {
+          state.reg[address] = value;
+          ++state.pos;
+          return 0;
+        }
+        else
+          return -1;
+      };
+      types[InstructionEnums::IntPop] = [](State& state) {
+        int value = state.alu_stack.top();
+        state.alu_stack.pop();
+        int address = state.program[++state.pos];
 
-			return types;
-		}
+        if (state.reg.size() > static_cast<size_t>(address))
+        {
+          state.reg[address] = value;
+          ++state.pos;
+          return 0;
+        }
+        else
+          return -1;
+      };
+      types[InstructionEnums::IntAdd] = [](State& state)
+      {
+        int a = state.alu_stack.top();
+        state.alu_stack.pop();
+        int b = state.alu_stack.top();
+        state.alu_stack.pop();
+        state.alu_stack.push(a + b);
+        ++state.pos;
+        return 0;
+      };
+      types[InstructionEnums::IntSubstract] = [](State& state)
+      {
+        int b = state.alu_stack.top();
+        state.alu_stack.pop();
+        int a = state.alu_stack.top();
+        state.alu_stack.pop();
+        state.alu_stack.push(a - b);
+        ++state.pos;
+        return 0;
+      };
+      types[InstructionEnums::IntMultiply] = [](State& state)
+      {
+        int a = state.alu_stack.top();
+        state.alu_stack.pop();
+        int b = state.alu_stack.top();
+        state.alu_stack.pop();
+        state.alu_stack.push(a * b);
+        ++state.pos;
+        return 0;
+      };
+      types[InstructionEnums::IntDivide] = [](State& state)
+      {
+        int b = state.alu_stack.top();
+        state.alu_stack.pop();
+        int a = state.alu_stack.top();
+        state.alu_stack.pop();
+        state.alu_stack.push(a / b);
+        ++state.pos;
+        return 0;
+      };
+      types[InstructionEnums::IntModulo] = [](State& state)
+      {
+        int b = state.alu_stack.top();
+        state.alu_stack.pop();
+        int a = state.alu_stack.top();
+        state.alu_stack.pop();
+        state.alu_stack.push(a % b);
+        ++state.pos;
+        return 0;
+      };
 
-		functionType InstructionManager::Get(InstructionEnums bc) {
-			return InstructionManager::Instructions[bc];
-		}
-		void InstructionManager::GetLegend(int instruction, queue<const char*>& comments)
-		{
-			switch (instruction)
-			{
-			case InstructionEnums::IncreaseRegister:
-				comments.push("Increases the register space ...");
-				comments.push("... size to increase");
-				break;
-			case InstructionEnums::DecreaseRegister:
-				comments.push("Decreases the register space ...");
-				comments.push("... size to decrease");
+      return types;
+    }
 
-				break;
-			case InstructionEnums::Push:
-				comments.push("Pushs the value ...");
-				comments.push("... at address");
-				break;
-			case InstructionEnums::PushConst:
-				comments.push("Pushs a constant ...");
-				comments.push("... value to push");
-				break;
-			case InstructionEnums::IntPop:
-				comments.push("Pops an integer from stack and copies to register ...");
-				comments.push("... at address");
-				break;
-			case InstructionEnums::Call:
-				comments.push("Calls function ...");
-				comments.push("... address of function");
-				break;
-			case InstructionEnums::CallEx:
-				comments.push("Calls external function ...");
-				comments.push("... Id of function");
-				break;
-			case InstructionEnums::Jump:
-				comments.push("Jumps ...");
-				comments.push("... address to jump");
-				break;
-			case InstructionEnums::Return:
-				comments.push("Returns");
-				break;
-			case InstructionEnums::IntCopy:
-				comments.push("Copies integer to register ...");
-				comments.push("... at address");
-				break;
-			case InstructionEnums::IntAdd:
-				comments.push("Adds two integers");
-				break;
-			case InstructionEnums::IntSubstract:
-				comments.push("Substracts two integers");
-				break;
-			case InstructionEnums::IntMultiply:
-				comments.push("Muliplies two integers");
-				break;
-			case InstructionEnums::IntDivide:
-				comments.push("Divides two integers");
-				break;
-			case InstructionEnums::IntModulo:
-				comments.push("Modulo of two integers");
-				break;
-			case InstructionEnums::Exit:
-				comments.push("Exit program");
-				break;
-			default:
-				break;
-			}
-		}
-		const array<functionType, InstructionEnums::Length> InstructionManager::Instructions = InstructionManager::Create();
+    functionType InstructionManager::Get(InstructionEnums bc) {
+      return InstructionManager::Instructions[bc];
+    }
+    void InstructionManager::GetLegend(int instruction, queue<const char*>& comments)
+    {
+      switch (instruction)
+      {
+      case InstructionEnums::IncreaseRegister:
+        comments.push("Increases the register space ...");
+        comments.push("... size to increase");
+        break;
+      case InstructionEnums::DecreaseRegister:
+        comments.push("Decreases the register space ...");
+        comments.push("... size to decrease");
 
-		State::State(): aluStack(), callStack(), reg(0), program(), pos(0), pExternalFunctionManager(0){}
-	}
+        break;
+      case InstructionEnums::Push:
+        comments.push("Pushs the value ...");
+        comments.push("... at address");
+        break;
+      case InstructionEnums::PushConst:
+        comments.push("Pushs a constant ...");
+        comments.push("... value to push");
+        break;
+      case InstructionEnums::IntPop:
+        comments.push("Pops an integer from stack and copies to register ...");
+        comments.push("... at address");
+        break;
+      case InstructionEnums::Call:
+        comments.push("Calls function ...");
+        comments.push("... address of function");
+        break;
+      case InstructionEnums::CallEx:
+        comments.push("Calls external function ...");
+        comments.push("... Id of function");
+        break;
+      case InstructionEnums::Jump:
+        comments.push("Jumps ...");
+        comments.push("... address to jump");
+        break;
+      case InstructionEnums::Return:
+        comments.push("Returns");
+        break;
+      case InstructionEnums::IntCopy:
+        comments.push("Copies integer to register ...");
+        comments.push("... at address");
+        break;
+      case InstructionEnums::IntAdd:
+        comments.push("Adds two integers");
+        break;
+      case InstructionEnums::IntSubstract:
+        comments.push("Substracts two integers");
+        break;
+      case InstructionEnums::IntMultiply:
+        comments.push("Muliplies two integers");
+        break;
+      case InstructionEnums::IntDivide:
+        comments.push("Divides two integers");
+        break;
+      case InstructionEnums::IntModulo:
+        comments.push("Modulo of two integers");
+        break;
+      case InstructionEnums::Exit:
+        comments.push("Exit program");
+        break;
+      default:
+        break;
+      }
+    }
+    const array<functionType, InstructionEnums::Length> InstructionManager::Instructions = InstructionManager::Create();
+
+    State::State() : alu_stack(), call_stack(), reg(0), program(), pos(0), external_function_manager(0) {}
+  }
 }

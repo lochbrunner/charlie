@@ -32,22 +32,22 @@ using namespace charlie::common;
 
 void Flag::Create()
 {
-	Dict = map<const char*, int, comparer_string>();
-	Dict["binary"] = FlagEnum::Binary;
-	Dict["-b"] = FlagEnum::Binary;
-	Dict["text"] = FlagEnum::Ascii;
-	Dict["-a"] = FlagEnum::Ascii;
-	Dict["logoutput"] = FlagEnum::LogOutput;
-	Dict["-lo"] = FlagEnum::LogOutput;
+  dict_ = map<const char*, int, comparer_string>();
+  dict_["binary"] = FlagEnum::Binary;
+  dict_["-b"] = FlagEnum::Binary;
+  dict_["text"] = FlagEnum::Ascii;
+  dict_["-a"] = FlagEnum::Ascii;
+  dict_["logoutput"] = FlagEnum::LogOutput;
+  dict_["-lo"] = FlagEnum::LogOutput;
 }
 
 int Flag::Get(const char* command)
 {
-	auto it = Dict.find(command);
-	if (it == Dict.end())
-		return FlagEnum::None;
-	return it->second;
+  auto it = dict_.find(command);
+  if (it == dict_.end())
+    return FlagEnum::None;
+  return it->second;
 }
 
 
-map<const char*, int, comparer_string> Flag::Dict = map<const char*, int, comparer_string>();
+map<const char*, int, comparer_string> Flag::dict_ = map<const char*, int, comparer_string>();

@@ -33,26 +33,28 @@
 #include "..\token\base.h"
 
 namespace charlie {
-	namespace program {
-		class Statement {
-		public:
-			Statement(token::Base* value);
-			virtual ~Statement();
-
-			token::Base* Value;
-			std::list<Statement> Arguments;
-
-			void Dispose();
-			bool Finished();
-			int Priority();
-		};
-	}
+  namespace program {
+    // Statements are use als lower nodes in the syntax tree.
+    class Statement {
+    public:
+      // Creates an object out of a pointer to the token.
+      Statement(token::Base* value);
+      // Explicit desctructor is used to delete the value.
+      virtual ~Statement();
+      // Deletes all the hidden pointers of this and member instances.
+      void Dispose();
+      // Returns true, if this statement is finished.
+      bool Finished();
+      // Returns the priorty of this statement.
+      // Needed to get the order of parsing. E.g. 3+4*5
+      int priority();
+      // Value of this node
+      token::Base* value;
+      // Children or arguments of this statement. E.g. "a" and "b" when a+b
+      std::list<Statement> arguments;
+    };
+  }
 }
-
-
-
-
-
 
 
 #endif // !CHARLIE_PROGRAM_STATEMENT_H

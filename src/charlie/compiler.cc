@@ -37,274 +37,281 @@
 
 #include "vm\instruction.h"
 
+#define ERROR_MESSAGE_MAKE_CODE(message) error_message(message, __FILE__, __LINE__)
+#define ERROR_MESSAGE_WITH_POS_MAKE_CODE(message, pos) error_message_to_code(message, pos, __FILE__, __LINE__)
+
 
 namespace charlie {
 
-	using namespace std;
-	using namespace common;
-	using namespace program;
-	using namespace vm;
-	using namespace token;
+  using namespace std;
+  using namespace common;
+  using namespace program;
+  using namespace vm;
+  using namespace token;
 
-	Compiler::Compiler() : 
-		LoggingComponent(), ExternalFunctionManager(), _program()
-	{
-	}
+  Compiler::Compiler() :
+    LoggingComponent(), external_function_manager(), program_()
+  {
+  }
 
-	Compiler::Compiler(function<void(string const& message)> messageDelegate) : 
-		LoggingComponent(messageDelegate), ExternalFunctionManager(), _program()
-	{
-	}
-	
-	bool Compiler::Build(string const &filename)
-	{
-		string code;
-		if (!io::ascii2string(filename, code)) {
-			std::stringstream str;
-			str << "Can not open file \"" << filename << "\"";
-			logOut(str.str());
-			return false;
-		}
+  Compiler::Compiler(function<void(string const& message)> messageDelegate) :
+    LoggingComponent(messageDelegate), external_function_manager(), program_()
+  {
+  }
 
-		_pCurrentCode = &code;
-		Scanner scanner = Scanner(&_program, &ExternalFunctionManager, _messageDelegate);
+  bool Compiler::Build(string const &filename)
+  {
+    string code;
+    if (!io::ascii2string(filename, code)) {
+      std::stringstream str;
+      str << "Can not open file \"" << filename << "\"";
+      ERROR_MESSAGE_MAKE_CODE(str);
+      return false;
+    }
 
-		if(!scanner.Scan(code)) {
-			logOut("Scanning failed!");
-			return false;
-		}
-		if (!compile()) {
-			logOut("Compiling failed!");
-			return false;
-		}
+    //_pCode = &code;
+    Scanner scanner = Scanner(&program_, &external_function_manager, _messageDelegate);
 
-		logOut("Building succeded!");
-		return true;
-	}
+    if (!scanner.Scan(code)) {
+      ERROR_MESSAGE_MAKE_CODE("Scanning failed!");
+      return false;
+    }
+    codeInfo_.set(&code);
+    if (!compile()) {
+      ERROR_MESSAGE_MAKE_CODE("Compiling failed!");
+      return false;
+    }
 
-	bool Compiler::SaveProgram(std::string const &filename, bool binary) {
-		if(binary)
-			return io::saveProgramBinary(filename, _program);
-		else
-			return io::saveProgramAscii(filename, _program);
-	}
+    error_message("Building succeded!");
+    return true;
+  }
 
-	bool Compiler::compile() {
-		auto funcPositions = map<FunctionDec, int, FunctionDec::comparer>();
+  bool Compiler::SaveProgram(std::string const &filename, bool binary) {
+    if (binary)
+      return io::saveProgramBinary(filename, program_);
+    else
+      return io::saveProgramAscii(filename, program_);
+  }
 
-		_program.Instructions.push_back(BYTECODE_VERSION);
-		// Junp address will be inserted at the end
-		// Global variables
-		_program.Instructions.push_back(InstructionEnums::IncreaseRegister);
-		_program.Instructions.push_back(_program.Root.CountVariableDecs);
-		int count = 2;
-		
-		for (auto itI = _program.Root.Statements.begin(); itI != _program.Root.Statements.end(); ++itI)
-		{
-			if (!enroleStatement(*itI, count, funcPositions))
-				return false;
-		}
-		
-		_program.Instructions.push_back(InstructionEnums::Call);
-		auto itMainAddress = --_program.Instructions.end();
-		_program.Instructions.push_back(InstructionEnums::Exit);
-		count+=3;
+  bool Compiler::compile() {
+    auto funcPositions = map<FunctionDeclaration, int, FunctionDeclaration::comparer>();
 
-		for (auto itF = _program.FunctionDecs.begin(); itF != _program.FunctionDecs.end(); ++itF) {
-			if (!itF->HasDefinition) {
-				stringstream st;
-				st << "Missing defintion for function: " << (*itF);
-				logging(st);
-				return false;
-			}
-			funcPositions.insert(make_pair((*itF), count));
+    program_.instructions.push_back(BYTECODE_VERSION);
+    // Junp address will be inserted at the end
+    // Global variables
+    program_.instructions.push_back(InstructionEnums::IncreaseRegister);
+    program_.instructions.push_back(program_.root.num_variable_declarations);
+    int count = 2;
 
-			_program.Instructions.push_back(InstructionEnums::IncreaseRegister);
-			_program.Instructions.push_back(itF->Definition.CountVariableDecs);
-			count += 2;
-		
-			// Insert variable declaration and defintion of the argument list
-			for (auto itI = itF->Definition.Statements.begin(); itI != itF->Definition.Statements.end(); ++itI)
-			{
-				if (!enroleStatement(*itI, count, funcPositions))
-					return false;
-			}
-			
-			_program.Instructions.push_back(InstructionEnums::DecreaseRegister);
-			_program.Instructions.push_back(itF->Definition.CountVariableDecs);
-			_program.Instructions.push_back(InstructionEnums::Return);
-			count += 3;
-		}
+    for (auto itI = program_.root.statements.begin(); itI != program_.root.statements.end(); ++itI)
+    {
+      if (!enroleStatement(*itI, count, funcPositions))
+        return false;
+    }
 
-		_program.Instructions.push_back(InstructionEnums::DecreaseRegister);
-		_program.Instructions.push_back(_program.Root.CountVariableDecs);
-		count += 2;
+    program_.instructions.push_back(InstructionEnums::Call);
+    auto itMainAddress = --program_.instructions.end();
+    program_.instructions.push_back(InstructionEnums::Exit);
+    count += 3;
 
-		// Find entryPoint
-		auto args = list<VariableDec>();
-		args.push_back(VariableDec::Int);
-		args.push_back(VariableDec::Char);
-		auto main = funcPositions.find(FunctionDec(string("main"), VariableDec::Int));
-		if (main == funcPositions.end())
-		{
-			logging("Can not find entry point");
-			return false;
-		}
+    for (auto itF = program_.function_declarations.begin(); itF != program_.function_declarations.end(); ++itF) {
+      if (!itF->has_definition) {
+        stringstream st;
+        st << "Missing defintion for function: " << (*itF);
+        ERROR_MESSAGE_MAKE_CODE(st);
+        return false;
+      }
+      funcPositions.insert(make_pair((*itF), count));
 
-		_program.Instructions.insert(++itMainAddress, main->second);
-		_program.Dispose();
-		return true;
-	}
+      program_.instructions.push_back(InstructionEnums::IncreaseRegister);
+      program_.instructions.push_back(itF->definition.num_variable_declarations);
+      count += 2;
 
-	bool Compiler::enroleStatement(program::Statement& statement, int& count, std::map<FunctionDec, int, FunctionDec::comparer>& functionDict) {
-		auto tokenType = statement.Value->TokenType;
-		if (tokenType == Base::TokenTypeEnum::ConstantInt) {
-			_program.Instructions.push_back(InstructionEnums::PushConst);
-			_program.Instructions.push_back(statement.Value->ByteCode());
-			count += 2;
-		}
-		else if (tokenType == Base::TokenTypeEnum::Label) {
-			if (dynamic_cast<Label*>(statement.Value)->Kind == Label::Function) {
-				auto label = dynamic_cast<Label*>(statement.Value);
+      // Insert variable declaration and defintion of the argument list
+      for (auto itI = itF->definition.statements.begin(); itI != itF->definition.statements.end(); ++itI)
+      {
+        if (!enroleStatement(*itI, count, funcPositions))
+          return false;
+      }
 
-				auto argTypes = std::list<VariableDec>();
-				for (auto it = statement.Arguments.begin(); it != statement.Arguments.end(); ++it)
-				{
-					if (!enroleStatement(*it, count, functionDict))
-						return false;
-					argTypes.push_back(it->Value->Type);
-				}
-				auto dec = FunctionDec(label->LabelString, VariableDec::Length, argTypes);
+      program_.instructions.push_back(InstructionEnums::DecreaseRegister);
+      program_.instructions.push_back(itF->definition.num_variable_declarations);
+      program_.instructions.push_back(InstructionEnums::Return);
+      count += 3;
+    }
 
-				int id = ExternalFunctionManager.GetId(dec);
-				if (id > -1) {
-					_program.Instructions.push_back(InstructionEnums::CallEx);
-					_program.Instructions.push_back(id);
-					count += 2;
-				}
-				else {
-					auto it = functionDict.find(dec);
-					if (it == functionDict.end())
-					{
-						stringstream st;
-						st << "Can not find function " << dec;
-						logging(st, label->Position);
-						return false;
-					}
-					label->Type = it->first.ImageType;
-					_program.Instructions.push_back(InstructionEnums::Call);
-					_program.Instructions.push_back(it->second);
-					count += 2;
-				}
-			}
-			else if(dynamic_cast<Label*>(statement.Value)->Kind == Label::Variable)
-			{
-				Label* label = dynamic_cast<Label*>(statement.Value);
-				int address = label->RegAddress();
-				if (address > -1) {
-					_program.Instructions.push_back(InstructionEnums::Push);
-					_program.Instructions.push_back(address);
-					count += 2;
-				}
-				else 
-				{
-					logging("Not addressed variable found!", label->Position);
-					return false;
-				}
-			}
-		}
-		else if(tokenType == Base::TokenTypeEnum::Operator)
-		{
-			auto op = dynamic_cast<Operator*>(statement.Value);
-			if (op->Kind == Operator::Copy) {
-				auto itAddress = statement.Arguments.begin();
-				assert(itAddress->Value->TokenType == Base::TokenTypeEnum::Label);
-				
-				int address = dynamic_cast<Label*>(itAddress->Value)->RegAddress();
-				if (!enroleStatement(*++itAddress, count, functionDict))
-					return false;
-				_program.Instructions.push_back(InstructionEnums::IntCopy);
-				_program.Instructions.push_back(address);
-				count += 2;
-			}
-			else if (op->Kind == Operator::Pop)
-			{
-				_program.Instructions.push_back(InstructionEnums::IntPop);
-				_program.Instructions.push_back(dynamic_cast<Label*>(statement.Arguments.begin()->Value)->RegAddress());
-				count += 2;
-			}
-			else {
-				for (auto it = statement.Arguments.begin(); it != statement.Arguments.end(); ++it)
-				{
-					if (!enroleStatement(*it, count, functionDict))
-						return false;
-				}
-				_program.Instructions.push_back(statement.Value->ByteCode());
-				++count;
-			}
-		}
-		return true;
-	}
+    program_.instructions.push_back(InstructionEnums::DecreaseRegister);
+    program_.instructions.push_back(program_.root.num_variable_declarations);
+    count += 2;
 
-	int Compiler::Run(int argn, char** argv) {
-		list<int>::const_iterator it = _program.Instructions.begin();
-		if (it == _program.Instructions.end())
-			return false;
+    // Find entryPoint
+    auto args = list<VariableDeclaration>();
+    args.push_back(VariableDeclaration::Int);
+    args.push_back(VariableDeclaration::Char);
+    auto main = funcPositions.find(FunctionDeclaration(string("main"), VariableDeclaration::Int));
+    if (main == funcPositions.end())
+    {
+      ERROR_MESSAGE_MAKE_CODE("Can not find entry point");
+      return false;
+    }
 
-		auto state = State();
-		state.pExternalFunctionManager = &ExternalFunctionManager;
-		state.aluStack.push(argn);
-		state.aluStack.push(reinterpret_cast<int>(argv));
+    program_.instructions.insert(++itMainAddress, main->second);
+    program_.Dispose();
+    return true;
+  }
 
-		int version = (*it++);
+  bool Compiler::enroleStatement(program::Statement& statement, int& count, std::map<FunctionDeclaration, int, FunctionDeclaration::comparer>& functionDict) {
+    auto tokenType = statement.value->token_type;
+    if (tokenType == Base::TokenTypeEnum::ConstantInt) {
+      program_.instructions.push_back(InstructionEnums::PushConst);
+      program_.instructions.push_back(statement.value->ByteCode());
+      count += 2;
+    }
+    else if (tokenType == Base::TokenTypeEnum::Label) {
+      if (dynamic_cast<Label*>(statement.value)->kind == Label::KindEnum::Function) {
+        auto label = dynamic_cast<Label*>(statement.value);
 
-		if (version != BYTECODE_VERSION) {
-			logging("Wrong bytecode version");
-			return -1;
-		}
+        auto argTypes = std::list<VariableDeclaration>();
+        for (auto it = statement.arguments.begin(); it != statement.arguments.end(); ++it)
+        {
+          if (!enroleStatement(*it, count, functionDict))
+            return false;
+          argTypes.push_back(it->value->type);
+        }
+        auto dec = FunctionDeclaration(label->label_string, VariableDeclaration::Length, argTypes);
 
-		for (; it != _program.Instructions.end(); ++it) {
-			state.program.push_back(*it);
-		}
+        int id = external_function_manager.GetId(dec);
+        if (id > -1) {
+          program_.instructions.push_back(InstructionEnums::CallEx);
+          program_.instructions.push_back(id);
+          count += 2;
+        }
+        else {
+          auto it = functionDict.find(dec);
+          if (it == functionDict.end())
+          {
+            stringstream st;
+            st << "Can not find function " << dec;
+            ERROR_MESSAGE_WITH_POS_MAKE_CODE(st, label->position.character_position);
+            return false;
+          }
+          label->type = it->first.image_type;
+          program_.instructions.push_back(InstructionEnums::Call);
+          program_.instructions.push_back(it->second);
+          count += 2;
+        }
+      }
+      else if (dynamic_cast<Label*>(statement.value)->kind == Label::KindEnum::Variable)
+      {
+        Label* label = dynamic_cast<Label*>(statement.value);
+        int address = label->register_address();
+        if (address > -1) {
+          program_.instructions.push_back(InstructionEnums::Push);
+          program_.instructions.push_back(address);
+          count += 2;
+        }
+        else
+        {
+          ERROR_MESSAGE_WITH_POS_MAKE_CODE("Not addressed variable found!", label->position.character_position);
+          return false;
+        }
+      }
+    }
+    else if (tokenType == Base::TokenTypeEnum::Operator)
+    {
+      auto op = dynamic_cast<Operator*>(statement.value);
+      if (op->kind == Operator::KindEnum::Copy) {
+        auto itAddress = statement.arguments.begin();
+        assert(itAddress->value->token_type == Base::TokenTypeEnum::Label);
 
-		while (state.pos>-1/* && !state.callStack.empty()*/)
-		{
-			int r = InstructionManager::Instructions[state.program[state.pos]](state);
-			if (r < 0)
-				break;
-		}
-		if (state.aluStack.empty())
-			return 0;
-		return state.aluStack.top();
-	}
+        int address = dynamic_cast<Label*>(itAddress->value)->register_address();
+        if (!enroleStatement(*++itAddress, count, functionDict))
+          return false;
+        program_.instructions.push_back(InstructionEnums::IntCopy);
+        program_.instructions.push_back(address);
+        count += 2;
+      }
+      else if (op->kind == Operator::KindEnum::Pop)
+      {
+        program_.instructions.push_back(InstructionEnums::IntPop);
+        program_.instructions.push_back(dynamic_cast<Label*>(statement.arguments.begin()->value)->register_address());
+        count += 2;
+      }
+      else {
+        for (auto it = statement.arguments.begin(); it != statement.arguments.end(); ++it)
+        {
+          if (!enroleStatement(*it, count, functionDict))
+            return false;
+        }
+        program_.instructions.push_back(statement.value->ByteCode());
+        ++count;
+      }
+    }
+    return true;
+  }
 
-	int Compiler::Run() {
-		list<int>::const_iterator it = _program.Instructions.begin();
-		if (it == _program.Instructions.end())
-			return false;
+  int Compiler::Run(int argn, char** argv) {
+    list<int>::const_iterator it = program_.instructions.begin();
+    if (it == program_.instructions.end())
+      return false;
 
-		auto state = State();
-		state.pExternalFunctionManager = &ExternalFunctionManager;
+    auto state = State();
+    state.external_function_manager = &external_function_manager;
+    state.alu_stack.push(argn);
+    state.alu_stack.push(reinterpret_cast<int>(argv));
 
-		int version = (*it++);
+    int version = (*it++);
 
-		if (version != BYTECODE_VERSION) {
-			logging("Wrong bytecode version");
-			return -1;
-		}
+    if (version != BYTECODE_VERSION) {
+      ERROR_MESSAGE_MAKE_CODE("Wrong bytecode version");
+      return -1;
+    }
 
-		for (;it != _program.Instructions.end();++it) {
-			state.program.push_back(*it);
-		}
+    for (; it != program_.instructions.end(); ++it) {
+      state.program.push_back(*it);
+    }
 
-		while (state.pos>-1/* && !state.callStack.empty()*/)
-		{
-			int r = InstructionManager::Instructions[state.program[state.pos]](state);
-			if (r < 0)
-				break;
-		}
-		if(state.aluStack.empty())
-			return 0;
-		return state.aluStack.top();
-	}
+    while (state.pos > -1/* && !state.call_stack.empty()*/)
+    {
+      int r = InstructionManager::Instructions[state.program[state.pos]](state);
+      if (r < 0)
+        break;
+    }
+    if (state.alu_stack.empty())
+      return 0;
+    return state.alu_stack.top();
+  }
+
+  int Compiler::Run() {
+    list<int>::const_iterator it = program_.instructions.begin();
+    if (it == program_.instructions.end())
+      return false;
+
+    auto state = State();
+    state.external_function_manager = &external_function_manager;
+
+    int version = (*it++);
+
+    if (version != BYTECODE_VERSION) {
+      ERROR_MESSAGE_MAKE_CODE("Wrong bytecode version");
+      return -1;
+    }
+
+    for (; it != program_.instructions.end(); ++it) {
+      state.program.push_back(*it);
+    }
+
+    while (state.pos > -1/* && !state.call_stack.empty()*/)
+    {
+      int r = InstructionManager::Instructions[state.program[state.pos]](state);
+      if (r < 0)
+        break;
+    }
+    if (state.alu_stack.empty())
+      return 0;
+    return state.alu_stack.top();
+  }
 }
+
+#undef ERROR_MESSAGE_MAKE_CODE
+#undef ERROR_MESSAGE_WITH_POS_MAKE_CODE

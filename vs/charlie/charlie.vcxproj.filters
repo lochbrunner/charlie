@@ -42,18 +42,6 @@
     <ClCompile Include="..\..\src\charlie\token\base.cc">
       <Filter>token</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\charlie\program\unresolvedProgram.cc">
-      <Filter>program</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\charlie\program\functionDec.cc">
-      <Filter>program</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\charlie\api\externalFunctionManager.cc">
-      <Filter>api</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\charlie\program\variableDec.cc">
-      <Filter>program</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\charlie\common\comparer_string.cc">
       <Filter>common</Filter>
     </ClCompile>
@@ -66,8 +54,20 @@
     <ClCompile Include="..\..\src\charlie\program\scope.cc">
       <Filter>program</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\charlie\common\loggingComponent.cc">
+    <ClCompile Include="..\..\src\charlie\api\external_function_manager.cc">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\charlie\common\logging_component.cc">
       <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\charlie\program\function_declaration.cc">
+      <Filter>program</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\charlie\program\variable_declaration.cc">
+      <Filter>program</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\charlie\program\unresolved_program.cc">
+      <Filter>program</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -86,18 +86,6 @@
     <ClInclude Include="..\..\src\charlie\token\base.h">
       <Filter>token</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\charlie\program\unresolvedProgram.h">
-      <Filter>program</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\charlie\program\functionDec.h">
-      <Filter>program</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\charlie\api\externalFunctionManager.h">
-      <Filter>api</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\charlie\program\variableDec.h">
-      <Filter>program</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\charlie\common\definitions.h">
       <Filter>common</Filter>
     </ClInclude>
@@ -113,8 +101,20 @@
     <ClInclude Include="..\..\src\charlie\program\scope.h">
       <Filter>program</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\charlie\common\loggingComponent.h">
+    <ClInclude Include="..\..\src\charlie\api\external_function_manager.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\charlie\common\logging_component.h">
       <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\charlie\program\function_declaration.h">
+      <Filter>program</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\charlie\program\variable_declaration.h">
+      <Filter>program</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\charlie\program\unresolved_program.h">
+      <Filter>program</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
