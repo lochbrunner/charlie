@@ -210,6 +210,28 @@ array<functionType, InstructionEnums::Length> InstructionManager::Create() {
     return 0;
   };
 
+  types[InstructionEnums::IntIncrease] = [](State& state) {
+    int address = state.program[++state.pos];
+
+    if (state.reg.size() > static_cast<size_t>(address)) {
+      state.reg[address] = ++state.reg[address];
+      ++state.pos;
+      return 0;
+    }
+    return -1;
+  };
+
+  types[InstructionEnums::IntDecrease] = [](State& state) {
+    int address = state.program[++state.pos];
+
+    if (state.reg.size() > static_cast<size_t>(address)) {
+      state.reg[address] = --state.reg[address];
+      ++state.pos;
+      return 0;
+    }
+    return -1;
+  };
+
   return types;
 }
 
@@ -274,6 +296,14 @@ void InstructionManager::GetLegend(int instruction, queue<const char*> *comments
     break;
   case InstructionEnums::IntModulo:
     comments->push("Modulo of two integers");
+    break;
+  case InstructionEnums::IntIncrease:
+    comments->push("Increases an integer ...");
+    comments->push("... at address");
+    break;
+  case InstructionEnums::IntDecrease:
+    comments->push("Decreases an integer ...");
+    comments->push("... at address");
     break;
   case InstructionEnums::Exit:
     comments->push("Exit program");

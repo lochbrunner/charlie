@@ -82,19 +82,19 @@ bool Compiler::Build(string const& filename) {
   if (!ascii2string(filename, &code)) {
     std::stringstream str;
     str << "Can not open file \"" << filename << "\"";
-    ERROR_MESSAGE_MAKE_CODE(str);
+    error_message(str);
     return false;
   }
 
   Scanner scanner = Scanner(&program_, &external_function_manager, _messageDelegate);
 
   if (!scanner.Scan(code)) {
-    ERROR_MESSAGE_MAKE_CODE("Scanning failed!");
+    error_message("Scanning failed!");
     return false;
   }
   codeInfo_.set(&code);
   if (!compile()) {
-    ERROR_MESSAGE_MAKE_CODE("Compiling failed!");
+    error_message("Compiling failed!");
     return false;
   }
 
@@ -138,7 +138,8 @@ bool Compiler::compile() {
     }
     funcPositions.insert(make_pair((*itF), count));
 
-    enroleBlock(funcPositions, itF->definition, &count);
+    if (!enroleBlock(funcPositions, itF->definition, &count))
+      return false;
 
     program_.instructions.push_back(InstructionEnums::Return);
     ++count;
@@ -236,17 +237,19 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
       }
     }
   }
-  else if (tokenType == Base::TokenTypeEnum::Operator)
-  {
+  else if (tokenType == Base::TokenTypeEnum::Operator) {
     auto op = dynamic_cast<Operator*>(statement.value);
-    if (op->kind == Operator::KindEnum::Copy) {
+    if (op->assigner) {
       auto itAddress = statement.arguments.begin();
       assert(itAddress->value->token_type == Base::TokenTypeEnum::Label);
-
       int address = dynamic_cast<Label*>(itAddress->value)->register_address();
-      if (!enroleStatement(functionDict, *++itAddress, count))
-        return false;
-      program_.instructions.push_back(InstructionEnums::IntCopy);
+
+      // TODO(lochbrunner): asign operators can also be used to push values: e.g. i = j++;
+      if (op->token_chidren_position == Base::TokenChidrenPosEnum::LeftAndRight) {
+        if (!enroleStatement(functionDict, *++itAddress, count))
+          return false;
+      }
+      program_.instructions.push_back(op->ByteCode());
       program_.instructions.push_back(address);
       *count += 2;
     } else if (op->kind == Operator::KindEnum::Pop) {
@@ -261,8 +264,7 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
       program_.instructions.push_back(statement.value->ByteCode());
       ++*count;
     }
-  }
-  else if (tokenType == Base::TokenTypeEnum::ControlFlow) {
+  } else if (tokenType == Base::TokenTypeEnum::ControlFlow) {
     if (dynamic_cast<const ControlFlow*>(statement.value)->kind == ControlFlow::KindEnum::If) {
       // Should have exactly two arguments: First a statement, second a block
       assert(statement.arguments.begin() != statement.arguments.end());
@@ -276,7 +278,7 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
 
       program_.instructions.push_back(InstructionEnums::PushConst);
       program_.instructions.push_back(-1);
-      
+
       auto itAlt = --program_.instructions.end();
       program_.instructions.push_back(InstructionEnums::JunpIf);
       *count += 3;

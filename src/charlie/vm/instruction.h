@@ -76,6 +76,8 @@ enum InstructionEnums {
   IntMultiply,
   IntDivide,
   IntModulo,
+  IntIncrease,
+  IntDecrease,
   Exit,
   Length
 };

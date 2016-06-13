@@ -42,7 +42,7 @@ Base::Base(TokenTypeEnum tokentype, CodePostion const& position, int priorty, bo
 }
 
 Bracket::Bracket(KindEnum kind, DirectionEnum direction, CodePostion const& position) :
-  Base(TokenTypeEnum::Bracket, position, 8), kind(kind), direction(direction) {
+  Base(TokenTypeEnum::Bracket, position, 9), kind(kind), direction(direction) {
 }
 
 std::string Bracket::ToString() const {
@@ -99,7 +99,7 @@ int ConstantInt::ByteCode() const {
   return value;
 }
 
-Operator::Operator(KindEnum kind, CodePostion const& postion) : Base(TokenTypeEnum::Operator, postion), kind(kind) {
+Operator::Operator(KindEnum kind, CodePostion const& postion) : Base(TokenTypeEnum::Operator, postion), kind(kind), assigner(false){
   switch (kind) {
   case Operator::KindEnum::Add:
   case Operator::KindEnum::Substract:
@@ -114,6 +114,7 @@ Operator::Operator(KindEnum kind, CodePostion const& postion) : Base(TokenTypeEn
     break;
   case Operator::KindEnum::Copy:
     priority = 2;
+    assigner = true;
     token_chidren_position = TokenChidrenPosEnum::LeftAndRight;
     break;
   case Operator::KindEnum::Equal:
@@ -144,8 +145,15 @@ Operator::Operator(KindEnum kind, CodePostion const& postion) : Base(TokenTypeEn
   case Operator::KindEnum::AndTo:
   case Operator::KindEnum::OrTo:
   case Operator::KindEnum::XorTo:
+    assigner = true;
     priority = 2;
     token_chidren_position = TokenChidrenPosEnum::LeftAndRight;
+    break;
+  case Operator::KindEnum::Increase:
+  case Operator::KindEnum::Decrease:
+    assigner = true;
+    priority = 7;
+    token_chidren_position = TokenChidrenPosEnum::LeftOrRight;
     break;
   default:
     break;
@@ -153,7 +161,64 @@ Operator::Operator(KindEnum kind, CodePostion const& postion) : Base(TokenTypeEn
 }
 
 std::string Operator::ToString() const {
-  return string();
+  switch (kind) {
+  case Operator::KindEnum::Add:
+    return "+";
+  case Operator::KindEnum::Substract:
+    return "-";
+  case Operator::KindEnum::Multipply:
+    return "*";
+  case Operator::KindEnum::Divide:
+    return "/";
+  case Operator::KindEnum::Modulo:
+    return "%";
+  case Operator::KindEnum::Copy:
+    return "=";
+  case Operator::KindEnum::Equal:
+    return "==";
+  case Operator::KindEnum::NotEqual:
+    return "!=";
+  case Operator::KindEnum::Greater:
+    return ">";
+  case Operator::KindEnum::GreaterEqual:
+    return ">=";
+  case Operator::KindEnum::Less:
+    return "<";
+  case Operator::KindEnum::LessEqual:
+    return "<=";
+  case Operator::KindEnum::LogicAnd:
+    return "&&";
+  case Operator::KindEnum::LogicOr:
+    return "||";
+  case Operator::KindEnum::BitAnd:
+    return "&";
+  case Operator::KindEnum::BitOr:
+    return "|";
+  case Operator::KindEnum::BitXor:
+    return "^";
+  case Operator::KindEnum::AddTo:
+    return "+=";
+  case Operator::KindEnum::SubstractTo:
+    return "-=";
+  case Operator::KindEnum::MultiplyTo:
+    return "*=";
+  case Operator::KindEnum::DivideTo:
+    return "/=";
+  case Operator::KindEnum::ModuloTo:
+    return "%=";
+  case Operator::KindEnum::AndTo:
+    return "&=";
+  case Operator::KindEnum::OrTo:
+    return "|=";
+  case Operator::KindEnum::XorTo:
+    return "^=";
+  case Operator::KindEnum::Increase:
+    return "++";
+  case Operator::KindEnum::Decrease:
+    return "--";
+  default:
+    return "Unknown!";
+  }
 }
 
 int Operator::ByteCode() const {
@@ -214,6 +279,14 @@ int Operator::ByteCode() const {
     break;
   case Operator::KindEnum::XorTo:
     break;
+  case Operator::KindEnum::Increase:
+    if (type == VariableDeclaration::Int)
+      return vm::IntIncrease;
+    return -1;
+  case Operator::KindEnum::Decrease:
+    if (type == VariableDeclaration::Int)
+      return vm::IntDecrease;
+    return -1;
   default:
     break;
   }
@@ -232,7 +305,7 @@ int Declarer::ByteCode() const {
 }
 
 Label::Label(string const& labelString, CodePostion const& position) :
-  Base(TokenTypeEnum::Label, position, 9), label_string(labelString), kind(Label::KindEnum::Unknown), register_address(0) {
+  Base(TokenTypeEnum::Label, position, 10), label_string(labelString), kind(Label::KindEnum::Unknown), register_address(0) {
 }
 
 std::string Label::ToString() const {

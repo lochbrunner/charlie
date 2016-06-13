@@ -63,7 +63,8 @@ class Base {
     None = 0,
     Left = 1,
     Right = 2,
-    LeftAndRight = 3
+    LeftAndRight = 3,
+    LeftOrRight = 8,    // E.g. "++i", or "i++"
   };
   // Creates an object.
   //    tokentype:  Should be set by the inherited class constructor.
@@ -81,7 +82,8 @@ class Base {
 
   // Should be set by the inherited class constructor.
   const TokenTypeEnum token_type;
-  // label: 9,  bracket: 8, namesep (::; .): 8,  (de)ref: 7; mul/div: 6, add/sub: 5,
+  // label: 10,  bracket: 9, namesep (::; .): 9,  (de)ref: 8; 
+  // in-/de-crease: 7 mul/div: 6, add/sub: 5,
   // comparer: 4, logic ops: 3, copy: 2 others: 1
   int priority;
   // Indicates wheter this token is finished parsed or not.
@@ -228,6 +230,8 @@ class Operator : public Base {
     AndTo,          // &=
     OrTo,           // |=,
     XorTo,          // ^=,
+    Increase,       // ++
+    Decrease,       // --
     Pop
   };
   // Creates an object.
@@ -241,6 +245,8 @@ class Operator : public Base {
   virtual int ByteCode() const;
   // Kind of this operator
   KindEnum kind;
+  // Indicates if the left variable should be assigned (e.g. "=", "++", "+=")
+  bool assigner;
 };
 
 // Represents a control flow word as a token

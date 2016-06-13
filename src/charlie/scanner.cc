@@ -591,7 +591,8 @@ bool Scanner::getBlock(FunctionDeclaration const& dec, Scope *scope) {
         return false;
       }
     // A new block?
-    } else if (ControlFlowDict::Contains(wordBuffer)) {
+    } 
+    else if (ControlFlowDict::Contains(wordBuffer)) {
       auto control = ControlFlowDict::Get(wordBuffer);
       switch (control) {
       case ControlFlow::KindEnum::While:
@@ -666,7 +667,8 @@ bool Scanner::getBlock(FunctionDeclaration const& dec, Scope *scope) {
         break;
       }
     // Must be a statement
-    } else {
+    }
+    else {
       if (!getStatement(word, scope)) {
         return false;
       }
@@ -748,11 +750,19 @@ bool Scanner::treeifyStatement(program::Scope const& scope, list<Statement> *lin
           return 0;
         }
         itMax->value->finished = true;
-      } else {
+      } 
+      else {
         auto functionNode = *itMax;
         dynamic_cast<Label*>(functionNode.value)->kind = Label::KindEnum::Function;
         getBracket(itTemp, linearStatements, &functionNode.arguments);
         if (++(functionNode.arguments.begin()) == functionNode.arguments.end()) {
+          auto arg = functionNode.arguments.begin();
+          if (arg->value->token_type == Base::TokenTypeEnum::Label && !try_get_type_of_variable(scope, arg->value)) {
+            stringstream st;
+            st << "Can not resolve type of \"" << arg->value->ToString() << "\" !";
+            ERROR_MESSAGE_WITH_POS_MAKE_CODE(st, itTemp->value->position.character_position);
+            return false;
+          }
           functionNode.value->finished = true;
           *statement = functionNode;
           return true;
@@ -773,11 +783,11 @@ bool Scanner::treeifyStatement(program::Scope const& scope, list<Statement> *lin
         ++post;
 
         if (prev == linearStatements->end()) {
-          ERROR_MESSAGE_MAKE_CODE_AND_POS("Missing symbol on the left side of a operator");
+          ERROR_MESSAGE_MAKE_CODE_AND_POS("Missing symbol on the left side of an operator");
           return false;
         }
         if (post == linearStatements->end()) {
-          ERROR_MESSAGE_MAKE_CODE_AND_POS("Missing symbol on the right side of a operator");
+          ERROR_MESSAGE_MAKE_CODE_AND_POS("Missing symbol on the right side of an operator");
           return false;
         }
         if (prev->value->token_type == Base::TokenTypeEnum::Label && dynamic_cast<Label*>(prev->value)->kind != Label::KindEnum::Function &&
@@ -803,6 +813,38 @@ bool Scanner::treeifyStatement(program::Scope const& scope, list<Statement> *lin
         } else {
           ERROR_MESSAGE_MAKE_CODE_AND_POS("Unspecified error");
           return false;
+        }
+      }
+      else if (itMax->value->token_chidren_position == Base::TokenChidrenPosEnum::LeftOrRight) {
+        std::list<Statement>::const_iterator prev = itMax;
+        --prev;
+        std::list<Statement>::const_iterator post = itMax;
+        ++post;
+        if (post == linearStatements->end() && prev == linearStatements->end()) {
+          stringstream st;
+          st << "Operator \"" << itMax->value->ToString() << "\" does not have any symbol either on the left side nor on the right side!";
+          ERROR_MESSAGE_MAKE_CODE_AND_POS(st);
+          return false;
+        }
+        // Postfix operator?
+        if (prev != linearStatements->end()) {
+          if (prev->value->token_type == Base::TokenTypeEnum::Label && dynamic_cast<Label*>(prev->value)->kind != Label::KindEnum::Function &&
+            !try_get_type_of_variable(scope, prev->value)) {
+            stringstream st;
+            st << "Could not get the type of \"" << prev->value->ToString() << "\"!";
+            ERROR_MESSAGE_MAKE_CODE_AND_POS(st);
+            return false;
+          }
+          if (prev->value->finished && prev->value->type == VariableDeclaration::Int) {
+            itMax->value->finished = true;
+            itMax->value->type = VariableDeclaration::Int;
+            itMax->arguments.push_back(*prev);
+            linearStatements->erase(prev);
+          }
+          else {
+            ERROR_MESSAGE_MAKE_CODE_AND_POS("Not implemented exception!");
+            return false;
+          }
         }
       }
       break;
@@ -947,7 +989,8 @@ int Scanner::getStatemantTokens(Statement *linearStatements, bool inBracket) {
           ERROR_MESSAGE_MAKE_CODE_AND_POS("Unexpected operator type");
           return -1;
         }
-      } else if (word.length() == 2 && word[1] == '=') {
+      }
+      else if (word.length() == 2 && word[1] == '=') {
         switch (word[0]) {
         case '=':
           linearStatements->arguments.push_back(new Operator(Operator::KindEnum::Equal, CodePostion(codeInfo_.pos)));
@@ -989,7 +1032,12 @@ int Scanner::getStatemantTokens(Statement *linearStatements, bool inBracket) {
           ERROR_MESSAGE_MAKE_CODE_AND_POS("Unexpected operator type");
           return -1;
         }
-      } else if (word.length() == 2 && word[0] == '&' && word[1] == '&')
+      }
+      else if (word.length() == 2 && word[0] == '+' && word[1] == '+')
+        linearStatements->arguments.push_back(new Operator(Operator::KindEnum::Increase, CodePostion(codeInfo_.pos)));
+      else if (word.length() == 2 && word[0] == '-' && word[1] == '-')
+        linearStatements->arguments.push_back(new Operator(Operator::KindEnum::Decrease, CodePostion(codeInfo_.pos)));
+      else if (word.length() == 2 && word[0] == '&' && word[1] == '&')
         linearStatements->arguments.push_back(new Operator(Operator::KindEnum::LogicAnd, CodePostion(codeInfo_.pos)));
       else if (word.length() == 2 && word[0] == '|' && word[1] == '|')
         linearStatements->arguments.push_back(new Operator(Operator::KindEnum::LogicOr, CodePostion(codeInfo_.pos)));

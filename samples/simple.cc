@@ -19,4 +19,8 @@ int main()
   {
   	println(123);
   }
+  g++;
+  println(g);
+  g--;
+  println(g);
 }
