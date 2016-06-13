@@ -30,15 +30,28 @@
 
 #include <list>
 
+namespace charlie {
+namespace program {
+class Statement;
+}  // namespace program
+}  // namespace charlie
+
+#include "scope.h"
 #include "..\token\base.h"
+
 
 namespace charlie {
 namespace program {
 // Statements are use als lower nodes in the syntax tree.
+// It can either store a block or a token.
 class Statement {
  public:
   // Creates an object out of a pointer to the token.
   Statement(token::Base* value);
+  // Creates an object out of a pointer to a block.
+  Statement(Scope* block);
+  // Creates an empty object
+  Statement();
   // Explicit desctructor is used to delete the value.
   virtual ~Statement();
   // Deletes all the hidden pointers of this and member instances.
@@ -50,6 +63,8 @@ class Statement {
   int priority() const;
   // Value of this node
   token::Base* value;
+  // Block of this node
+  Scope* block;
   // Children or arguments of this statement. E.g. "a" and "b" when a+b
   std::list<Statement> arguments;
 };

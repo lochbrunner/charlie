@@ -32,6 +32,12 @@
 #include <map>
 #include <functional>
 
+namespace charlie {
+namespace program {
+class Scope;
+}  // namespace program
+}  // namespace charlie
+
 #include "variable_declaration.h"
 #include "statement.h"
 

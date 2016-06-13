@@ -43,11 +43,28 @@
 
 namespace charlie {
 
-using namespace std;
-using namespace token;
-using namespace program;
-using namespace api;
-using namespace common;
+using std::list;
+using std::map;
+using std::string;
+using std::stringstream;
+using std::function;
+
+using token::Base;
+using token::Bracket;
+using token::ControlFlow;
+using token::Operator;
+using token::Label;
+using token::ConstantInt;
+using token::CodePostion;
+using token::Comma;
+using token::Constant;
+
+using program::VariableDeclaration;
+using program::FunctionDeclaration;
+using program::Scope;
+using program::Statement;
+
+using common::comparer_string;
 
 inline bool isBracketToken(Base* token, Bracket::DirectionEnum direction, Bracket::KindEnum kind) {
   return token->token_type == Base::TokenTypeEnum::Bracket && dynamic_cast<Bracket*>(token)->kind == kind &&
@@ -246,9 +263,9 @@ void Scanner::getNextWord(std::string *word, WordType *type) {
   for (; codeInfo_.pos < codeInfo_.length; ++codeInfo_.pos) {
     char c = codeInfo_.current_char();
     if (c == ' ' || c == '\n' || c == '\t') {
-      if (*type == WordType::None)
+      if (*type == WordType::None) {
         continue;
-      else if (*type == WordType::String) {
+      } else if (*type == WordType::String) {
         if (c == ' ' || c == '\t')
           continue;
         else {
@@ -508,10 +525,6 @@ void Scanner::proceess_controlsequences(std::string *text) {
 }
 
 bool Scanner::getFunctionDefinition(FunctionDeclaration *dec) {
-  WordType wordType;
-  string word;
-  const char* wordBuffer;
-
   // Are Arguments declared?
   for (auto it = dec->argument_types.begin(); it != dec->argument_types.end(); ++it) {
     dec->definition.AddVariableDec(*it);
@@ -529,33 +542,45 @@ bool Scanner::getFunctionDefinition(FunctionDeclaration *dec) {
     }
   }
 
+  return getBlock(*dec, &dec->definition);
+}
+
+bool Scanner::getBlock(FunctionDeclaration const& dec, Scope *scope) {
+  WordType wordType;
+  string word;
+  const char* wordBuffer;
+
   while (codeInfo_.pos < codeInfo_.length && codeInfo_.pos != -1) {
     getNextWord(&word, &wordType);
-    // Declarations, statements or loops/ifs?
+    // End of this block?
     if (wordType == WordType::Bracket && codeInfo_.current_char() == '}') {
       ++codeInfo_.pos;
       break;
     }
+    // A single semikolon? Does not make sense, but is ok.
     if (wordType == WordType::Semikolon) {
       ++codeInfo_.pos;
       continue;
+    // Prefix operator?
     } else if (wordType == WordType::Operator) {
       // TODO(lochbrunner): prefix operators i.e. ++i;
-      ERROR_MESSAGE_MAKE_CODE_AND_POS("Not implemented exeption!");
+      ERROR_MESSAGE_MAKE_CODE_AND_POS("Sorry: Prefix operators are not implemented yet!");
       return false;
+    // Anything else but not name?
     } else if (wordType != WordType::Name) {
       ERROR_MESSAGE_MAKE_CODE_AND_POS("Unexpected symbol in function definition");
       return false;
     }
     wordBuffer = word.c_str();
+    // A declaration?
     if (TypeDict::Contains(wordBuffer)) {
       auto type = TypeDict::Get(wordBuffer);
       string variableName;
       getNextWord(&variableName, &wordType);
 
       if (wordType == WordType::Name) {
-        dec->definition.AddVariableDec(VariableDeclaration(variableName, type));
-        if (!getStatement(variableName, &dec->definition)) {
+        scope->AddVariableDec(VariableDeclaration(variableName, type));
+        if (!getStatement(variableName, scope)) {
           return false;
         }
       } else if (wordType == WordType::Semikolon) {
@@ -565,6 +590,7 @@ bool Scanner::getFunctionDefinition(FunctionDeclaration *dec) {
         ERROR_MESSAGE_MAKE_CODE_AND_POS("Unexpected symbol in function definition");
         return false;
       }
+    // A new block?
     } else if (ControlFlowDict::Contains(wordBuffer)) {
       auto control = ControlFlowDict::Get(wordBuffer);
       switch (control) {
@@ -577,18 +603,34 @@ bool Scanner::getFunctionDefinition(FunctionDeclaration *dec) {
       case ControlFlow::KindEnum::If:
         getNextWord(&word, &wordType);
         if (wordType != WordType::Bracket || codeInfo_.current_char() != '(') {
-          ERROR_MESSAGE_MAKE_CODE_AND_POS("Expected opening bracket after word");
+          ERROR_MESSAGE_MAKE_CODE_AND_POS("Expected opening bracket after if");
           return false;
         } else {
           ++codeInfo_.pos;
-          Scope expression = Scope(&dec->definition);
+          Scope expression = Scope(scope);
           getExpression(&expression, true);
+          // Is there exactly one statment
+          if (expression.statements.begin() == expression.statements.end() ||
+            ++expression.statements.begin() != expression.statements.end()) {
+            ERROR_MESSAGE_MAKE_CODE_AND_POS("Expected one expression in if(...)");
+            return false;
+          }
           getNextWord(&word, &wordType);
           if (wordType != WordType::Bracket || codeInfo_.current_char() != '{') {
-            Scope block = Scope(&dec->definition);
-
+            // Single statement block
+            // TODO(lochbrunner)
+            ERROR_MESSAGE_MAKE_CODE_AND_POS("Sorry: Single statement blocks are not implemented yet!");
+            return false;
           } else {
-
+            auto block = new Scope(scope);
+            ++codeInfo_.pos;
+            if(!getBlock(dec, block))
+              return false;
+            auto cflow = new ControlFlow(control, CodePostion(codeInfo_.pos));
+            auto statement = Statement(cflow);
+            statement.arguments.push_back(*expression.statements.begin());
+            statement.arguments.push_back(block);
+            scope->statements.push_back(statement);
           }
         }
         break;
@@ -599,17 +641,16 @@ bool Scanner::getFunctionDefinition(FunctionDeclaration *dec) {
       case ControlFlow::KindEnum::Continue:
         break;
       case ControlFlow::KindEnum::Return:
-        if (dec->image_type != VariableDeclaration::Void) {
-
-          if (getExpression(&dec->definition)) {
-            dec->definition.statements.push_back(Statement(new ControlFlow(control, CodePostion(codeInfo_.pos))));
+        if (dec.image_type != VariableDeclaration::Void) {
+          if (getExpression(scope)) {
+            scope->statements.push_back(Statement(new ControlFlow(control, CodePostion(codeInfo_.pos))));
             break;
           }
           return false;
         } else {
           getNextWord(&word, &wordType);
           if (wordType == WordType::Semikolon) {
-            dec->definition.statements.push_back(Statement(new ControlFlow(control, CodePostion(codeInfo_.pos))));
+            scope->statements.push_back(Statement(new ControlFlow(control, CodePostion(codeInfo_.pos))));
             break;
           } else {
             ERROR_MESSAGE_MAKE_CODE_AND_POS("This function has returning type of void and nothing else!");
@@ -624,23 +665,22 @@ bool Scanner::getFunctionDefinition(FunctionDeclaration *dec) {
       default:
         break;
       }
-
+    // Must be a statement
     } else {
-      if (!getStatement(word, &dec->definition)) {
+      if (!getStatement(word, scope)) {
         return false;
       }
     }
   }
-
   return true;
 }
 
 bool Scanner::getExpression(Scope *prog, bool inBracket) {
-  Statement tokens = Statement(nullptr);
+  Statement tokens = Statement();
 
   int num = getStatemantTokens(&tokens, inBracket);
   if (num > 0) {
-    Statement statement = nullptr;
+    Statement statement = Statement();
     if (!treeifyStatement(*prog, &tokens.arguments, &statement))
       return false;
     prog->statements.push_back(statement);
@@ -650,13 +690,13 @@ bool Scanner::getExpression(Scope *prog, bool inBracket) {
 }
 
 bool Scanner::getStatement(string const &word, Scope *prog) {
-  Statement tokens = Statement(nullptr);
+  Statement tokens = Statement();
 
   tokens.arguments.push_back(new Label(word, CodePostion(codeInfo_.pos)));
 
   int num = getStatemantTokens(&tokens);
   if (num > 0) {
-    Statement statement = nullptr;
+    Statement statement = Statement();
     if (!treeifyStatement(prog, &tokens.arguments, &statement))
       return false;
     prog->statements.push_back(statement);
@@ -750,7 +790,6 @@ bool Scanner::treeifyStatement(program::Scope const& scope, list<Statement> *lin
         if (prev->value->finished && prev->value->type == VariableDeclaration::Int ||
           prev->value->finished && prev->value->type == VariableDeclaration::Length) {
           if (post->value->finished && post->value->type == VariableDeclaration::Int) {
-
             itMax->value->finished = true;
             itMax->value->type = VariableDeclaration::Int;
             itMax->arguments.push_back(*prev);
@@ -795,7 +834,8 @@ int Scanner::getStatemantTokens(Statement *linearStatements, bool inBracket) {
     case WordType::Bracket:
       switch (codeInfo_.current_char()) {
       case '(':
-        linearStatements->arguments.push_back(new Bracket(Bracket::KindEnum::Round, Bracket::DirectionEnum::Opening, CodePostion(codeInfo_.pos)));
+        linearStatements->arguments.push_back(new Bracket(Bracket::KindEnum::Round, Bracket::DirectionEnum::Opening,
+                                              CodePostion(codeInfo_.pos)));
         ++bracketStateRound;
         break;
       case ')':
@@ -807,11 +847,13 @@ int Scanner::getStatemantTokens(Statement *linearStatements, bool inBracket) {
           ERROR_MESSAGE_MAKE_CODE_AND_POS("There is nothing to close with a round bracket");
           return -1;
         }
-        linearStatements->arguments.push_back(new Bracket(Bracket::KindEnum::Round, Bracket::DirectionEnum::Closing, CodePostion(codeInfo_.pos)));
+        linearStatements->arguments.push_back(new Bracket(Bracket::KindEnum::Round, Bracket::DirectionEnum::Closing,
+                                              CodePostion(codeInfo_.pos)));
         --bracketStateRound;
         break;
       case '[':
-        linearStatements->arguments.push_back(new Bracket(Bracket::KindEnum::Square, Bracket::DirectionEnum::Opening, CodePostion(codeInfo_.pos)));
+        linearStatements->arguments.push_back(new Bracket(Bracket::KindEnum::Square, Bracket::DirectionEnum::Opening,
+                                              CodePostion(codeInfo_.pos)));
         ++bracketStateSquare;
         break;
       case ']':
@@ -819,11 +861,13 @@ int Scanner::getStatemantTokens(Statement *linearStatements, bool inBracket) {
           ERROR_MESSAGE_MAKE_CODE_AND_POS("There is nothing to close with a square bracket");
           return -1;
         }
-        linearStatements->arguments.push_back(new Bracket(Bracket::KindEnum::Square, Bracket::DirectionEnum::Closing, CodePostion(codeInfo_.pos)));
+        linearStatements->arguments.push_back(new Bracket(Bracket::KindEnum::Square, Bracket::DirectionEnum::Closing,
+                                              CodePostion(codeInfo_.pos)));
         --bracketStateSquare;
         break;
       case '{':
-        linearStatements->arguments.push_back(new Bracket(Bracket::KindEnum::Curly, Bracket::DirectionEnum::Opening, CodePostion(codeInfo_.pos)));
+        linearStatements->arguments.push_back(new Bracket(Bracket::KindEnum::Curly, Bracket::DirectionEnum::Opening,
+                                              CodePostion(codeInfo_.pos)));
         ++bracketStateCurly;
         break;
       case '}':
@@ -831,14 +875,17 @@ int Scanner::getStatemantTokens(Statement *linearStatements, bool inBracket) {
           ERROR_MESSAGE_MAKE_CODE_AND_POS("There is nothing to close with a curly bracket");
           return -1;
         }
-        linearStatements->arguments.push_back(new Bracket(Bracket::KindEnum::Curly, Bracket::DirectionEnum::Closing, CodePostion(codeInfo_.pos)));
+        linearStatements->arguments.push_back(new Bracket(Bracket::KindEnum::Curly, Bracket::DirectionEnum::Closing,
+                                              CodePostion(codeInfo_.pos)));
         --bracketStateCurly;
         break;
       case '<':
-        linearStatements->arguments.push_back(new Bracket(Bracket::KindEnum::Triangle, Bracket::DirectionEnum::Opening, CodePostion(codeInfo_.pos)));
+        linearStatements->arguments.push_back(new Bracket(Bracket::KindEnum::Triangle, Bracket::DirectionEnum::Opening,
+                                              CodePostion(codeInfo_.pos)));
         break;
       case '>':
-        linearStatements->arguments.push_back(new Bracket(Bracket::KindEnum::Triangle, Bracket::DirectionEnum::Closing, CodePostion(codeInfo_.pos)));
+        linearStatements->arguments.push_back(new Bracket(Bracket::KindEnum::Triangle, Bracket::DirectionEnum::Closing,
+                                              CodePostion(codeInfo_.pos)));
         break;
       default:
         break;
@@ -846,7 +893,8 @@ int Scanner::getStatemantTokens(Statement *linearStatements, bool inBracket) {
       ++codeInfo_.pos;
       break;
     case WordType::Char:
-      linearStatements->arguments.push_back(new Constant(Constant::KindEnum::Char, new char(codeInfo_.current_char()), CodePostion(codeInfo_.pos)));
+      linearStatements->arguments.push_back(new Constant(Constant::KindEnum::Char, new char(codeInfo_.current_char()),
+                                            CodePostion(codeInfo_.pos)));
       break;
     case WordType::Comma:
       linearStatements->arguments.push_back(new Comma(CodePostion(codeInfo_.pos)));
@@ -957,7 +1005,6 @@ int Scanner::getStatemantTokens(Statement *linearStatements, bool inBracket) {
       ERROR_MESSAGE_MAKE_CODE_AND_POS("Unexpected word type");
       return -1;
     }
-
   } while (wordType != WordType::Semikolon);
   if (bracketStateRound != 0) {
     ERROR_MESSAGE_MAKE_CODE_AND_POS("There is still an open round bracket");
@@ -983,9 +1030,9 @@ bool Scanner::getBracket(list<Statement>::const_iterator const& itOpening,
   delete it->value;
 
   for (++it; it != linearStatements->end(); ++it) {
-    if (isBracketToken(it->value, Bracket::DirectionEnum::Opening, Bracket::KindEnum::Round))
+    if (isBracketToken(it->value, Bracket::DirectionEnum::Opening, Bracket::KindEnum::Round)) {
       ++openBrackets;
-    else if (isBracketToken(it->value, Bracket::DirectionEnum::Closing, Bracket::KindEnum::Round)) {
+    } else if (isBracketToken(it->value, Bracket::DirectionEnum::Closing, Bracket::KindEnum::Round)) {
       --openBrackets;
       if (openBrackets == 0) {
         delete it->value;
@@ -1005,13 +1052,13 @@ bool Scanner::getBracket(list<Statement>::const_iterator const& itOpening,
 bool Scanner::try_get_type_of_variable(program::Scope const& scope, Base *token) {
   if (token->token_type == Base::TokenTypeEnum::Label) {
     if (dynamic_cast<Label*>(token)->kind == Label::KindEnum::Function) {
-      //if(token->type == VariableDeclaration::Length)
-      //{
-      //  stringstream st;
-      //  st << "Unknown Function found: \"" << dynamic_cast<Label*>(token)->label_string << "\"!";
-      //  logging(st.str());
-      //	return false;
-      //}
+      //  if(token->type == VariableDeclaration::Length)
+      //  {
+      //    stringstream st;
+      //    st << "Unknown Function found: \"" << dynamic_cast<Label*>(token)->label_string << "\"!";
+      //    logging(st.str());
+      //    return false;
+      //  }
     } else {
       if (token->type == VariableDeclaration::Length) {
         auto dec = VariableDeclaration(dynamic_cast<Label*>(token)->label_string, VariableDeclaration::Length);

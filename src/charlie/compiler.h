@@ -71,9 +71,12 @@ class Compiler : public common::LoggingComponent {
  private:
   // Compiles the syntax tree to bytecode.
   bool compile();
+  // Enroles a block of the syntax tree to bytecode.
+  bool enroleBlock(std::map<program::FunctionDeclaration, int, program::FunctionDeclaration::comparer> const& functionDict,
+    program::Scope const& block, int *count);
   // Enroles a statement of the syntax tree to bytecode.
   bool enroleStatement(std::map<program::FunctionDeclaration, int, program::FunctionDeclaration::comparer> const& functionDict,
-    program::Statement *statement, int *count);
+    program::Statement const& statement, int *count);
   // The current program data.
   program::UnresolvedProgram program_;
 };

@@ -66,6 +66,7 @@ using vm::State;
 
 using token::Label;
 using token::Base;
+using token::ControlFlow;
 using token::Operator;
 
 Compiler::Compiler() :
@@ -119,7 +120,7 @@ bool Compiler::compile() {
   int count = 2;
 
   for (auto itI = program_.root.statements.begin(); itI != program_.root.statements.end(); ++itI) {
-    if (!enroleStatement(funcPositions, &(*itI), &count))
+    if (!enroleStatement(funcPositions, *itI, &count))
       return false;
   }
 
@@ -137,20 +138,10 @@ bool Compiler::compile() {
     }
     funcPositions.insert(make_pair((*itF), count));
 
-    program_.instructions.push_back(InstructionEnums::IncreaseRegister);
-    program_.instructions.push_back(itF->definition.num_variable_declarations);
-    count += 2;
+    enroleBlock(funcPositions, itF->definition, &count);
 
-    // Insert variable declaration and defintion of the argument list
-    for (auto itI = itF->definition.statements.begin(); itI != itF->definition.statements.end(); ++itI) {
-      if (!enroleStatement(funcPositions, &(*itI), &count))
-        return false;
-    }
-
-    program_.instructions.push_back(InstructionEnums::DecreaseRegister);
-    program_.instructions.push_back(itF->definition.num_variable_declarations);
     program_.instructions.push_back(InstructionEnums::Return);
-    count += 3;
+    ++count;
   }
 
   program_.instructions.push_back(InstructionEnums::DecreaseRegister);
@@ -172,20 +163,41 @@ bool Compiler::compile() {
   return true;
 }
 
+bool Compiler::enroleBlock(std::map<program::FunctionDeclaration, int, program::FunctionDeclaration::comparer> const& functionDict,
+  program::Scope const& block, int *count) {
+
+  program_.instructions.push_back(InstructionEnums::IncreaseRegister);
+  program_.instructions.push_back(block.num_variable_declarations);
+  *count += 2;
+
+  // Insert variable declaration and defintion of the argument list
+  for (auto itI = block.statements.begin(); itI != block.statements.end(); ++itI) {
+    if (!enroleStatement(functionDict, *itI, count))
+      return false;
+  }
+
+  program_.instructions.push_back(InstructionEnums::DecreaseRegister);
+  program_.instructions.push_back(block.num_variable_declarations);
+  *count += 2;
+  return true;
+}
+
 bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration::comparer> const& functionDict,
-                               Statement *statement, int *count) {
-  auto tokenType = statement->value->token_type;
+                               Statement const& statement, int *count) {
+  auto tokenType = statement.value->token_type;
   if (tokenType == Base::TokenTypeEnum::ConstantInt) {
     program_.instructions.push_back(InstructionEnums::PushConst);
-    program_.instructions.push_back(statement->value->ByteCode());
+    program_.instructions.push_back(statement.value->ByteCode());
     *count += 2;
-  } else if (tokenType == Base::TokenTypeEnum::Label) {
-    if (dynamic_cast<Label*>(statement->value)->kind == Label::KindEnum::Function) {
-      auto label = dynamic_cast<Label*>(statement->value);
+  } 
+  else if (tokenType == Base::TokenTypeEnum::Label)
+  {
+    if (dynamic_cast<Label*>(statement.value)->kind == Label::KindEnum::Function) {
+      auto label = dynamic_cast<Label*>(statement.value);
 
       auto argTypes = std::list<VariableDeclaration>();
-      for (auto it = statement->arguments.begin(); it != statement->arguments.end(); ++it) {
-        if (!enroleStatement(functionDict, &(*it), count))
+      for (auto it = statement.arguments.begin(); it != statement.arguments.end(); ++it) {
+        if (!enroleStatement(functionDict, *it, count))
           return false;
         argTypes.push_back(it->value->type);
       }
@@ -209,8 +221,10 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
         program_.instructions.push_back(it->second);
         *count += 2;
       }
-    } else if (dynamic_cast<Label*>(statement->value)->kind == Label::KindEnum::Variable) {
-      Label* label = dynamic_cast<Label*>(statement->value);
+    }
+    else if (dynamic_cast<Label*>(statement.value)->kind == Label::KindEnum::Variable)
+    {
+      Label* label = dynamic_cast<Label*>(statement.value);
       int address = label->register_address();
       if (address > -1) {
         program_.instructions.push_back(InstructionEnums::Push);
@@ -221,30 +235,56 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
         return false;
       }
     }
-  } else if (tokenType == Base::TokenTypeEnum::Operator) {
-    auto op = dynamic_cast<Operator*>(statement->value);
+  }
+  else if (tokenType == Base::TokenTypeEnum::Operator)
+  {
+    auto op = dynamic_cast<Operator*>(statement.value);
     if (op->kind == Operator::KindEnum::Copy) {
-      auto itAddress = statement->arguments.begin();
+      auto itAddress = statement.arguments.begin();
       assert(itAddress->value->token_type == Base::TokenTypeEnum::Label);
 
       int address = dynamic_cast<Label*>(itAddress->value)->register_address();
-      if (!enroleStatement(functionDict, &(*++itAddress), count))
+      if (!enroleStatement(functionDict, *++itAddress, count))
         return false;
       program_.instructions.push_back(InstructionEnums::IntCopy);
       program_.instructions.push_back(address);
       *count += 2;
     } else if (op->kind == Operator::KindEnum::Pop) {
       program_.instructions.push_back(InstructionEnums::IntPop);
-      program_.instructions.push_back(dynamic_cast<Label*>(statement->arguments.begin()->value)->register_address());
+      program_.instructions.push_back(dynamic_cast<Label*>(statement.arguments.begin()->value)->register_address());
       *count += 2;
     } else {
-      for (auto it = statement->arguments.begin(); it != statement->arguments.end(); ++it) {
-        if (!enroleStatement(functionDict, &(*it), count))
+      for (auto it = statement.arguments.begin(); it != statement.arguments.end(); ++it) {
+        if (!enroleStatement(functionDict, *it, count))
           return false;
       }
-      program_.instructions.push_back(statement->value->ByteCode());
+      program_.instructions.push_back(statement.value->ByteCode());
       ++*count;
     }
+  }
+  else if (tokenType == Base::TokenTypeEnum::ControlFlow) {
+    if (dynamic_cast<const ControlFlow*>(statement.value)->kind == ControlFlow::KindEnum::If) {
+      // Should have exactly two arguments: First a statement, second a block
+      assert(statement.arguments.begin() != statement.arguments.end());
+      assert(++++statement.arguments.begin() == statement.arguments.end());
+      assert(statement.arguments.begin()->block == nullptr);
+      assert(statement.arguments.begin()->value != nullptr);
+      assert((++statement.arguments.begin())->value == nullptr);
+      assert((++statement.arguments.begin())->block != nullptr);
+
+      enroleStatement(functionDict, *statement.arguments.begin(), count);
+
+      program_.instructions.push_back(InstructionEnums::PushConst);
+      program_.instructions.push_back(-1);
+      
+      auto itAlt = --program_.instructions.end();
+      program_.instructions.push_back(InstructionEnums::JunpIf);
+      *count += 3;
+      auto block = (++statement.arguments.begin())->block;
+      enroleBlock(functionDict, *block, count);
+      *itAlt = *count;
+    }
+
   }
   return true;
 }

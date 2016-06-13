@@ -68,6 +68,7 @@ enum InstructionEnums {
   Call,
   CallEx,
   Jump,
+  JunpIf,
   Return,
   IntCopy,
   IntAdd,

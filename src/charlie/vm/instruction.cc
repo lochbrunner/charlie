@@ -96,6 +96,19 @@ array<functionType, InstructionEnums::Length> InstructionManager::Create() {
     return 0;
   };
 
+  types[InstructionEnums::JunpIf] = [](State& state) {
+    int condition = state.alu_stack.top();
+    state.alu_stack.pop();
+    int elseAddress = state.alu_stack.top();
+    state.alu_stack.pop();
+
+    if (condition != 0)
+      ++state.pos;
+    else
+      state.pos = elseAddress;
+    return 0;
+  };
+
   types[InstructionEnums::Return] = [](State& state) {
     // Only for testing
     if (state.call_stack.empty()) {
@@ -237,6 +250,8 @@ void InstructionManager::GetLegend(int instruction, queue<const char*> *comments
   case InstructionEnums::Jump:
     comments->push("Jumps ...");
     comments->push("... address to jump");
+  case InstructionEnums::JunpIf:
+    comments->push("Jumps if the condition is not zero");
     break;
   case InstructionEnums::Return:
     comments->push("Returns");

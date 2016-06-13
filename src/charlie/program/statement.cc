@@ -27,9 +27,19 @@
 
 #include "statement.h"
 
+//#include "..\token\base.h"
+#include "scope.h"
+
 namespace charlie {
 namespace program {
-Statement::Statement(token::Base* value) : value(value), arguments() {}
+
+using token::Base;
+
+Statement::Statement(Base* value) : value(value), block(nullptr), arguments() {}
+
+Statement::Statement(Scope* block) : value(nullptr), block(block), arguments() {}
+
+Statement::Statement() : value(nullptr), block(nullptr), arguments() {}
 
 Statement::~Statement() {
 }
@@ -39,9 +49,15 @@ void Statement::Dispose() {
     delete value;
     value = nullptr;
   }
+  if (block != nullptr) {
+    delete block;
+    block = nullptr;
+  }
 }
 
 bool Statement::Finished() const {
+  if (block != nullptr)
+    return true;
   if (value == nullptr)
     return false;
   return value->finished;
