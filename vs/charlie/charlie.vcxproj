@@ -32,6 +32,8 @@
     <ClCompile Include="..\..\src\charlie\scanner.cc" />
     <ClCompile Include="..\..\src\charlie\token\base.cc" />
     <ClCompile Include="..\..\src\charlie\vm\instruction.cc" />
+    <ClCompile Include="..\..\src\charlie\vm\register.cc" />
+    <ClCompile Include="..\..\src\charlie\vm\state.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\charlie\api\external_function_manager.h" />
@@ -49,6 +51,8 @@
     <ClInclude Include="..\..\src\charlie\scanner.h" />
     <ClInclude Include="..\..\src\charlie\token\base.h" />
     <ClInclude Include="..\..\src\charlie\vm\instruction.h" />
+    <ClInclude Include="..\..\src\charlie\vm\register.h" />
+    <ClInclude Include="..\..\src\charlie\vm\state.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{F9B0A582-A9CD-444A-A11A-196CFC0B8B9D}</ProjectGuid>

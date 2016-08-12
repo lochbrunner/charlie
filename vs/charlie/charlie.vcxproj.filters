@@ -69,6 +69,12 @@
     <ClCompile Include="..\..\src\charlie\program\unresolved_program.cc">
       <Filter>program</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\charlie\vm\state.cc">
+      <Filter>vm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\charlie\vm\register.cc">
+      <Filter>vm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\charlie\compiler.h">
@@ -115,6 +121,12 @@
     </ClInclude>
     <ClInclude Include="..\..\src\charlie\program\unresolved_program.h">
       <Filter>program</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\charlie\vm\state.h">
+      <Filter>vm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\charlie\vm\register.h">
+      <Filter>vm</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

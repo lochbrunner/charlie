@@ -8,9 +8,8 @@ A learning project: Compiles C-Code to Byte-Code and runs it in a virtual machin
 
 Type into the console
 
-charlie build <entry>
-    where `<entry>
-        ` is your entry C++ file in which a `main` function must be defined.
+charlie build where `<entry>` is your entry C++ file in which a `main` function must be defined.
+For now the compiler only supports source files. Note the ending `.cc` willl be append to your given filename.
 
 ### The Library
 
@@ -30,16 +29,17 @@ compiler.ExternalFunctionManager.AddFunction("print", [](const char* message)
     cout << message;
 });
 
-// Compile the file
-compiler.Build("main");
+// Compile the file "src/main.cc"
+compiler.Build("src/main");
 
 // Run the program
 compiler.Run();
 ```
 
+
 ## Supported Features
 
-The [samples](/samples) in show the currently supported features of that tool set. Or [klick here](/docs/features.md) for more informations.
+The [samples](/samples) in show the currently supported features of that tool set. Or [click here](/docs/features.md) for more informations.
 
 ## Contributing Code
 

@@ -38,34 +38,25 @@ array<functionType, InstructionEnums::Length> InstructionManager::Create() {
   array<functionType, InstructionEnums::Length> types = array<functionType, InstructionEnums::Length>();
   types[InstructionEnums::IncreaseRegister] = [](State& state) {
     int addition = state.program[++state.pos];
-    if (addition > 0) {
-      int currentSize = state.reg.size();
-      state.reg.resize(currentSize + addition);
-    }
+    state.reg.Increase(addition);
     ++state.pos;
     return 0;
   };
 
   types[InstructionEnums::DecreaseRegister] = [](State& state) {
-    int remove = state.program[++state.pos];
-    if (remove > 0) {
-      int currentSize = state.reg.size();
-      state.reg.resize(currentSize - remove);
-    }
+    state.reg.Decrease();
     ++state.pos;
     return 0;
   };
 
   types[InstructionEnums::Push] = [](State& state) {
     int address = state.program[++state.pos];
-    if (static_cast<int>(state.reg.size()) > address) {
-      state.alu_stack.push(state.reg[address]);
-      ++state.pos;
-      return 0;
-    } else {
-      state.pos = -2;
+    int value;
+    if (!state.reg.GetValue(address, &value))
       return -1;
-    }
+    state.alu_stack.push(value);
+    ++state.pos;
+    return 0;
   };
 
   types[InstructionEnums::PushConst] = [](State& state) {
@@ -77,22 +68,22 @@ array<functionType, InstructionEnums::Length> InstructionManager::Create() {
 
   types[InstructionEnums::IntPop] = [](State& state) {
     int address = state.program[++state.pos];
-    if (static_cast<int>(state.reg.size()) > address) {
-      int value = state.alu_stack.top();
-      state.alu_stack.pop();
-      state.reg[address] = value;
-      ++state.pos;
-      return 0;
-    } else {
-      state.pos = -2;
+    if (state.alu_stack.empty())
       return -1;
-    }
+    int value = state.alu_stack.top();
+    state.alu_stack.pop();
+
+    if (!state.reg.SetValue(address, value))
+      return -1;
+    ++state.pos;
+    return 0;
   };
 
   types[InstructionEnums::Call] = [](State& state) {
     state.call_stack.push(state.pos + 2);
     int address = state.program[++state.pos];
     state.pos = address;
+    state.reg.StoreFunctionScopes();
     return 0;
   };
 
@@ -116,6 +107,7 @@ array<functionType, InstructionEnums::Length> InstructionManager::Create() {
       return -1;
     } else {
       state.pos = state.call_stack.top();
+      state.reg.RestoreFunctionScopes();
     }
     state.call_stack.pop();
     return 0;
@@ -139,12 +131,11 @@ array<functionType, InstructionEnums::Length> InstructionManager::Create() {
     state.alu_stack.pop();
     int address = state.program[++state.pos];
 
-    if (state.reg.size() > static_cast<size_t>(address)) {
-      state.reg[address] = value;
-      ++state.pos;
-      return 0;
-    }
-    return -1;
+    if (!state.reg.SetValue(address, value))
+      return -1;
+
+    ++state.pos;
+    return 0;
   };
 
   types[InstructionEnums::IntPop] = [](State& state) {
@@ -152,13 +143,11 @@ array<functionType, InstructionEnums::Length> InstructionManager::Create() {
     state.alu_stack.pop();
     int address = state.program[++state.pos];
 
-    if (state.reg.size() > static_cast<size_t>(address)) {
-      state.reg[address] = value;
-      ++state.pos;
-      return 0;
-    } else {
+    if (!state.reg.SetValue(address, value))
       return -1;
-    }
+
+    ++state.pos;
+    return 0;
   };
 
   types[InstructionEnums::IntAdd] = [](State& state) {
@@ -180,6 +169,7 @@ array<functionType, InstructionEnums::Length> InstructionManager::Create() {
     ++state.pos;
     return 0;
   };
+
   types[InstructionEnums::IntMultiply] = [](State& state) {
     int a = state.alu_stack.top();
     state.alu_stack.pop();
@@ -213,23 +203,27 @@ array<functionType, InstructionEnums::Length> InstructionManager::Create() {
   types[InstructionEnums::IntIncrease] = [](State& state) {
     int address = state.program[++state.pos];
 
-    if (state.reg.size() > static_cast<size_t>(address)) {
-      state.reg[address] = ++state.reg[address];
-      ++state.pos;
-      return 0;
-    }
-    return -1;
+    int value;
+    if (!state.reg.GetValue(address, &value))
+      return -1;
+
+    ++value;
+    state.reg.SetValue(address, value);
+    ++state.pos;
+    return 0;
   };
 
   types[InstructionEnums::IntDecrease] = [](State& state) {
     int address = state.program[++state.pos];
 
-    if (state.reg.size() > static_cast<size_t>(address)) {
-      state.reg[address] = --state.reg[address];
-      ++state.pos;
-      return 0;
-    }
-    return -1;
+    int value;
+    if (!state.reg.GetValue(address, &value))
+      return -1;
+
+    --value;
+    state.reg.SetValue(address, value);
+    ++state.pos;
+    return 0;
   };
 
   return types;
@@ -245,8 +239,7 @@ void InstructionManager::GetLegend(int instruction, queue<const char*> *comments
     comments->push("... size to increase");
     break;
   case InstructionEnums::DecreaseRegister:
-    comments->push("Decreases the register space ...");
-    comments->push("... size to decrease");
+    comments->push("Decreases the register space");
 
     break;
   case InstructionEnums::Push:
@@ -313,8 +306,6 @@ void InstructionManager::GetLegend(int instruction, queue<const char*> *comments
   }
 }
 const array<functionType, InstructionEnums::Length> InstructionManager::Instructions = InstructionManager::Create();
-
-State::State() : alu_stack(), call_stack(), reg(0), program(), pos(0), external_function_manager(nullptr) {}
 
 }  // namespace vm
 }  // namespace charlie

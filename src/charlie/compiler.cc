@@ -146,8 +146,7 @@ bool Compiler::compile() {
   }
 
   program_.instructions.push_back(InstructionEnums::DecreaseRegister);
-  program_.instructions.push_back(program_.root.num_variable_declarations);
-  count += 2;
+  count += 1;
 
   // Find entryPoint
   auto args = list<VariableDeclaration>();
@@ -178,8 +177,7 @@ bool Compiler::enroleBlock(std::map<program::FunctionDeclaration, int, program::
   }
 
   program_.instructions.push_back(InstructionEnums::DecreaseRegister);
-  program_.instructions.push_back(block.num_variable_declarations);
-  *count += 2;
+  *count += 1;
   return true;
 }
 

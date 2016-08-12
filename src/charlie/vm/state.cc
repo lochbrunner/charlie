@@ -25,63 +25,13 @@
 * SUCH DAMAGE.
 */
 
-#ifndef CHARLIE_VM_INSTRUCTION_H
-#define CHARLIE_VM_INSTRUCTION_H
+#include "instruction.h"
 
-#include <functional>
-
-#include <array>
-#include <queue>
-
-#include "state.h"
-
-#include "..\api\external_function_manager.h"
 
 namespace charlie {
 namespace vm {
 
-// Enum of all kind of bytecodes
-enum InstructionEnums {
-  IncreaseRegister,
-  DecreaseRegister,
-  Push,
-  PushConst,
-  IntPop,
-  Call,
-  CallEx,
-  Jump,
-  JunpIf,
-  Return,
-  IntCopy,
-  IntAdd,
-  IntSubstract,
-  IntMultiply,
-  IntDivide,
-  IntModulo,
-  IntIncrease,
-  IntDecrease,
-  Exit,
-  Length
-};
-// Type of callback function of each instruction
-typedef std::function<int(State&)> functionType;
-// The instruction manager does the mass of work
-// of the VM: It manages all the instructions which
-// get "called" by the bytecode.
-class InstructionManager {
- public:
-  // creates the instruction array.
-  static std::array<functionType, InstructionEnums::Length> Create();
-  // Returns the instruction to the specified bytecode.
-  static functionType Get(InstructionEnums bc);
-  // Returns the legend to the specified bytecode.
-  // Used when saving the program as a textfile.
-  static void GetLegend(int instruction, std::queue<const char*> *comments);
-  // Stores all the instructions.
-  static const std::array<functionType, InstructionEnums::Length> Instructions;
-};
+State::State() : alu_stack(), call_stack(), reg(), program(), pos(0), external_function_manager(nullptr) {}
+
 }  // namespace vm
 }  // namespace charlie
-
-
-#endif  // !CHARLIE_VM_INSTRUCTION_H
