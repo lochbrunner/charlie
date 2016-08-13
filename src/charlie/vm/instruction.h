@@ -50,7 +50,7 @@ enum InstructionEnums {
   Call,
   CallEx,
   Jump,
-  JunpIf,
+  JumpIf,
   Return,
   IntCopy,
   IntAdd,
@@ -60,6 +60,12 @@ enum InstructionEnums {
   IntModulo,
   IntIncrease,
   IntDecrease,
+  IntEqual,
+  IntNotEqual,
+  IntGreater,
+  IntGreaterEqual,
+  IntLess,
+  IntLessEqual,
   Exit,
   Length
 };

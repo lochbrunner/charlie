@@ -4,7 +4,7 @@ int g = 4;
 
 int cubic(int v)
 {
-  return v *v*v;
+  return v*v*v;
 }
 
 int main()
@@ -19,10 +19,16 @@ int main()
 
   if (1) 
   {
-  	println(123);
+    println(123);
   }
+
   g++;
   println(g);
   g--;
   println(g);
+
+  while (i < 10) {
+    println(i);
+    i++;
+  }
 }

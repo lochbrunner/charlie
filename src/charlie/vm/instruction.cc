@@ -87,10 +87,17 @@ array<functionType, InstructionEnums::Length> InstructionManager::Create() {
     return 0;
   };
 
-  types[InstructionEnums::JunpIf] = [](State& state) {
-    int condition = state.alu_stack.top();
-    state.alu_stack.pop();
+  types[InstructionEnums::Jump] = [](State& state) {
+    int address = state.program[++state.pos];
+
+    state.pos = address;
+    return 0;
+  };
+
+  types[InstructionEnums::JumpIf] = [](State& state) {
     int elseAddress = state.alu_stack.top();
+    state.alu_stack.pop();
+    int condition = state.alu_stack.top();
     state.alu_stack.pop();
 
     if (condition != 0)
@@ -226,6 +233,66 @@ array<functionType, InstructionEnums::Length> InstructionManager::Create() {
     return 0;
   };
 
+  types[InstructionEnums::IntEqual] = [](State& state) {
+    int a = state.alu_stack.top();
+    state.alu_stack.pop();
+    int b = state.alu_stack.top();
+    state.alu_stack.pop();
+    state.alu_stack.push(a == b ? 1 : 0);
+    ++state.pos;
+    return 0;
+  };
+
+  types[InstructionEnums::IntNotEqual] = [](State& state) {
+    int a = state.alu_stack.top();
+    state.alu_stack.pop();
+    int b = state.alu_stack.top();
+    state.alu_stack.pop();
+    state.alu_stack.push(a != b ? 1 : 0);
+    ++state.pos;
+    return 0;
+  };
+
+  types[InstructionEnums::IntGreater] = [](State& state) {
+    int b = state.alu_stack.top();
+    state.alu_stack.pop();
+    int a = state.alu_stack.top();
+    state.alu_stack.pop();
+    state.alu_stack.push(a > b ? 1 : 0);
+    ++state.pos;
+    return 0;
+  };
+
+  types[InstructionEnums::IntGreaterEqual] = [](State& state) {
+    int b = state.alu_stack.top();
+    state.alu_stack.pop();
+    int a = state.alu_stack.top();
+    state.alu_stack.pop();
+    state.alu_stack.push(a >= b ? 1 : 0);
+    ++state.pos;
+    return 0;
+  };
+
+  types[InstructionEnums::IntLess] = [](State& state) {
+    int b = state.alu_stack.top();
+    state.alu_stack.pop();
+    int a = state.alu_stack.top();
+    state.alu_stack.pop();
+    state.alu_stack.push(a < b ? 1 : 0);
+    ++state.pos;
+    return 0;
+  };
+
+  types[InstructionEnums::IntLessEqual] = [](State& state) {
+    int b = state.alu_stack.top();
+    state.alu_stack.pop();
+    int a = state.alu_stack.top();
+    state.alu_stack.pop();
+    state.alu_stack.push(a <= b ? 1 : 0);
+    ++state.pos;
+    return 0;
+  };
+
   return types;
 }
 
@@ -265,7 +332,8 @@ void InstructionManager::GetLegend(int instruction, queue<const char*> *comments
   case InstructionEnums::Jump:
     comments->push("Jumps ...");
     comments->push("... address to jump");
-  case InstructionEnums::JunpIf:
+    break;
+  case InstructionEnums::JumpIf:
     comments->push("Jumps if the condition is not zero");
     break;
   case InstructionEnums::Return:
@@ -297,6 +365,24 @@ void InstructionManager::GetLegend(int instruction, queue<const char*> *comments
   case InstructionEnums::IntDecrease:
     comments->push("Decreases an integer ...");
     comments->push("... at address");
+    break;
+  case InstructionEnums::IntEqual:
+    comments->push("Compares to integers on equility");
+    break;
+  case InstructionEnums::IntNotEqual:
+    comments->push("Compares to integers on non-equility");
+    break;
+  case InstructionEnums::IntGreater:
+    comments->push("Compares if the first integer is greater than the second");
+    break;
+  case InstructionEnums::IntGreaterEqual:
+    comments->push("Compares if the first integer is greater or equal than the second");
+    break;
+  case InstructionEnums::IntLess:
+    comments->push("Compares if the first integer is less than the second");
+    break;
+  case InstructionEnums::IntLessEqual:
+    comments->push("Compares if the first integer is less or equal than the second");
     break;
   case InstructionEnums::Exit:
     comments->push("Exit program");

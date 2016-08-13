@@ -34,7 +34,7 @@
 namespace charlie {
 namespace vm {
 
-Register::Register() : data_(nullptr), size_(0), scope_sizes_(), functions_()/*, in_global_scope(true)*/{}
+Register::Register() : data_(nullptr), size_(0), scope_sizes_(), functions_(){}
 
 Register::~Register() {
   if (data_ != nullptr) {

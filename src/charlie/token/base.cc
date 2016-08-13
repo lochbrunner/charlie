@@ -244,17 +244,29 @@ int Operator::ByteCode() const {
       return vm::IntCopy;
     return -1;
   case Operator::KindEnum::Equal:
-    break;
+    if (type == VariableDeclaration::Int)
+      return vm::IntEqual;
+    return -1;
   case Operator::KindEnum::NotEqual:
-    break;
+    if (type == VariableDeclaration::Int)
+      return vm::IntNotEqual;
+    return -1;
   case Operator::KindEnum::Greater:
-    break;
+    if (type == VariableDeclaration::Int)
+      return vm::IntGreater;
+    return -1;
   case Operator::KindEnum::GreaterEqual:
-    break;
+    if (type == VariableDeclaration::Int)
+      return vm::IntGreaterEqual;
+    return -1;
   case Operator::KindEnum::Less:
-    break;
+    if (type == VariableDeclaration::Int)
+      return vm::IntLess;
+    return -1;
   case Operator::KindEnum::LessEqual:
-    break;
+    if (type == VariableDeclaration::Int)
+      return vm::IntLessEqual;
+    return -1;
   case Operator::KindEnum::LogicAnd:
     break;
   case Operator::KindEnum::LogicOr:

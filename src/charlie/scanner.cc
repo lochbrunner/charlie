@@ -537,7 +537,7 @@ bool Scanner::getFunctionDefinition(FunctionDeclaration *dec) {
       statement.arguments.push_back(pLa);
       dec->definition.statements.push_back(statement);
     } else {
-      ERROR_MESSAGE_MAKE_CODE_AND_POS("Unspported type");
+      ERROR_MESSAGE_MAKE_CODE_AND_POS("Unsupported type");
       return false;
     }
   }
@@ -595,16 +595,25 @@ bool Scanner::getBlock(FunctionDeclaration const& dec, Scope *scope) {
     else if (ControlFlowDict::Contains(wordBuffer)) {
       auto control = ControlFlowDict::Get(wordBuffer);
       switch (control) {
-      case ControlFlow::KindEnum::While:
-        break;
       case ControlFlow::KindEnum::For:
+        getNextWord(&word, &wordType);
+        if (wordType != WordType::Bracket || codeInfo_.current_char() != '(') {
+          ERROR_MESSAGE_MAKE_CODE_AND_POS("Expected opening bracket after for");
+          return false;
+        } else {
+          ERROR_MESSAGE_MAKE_CODE_AND_POS("For loop is not implemented yet!");
+          return false;
+        }
         break;
       case ControlFlow::KindEnum::Do:
         break;
       case ControlFlow::KindEnum::If:
+      case ControlFlow::KindEnum::While:
         getNextWord(&word, &wordType);
         if (wordType != WordType::Bracket || codeInfo_.current_char() != '(') {
-          ERROR_MESSAGE_MAKE_CODE_AND_POS("Expected opening bracket after if");
+          stringstream st;
+          st << "Expected opening bracket after " << word;
+          ERROR_MESSAGE_MAKE_CODE_AND_POS(st);
           return false;
         } else {
           ++codeInfo_.pos;
@@ -613,7 +622,9 @@ bool Scanner::getBlock(FunctionDeclaration const& dec, Scope *scope) {
           // Is there exactly one statment
           if (expression.statements.begin() == expression.statements.end() ||
             ++expression.statements.begin() != expression.statements.end()) {
-            ERROR_MESSAGE_MAKE_CODE_AND_POS("Expected one expression in if(...)");
+            stringstream st;
+            st << "Expected one expression in " << word << "(...)";
+            ERROR_MESSAGE_MAKE_CODE_AND_POS(st);
             return false;
           }
           getNextWord(&word, &wordType);

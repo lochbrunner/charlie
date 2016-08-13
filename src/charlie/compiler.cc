@@ -278,13 +278,40 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
       program_.instructions.push_back(-1);
 
       auto itAlt = --program_.instructions.end();
-      program_.instructions.push_back(InstructionEnums::JunpIf);
+      program_.instructions.push_back(InstructionEnums::JumpIf);
       *count += 3;
       auto block = (++statement.arguments.begin())->block;
       enroleBlock(functionDict, *block, count);
       *itAlt = *count;
     }
+    else if (dynamic_cast<const ControlFlow*>(statement.value)->kind == ControlFlow::KindEnum::While) {
+      // Should have exactly two arguments: First a statement, second a block
+      assert(statement.arguments.begin() != statement.arguments.end());
+      assert(++++statement.arguments.begin() == statement.arguments.end());
+      assert(statement.arguments.begin()->block == nullptr);
+      assert(statement.arguments.begin()->value != nullptr);
+      assert((++statement.arguments.begin())->value == nullptr);
+      assert((++statement.arguments.begin())->block != nullptr);
 
+      int begin = *count;
+      enroleStatement(functionDict, *statement.arguments.begin(), count);
+
+      program_.instructions.push_back(InstructionEnums::PushConst);
+      program_.instructions.push_back(-1);
+
+      auto itAlt = --program_.instructions.end();
+      program_.instructions.push_back(InstructionEnums::JumpIf);
+      *count += 3;
+
+      auto block = (++statement.arguments.begin())->block;
+      enroleBlock(functionDict, *block, count);
+
+      program_.instructions.push_back(InstructionEnums::Jump);
+      program_.instructions.push_back(begin);
+      *count += 2;
+      
+      *itAlt = *count;
+    }
   }
   return true;
 }

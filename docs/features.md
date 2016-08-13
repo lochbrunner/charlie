@@ -10,6 +10,6 @@
 * Internal function calls of type int with any number of int typed arguments
      
 * Operations on Integers
- * `=`, `+`,`-`,`*`,`/`, `%`, `++`, `--`
+ * `=`, `+`,`-`,`*`,`/`, `%`, `++`, `--`, `>`, `>=`, `<`, `<=`
 * Control flow
- * `if`
+ * `if`, `while`

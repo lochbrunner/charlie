@@ -18,13 +18,13 @@ Usage example:
 using namespace charlie;
 
 // Init the Compiler and set the output for compiler messages.
-Compiler compiler = Compiler([](string const &message)
+Compiler compiler = Compiler([](string const& message)
 {
     cout << message << endl;
 });
 
 // Add external function which can be called by the program
-compiler.ExternalFunctionManager.AddFunction("print", [](const char* message)
+compiler.ExternalFunctionManager.AddFunction("print", [](const char *message)
 {
     cout << message;
 });
