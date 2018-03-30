@@ -35,9 +35,9 @@
 #include <list>
 #include <functional>
 
-#include "..\common\exportDefs.h"
+#include "../common/exportDefs.h"
 
-#include "..\program\function_declaration.h"
+#include "../program/function_declaration.h"
 
 namespace charlie {
 namespace api {

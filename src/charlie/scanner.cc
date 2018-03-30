@@ -31,10 +31,10 @@
 
 #include "scanner.h"
 
-#include "common\comparer_string.h"
-#include "program\unresolved_program.h"
+#include "common/comparer_string.h"
+#include "program/unresolved_program.h"
 
-#include "vm\instruction.h"
+#include "vm/instruction.h"
 
 #define ERROR_MESSAGE_MAKE_CODE(message) error_message(message, __FILE__, __LINE__)
 #define ERROR_MESSAGE_MAKE_CODE_AND_POS(message) error_message_to_code(message, __FILE__, __LINE__)
@@ -262,7 +262,7 @@ void Scanner::getNextWord(std::string *word, WordType *type) {
   *type = WordType::None;
   for (; codeInfo_.pos < codeInfo_.length; ++codeInfo_.pos) {
     char c = codeInfo_.current_char();
-    if (c == ' ' || c == '\n' || c == '\t') {
+    if (c == ' ' || c == '\n' || c == '\t' || c == '\r') {
       if (*type == WordType::None) {
         continue;
       } else if (*type == WordType::String) {

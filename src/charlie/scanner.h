@@ -32,19 +32,19 @@
 #include <list>
 #include <string>
 
-#include "common\logging_component.h"
-#include "common\definitions.h"
-#include "common\exportDefs.h"
+#include "common/logging_component.h"
+#include "common/definitions.h"
+#include "common/exportDefs.h"
 
-#include "token\base.h"
+#include "token/base.h"
 
-#include "program\variable_declaration.h"
-#include "program\function_declaration.h"
-#include "program\scope.h"
-#include "program\unresolved_program.h"
-#include "program\statement.h"
+#include "program/variable_declaration.h"
+#include "program/function_declaration.h"
+#include "program/scope.h"
+#include "program/unresolved_program.h"
+#include "program/statement.h"
 
-#include "api\external_function_manager.h"
+#include "api/external_function_manager.h"
 
 namespace charlie {
 // Scans C-code and creates the corresponding syntax tree.

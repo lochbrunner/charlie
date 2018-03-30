@@ -35,7 +35,7 @@
 
 #include "state.h"
 
-#include "..\api\external_function_manager.h"
+#include "../api/external_function_manager.h"
 
 namespace charlie {
 namespace vm {

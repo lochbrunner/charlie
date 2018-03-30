@@ -29,7 +29,7 @@
 #define CHARLIE_COMMON_IO_H
 
 #include <string>
-#include "..\program\unresolved_program.h"
+#include "../program/unresolved_program.h"
 
 namespace charlie {
 namespace common {

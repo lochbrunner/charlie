@@ -32,9 +32,9 @@
 #include <sstream>
 #include <functional>
 
-#include "..\token\base.h"
+#include "../token/base.h"
 
-#include "..\common\exportDefs.h"
+#include "../common/exportDefs.h"
 
 namespace charlie {
 namespace common {

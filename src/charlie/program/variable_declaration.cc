@@ -25,6 +25,8 @@
 * SUCH DAMAGE.
 */
 
+#include <cstring>
+
 #include "variable_declaration.h"
 
 

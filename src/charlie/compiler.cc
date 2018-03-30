@@ -34,10 +34,10 @@
 
 #include "scanner.h"
 
-#include "common\io.h"
-#include "common\definitions.h"
+#include "common/io.h"
+#include "common/definitions.h"
 
-#include "vm\instruction.h"
+#include "vm/instruction.h"
 
 #define ERROR_MESSAGE_MAKE_CODE(message) error_message(message, __FILE__, __LINE__)
 #define ERROR_MESSAGE_WITH_POS_MAKE_CODE(message, pos) error_message_to_code(message, pos, __FILE__, __LINE__)
@@ -323,8 +323,8 @@ int Compiler::Run(int argn, char** argv) const {
 
   auto state = State();
   state.external_function_manager = &external_function_manager;
-  state.alu_stack.push(argn);
-  state.alu_stack.push(reinterpret_cast<int>(argv));
+  // state.alu_stack.push(argn);
+  // state.alu_stack.push(reinterpret_cast<int>(argv));
 
   int version = (*it++);
 

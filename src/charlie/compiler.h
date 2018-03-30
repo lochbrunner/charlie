@@ -31,14 +31,14 @@
 #include <map>
 #include <string>
 #include <functional>
-#include "common\exportDefs.h"
-#include "common\logging_component.h"
+#include "common/exportDefs.h"
+#include "common/logging_component.h"
 
-#include "program\function_declaration.h"
-#include "program\unresolved_program.h"
-#include "program\statement.h"
+#include "program/function_declaration.h"
+#include "program/unresolved_program.h"
+#include "program/statement.h"
 
-#include "api\external_function_manager.h"
+#include "api/external_function_manager.h"
 
 
 namespace charlie {

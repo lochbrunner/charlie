@@ -37,7 +37,7 @@ class Statement;
 }  // namespace charlie
 
 #include "scope.h"
-#include "..\token\base.h"
+#include "../token/base.h"
 
 
 namespace charlie {

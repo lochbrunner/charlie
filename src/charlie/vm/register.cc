@@ -27,9 +27,9 @@
 
 #include <algorithm>
 #include <cassert>
+#include <memory.h>
 
 #include "register.h"
-
 
 namespace charlie {
 namespace vm {
@@ -50,7 +50,7 @@ bool Register::resize(int change, bool updateFunc) {
   int newSize = size_ + change;
   int *newData = new int[newSize];
 
-  if (memcpy_s(newData, sizeof(int)*newSize, data_, sizeof(int)*std::min(size_, newSize)) != 0) {
+  if (memcpy(newData, data_, sizeof(int)*std::min(size_, newSize)) != 0) {
     delete[] newData;
     return false;
   }
@@ -99,7 +99,7 @@ void Register::StoreFunctionScopes() {
 
     const int size = functions_.top().size;
 
-    if (memcpy_s(functions_.top().data, sizeof(int)*size, &data_[size_- size], sizeof(int)*size) != 0) {
+    if (memcpy(functions_.top().data, &data_[size_- size], sizeof(int)*size) != 0) {
       functions_.pop();
     }
 
@@ -129,7 +129,7 @@ void Register::RestoreFunctionScopes() {
 
   resize(size);
 
-  memcpy_s(&data_[size_-size], sizeof(int)*size, functions_.top().data, sizeof(int)*size);
+  memcpy(&data_[size_-size], functions_.top().data, sizeof(int)*size);
 
   while (!functions_.top().scope_sizes_.empty()) {
     scope_sizes_.push(functions_.top().scope_sizes_.top());

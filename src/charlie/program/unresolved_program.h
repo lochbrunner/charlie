@@ -22,7 +22,8 @@
 * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
 * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-* SUCH DAMAGE.
+* SUCH DAMAGE.zeof(int)*size);
+   ^~~~~~~~
 */
 
 #ifndef CHARLIE_PROGRAM_UNRESOLVEDPROGRAM_H
@@ -35,7 +36,7 @@
 #include "variable_declaration.h"
 #include "scope.h"
 
-#include "..\common\exportDefs.h"
+#include "../common/exportDefs.h"
 
 namespace charlie {
 namespace program {

@@ -33,7 +33,7 @@
 #include <string>
 #include <functional>
 
-#include "..\program\variable_declaration.h"
+#include "../program/variable_declaration.h"
 
 namespace charlie {
 namespace token {

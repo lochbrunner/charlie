@@ -25,31 +25,29 @@
 * SUCH DAMAGE.
 */
 
-#ifndef CONSOLE_FLAG_H
-#define CONSOLE_FLAG_H
+#ifndef CONSOLE_COMMAND_H
+#define CONSOLE_COMMAND_H
 
 #include <map>
-#include "common\comparer_string.h"
+#include "common/comparer_string.h"
 
-// Manages all flags which can modify the behaivor of this console application.
-class Flag {
+// Manages all commands which can be performed by this console application.
+class Command {
  public:
-  // Enum of all supported flags.
-  enum FlagEnum {
-    None = 0,
-    Binary = 1 << 0,
-    Ascii = 1 << 1,
-    LogOutput = 1 << 2
+  // Enum of all supported commands.
+  enum CommandEnum {
+    None,
+    Build
   };
-  // Creates all flags which can modify the behaivor of this console application.
+  // Creates all commands which can be performed by this console application.
   static void Create();
-  // Parses the char array and returns the corresponding flag.
-  // Returns FlagEnum::None if no falg could be parsed.
-  static int Get(const char* command);
+  // Parses the char array and returns the corresponding command.
+  // Returns CommandEnum::None if no command could be parsed.
+  static CommandEnum Get(const char* command);
 
  private:
-  // Map storing all flags and its corresponding char array.
-  static std::map<const char*, int, charlie::common::comparer_string> dict_;
+  // Map storing all commands and its corresponding char array.
+  static std::map<const char*, CommandEnum, charlie::common::comparer_string> dict_;
 };
 
-#endif  // !CONSOLE_FLAG_H
+#endif  // !CONSOLE_COMMAND_H

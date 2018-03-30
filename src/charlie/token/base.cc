@@ -26,7 +26,7 @@
 */
 
 #include "base.h"
-#include "..\vm\instruction.h"
+#include "../vm/instruction.h"
 
 namespace charlie {
 namespace token {

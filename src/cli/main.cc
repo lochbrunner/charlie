@@ -34,7 +34,7 @@
 #include "log.h"
 
 #include "compiler.h"
-#include "common\comparer_string.h"
+#include "common/comparer_string.h"
 
 using std::string;
 using std::cout;
@@ -74,7 +74,7 @@ int main(int argn, char** argv) {
   Flag::Create();
 
 
-#ifdef _DEBUG
+#ifndef _DEBUG
   if (argn > 2) {
     command = Command::Get(argv[1]);
     entry = argv[2];
@@ -84,27 +84,27 @@ int main(int argn, char** argv) {
   }
 #else
   if (argn > 1) {
-    command = Commands::Get(argv[0]);
+    command = Command::Get(argv[0]);
     entry = argv[1];
   }
   for (int i = 2; i < argn; ++i) {
-    flag |= Flags::Get(argv[i]);
+    flag |= Flag::Get(argv[i]);
   }
 #endif  // _DEBUG
 
   if (command == Command::None) {
-    cout << "Please specify a command";
+    cout << "Please specify a command\n";
     return -1;
   }
 
   if (entry == NULL) {
-    cout << "Please specify an entry point";
+    cout << "Please specify an entry point\n";
     return -1;
   }
 
   int result = 0;
   if (command == Command::Build) {
-    Compiler compiler = Compiler([](string const &message) {
+    Compiler compiler([](string const &message) {
       cout << message << endl;
     });
 

@@ -32,7 +32,7 @@
 #include <list>
 #include <queue>
 
-#include "..\vm\instruction.h"
+#include "../vm/instruction.h"
 
 using std::list;
 using std::queue;
@@ -46,7 +46,7 @@ namespace common {
 namespace io {
 bool ascii2string(std::string const& filename, std::string *result) {
   string fullfilename = filename;
-  fullfilename.append(".cc");
+  // fullfilename.append(".cc");
   ifstream file(fullfilename);
   if (!file.is_open()) {
     return false;

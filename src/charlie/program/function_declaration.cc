@@ -28,6 +28,7 @@
 #include "function_declaration.h"
 
 #include <list>
+#include <cstring>
 
 namespace charlie {
 
@@ -64,7 +65,7 @@ std::ostream& operator<<(std::ostream & stream, const FunctionDeclaration &dec) 
 // Is a "smaller" than b
 bool FunctionDeclaration::comparer::operator()(const FunctionDeclaration & a, const FunctionDeclaration & b) const {
   // See: http://stackoverflow.com/questions/5733254/create-an-own-comparator-for-map
-  int name = strcmp(a.label.c_str(), b.label.c_str());
+  int name = std::strcmp(a.label.c_str(), b.label.c_str());
   if (name != 0)
     return name < 0;
 
