@@ -1,6 +1,16 @@
-# charlie
+# Charlie
 A learning project: Compiles C-Code to Byte-Code and runs it in a virtual machine.
 
+## Prerequisites 
+
+* Boost C++ Library
+* CMake
+
+## Build
+
+Run `./configure` to create the build directory and the make files.
+
+RUn `cmake --build .` inside the `build-debug` directory to build the binaries into `build-debug/bin` and `build-debug/lib`.
 
 ## Usage
 

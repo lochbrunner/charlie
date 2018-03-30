@@ -9,7 +9,10 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build-debug/bin/charliec",
-            "args": ["build", "./samples/simple.cc"],
+            "args": [
+                "run", 
+                "./samples/simple.cc"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
