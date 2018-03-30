@@ -50,7 +50,7 @@ bool Register::resize(int change, bool updateFunc) {
   int newSize = size_ + change;
   int *newData = new int[newSize];
 
-  if (memcpy(newData, data_, sizeof(int)*std::min(size_, newSize)) != 0) {
+  if (memcpy(newData, data_, sizeof(int)*std::min(size_, newSize)) == nullptr) {
     delete[] newData;
     return false;
   }
@@ -99,7 +99,7 @@ void Register::StoreFunctionScopes() {
 
     const int size = functions_.top().size;
 
-    if (memcpy(functions_.top().data, &data_[size_- size], sizeof(int)*size) != 0) {
+    if (memcpy(functions_.top().data, &data_[size_- size], sizeof(int)*size) == nullptr) {
       functions_.pop();
     }
 
