@@ -1,29 +1,29 @@
 /*
-* Copyright (c) 2016, Matthias Lochbrunner <matthias_lochbrunner@live.de>
-* All rights reserved.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions
-* are met:
-*
-* 1. Redistributions of source code must retain the above copyright
-*    notice, this list of conditions and the following disclaimer.
-* 2. Redistributions in binary form must reproduce the above copyright
-*    notice, this list of conditions and the following disclaimer in the
-*    documentation and/or other materials provided with the distribution.
-*
-* THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
-* ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-* IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-* ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
-* FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-* DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-* OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-* LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-* OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-* SUCH DAMAGE.
-*/
+ * Copyright (c) 2016, Matthias Lochbrunner <matthias_lochbrunner@live.de>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
 
 #include "compiler.h"
 
@@ -34,48 +34,44 @@
 
 #include "scanner.h"
 
-#include "common/io.h"
 #include "common/definitions.h"
+#include "common/io.h"
 
 #include "vm/instruction.h"
 
 #define ERROR_MESSAGE_MAKE_CODE(message) error_message(message, __FILE__, __LINE__)
 #define ERROR_MESSAGE_WITH_POS_MAKE_CODE(message, pos) error_message_to_code(message, pos, __FILE__, __LINE__)
 
-
 namespace charlie {
 
-using std::map;
+using std::function;
 using std::list;
+using std::make_pair;
+using std::map;
 using std::string;
 using std::stringstream;
-using std::function;
-using std::make_pair;
 
 using common::io::ascii2string;
 using common::io::saveProgramAscii;
 using common::io::saveProgramBinary;
 
-using program::VariableDeclaration;
 using program::FunctionDeclaration;
 using program::Statement;
+using program::VariableDeclaration;
 
 using vm::InstructionEnums;
 using vm::InstructionManager;
 using vm::State;
 
-using token::Label;
 using token::Base;
 using token::ControlFlow;
+using token::Label;
 using token::Operator;
 
-Compiler::Compiler() :
-  LoggingComponent(), external_function_manager(), program_() {
-}
+Compiler::Compiler() : LoggingComponent(), external_function_manager(), program_() {}
 
-Compiler::Compiler(function<void(string const& message)> messageDelegate) :
-  LoggingComponent(messageDelegate), external_function_manager(), program_() {
-}
+Compiler::Compiler(function<void(string const& message)> messageDelegate)
+    : LoggingComponent(messageDelegate), external_function_manager(), program_() {}
 
 bool Compiler::Build(string const& filename) {
   string code;
@@ -102,7 +98,7 @@ bool Compiler::Build(string const& filename) {
   return true;
 }
 
-bool Compiler::SaveProgram(std::string const &filename, bool binary) const {
+bool Compiler::SaveProgram(std::string const& filename, bool binary) const {
   if (binary)
     return saveProgramBinary(filename, program_);
   else
@@ -120,8 +116,7 @@ bool Compiler::compile() {
   int count = 2;
 
   for (auto itI = program_.root.statements.begin(); itI != program_.root.statements.end(); ++itI) {
-    if (!enroleStatement(funcPositions, *itI, &count))
-      return false;
+    if (!enroleStatement(funcPositions, *itI, &count)) return false;
   }
 
   program_.instructions.push_back(InstructionEnums::Call);
@@ -138,8 +133,7 @@ bool Compiler::compile() {
     }
     funcPositions.insert(make_pair((*itF), count));
 
-    if (!enroleBlock(funcPositions, itF->definition, &count))
-      return false;
+    if (!enroleBlock(funcPositions, itF->definition, &count)) return false;
 
     program_.instructions.push_back(InstructionEnums::Return);
     ++count;
@@ -163,17 +157,16 @@ bool Compiler::compile() {
   return true;
 }
 
-bool Compiler::enroleBlock(std::map<program::FunctionDeclaration, int, program::FunctionDeclaration::comparer> const& functionDict,
-  program::Scope const& block, int *count) {
-
+bool Compiler::enroleBlock(
+    std::map<program::FunctionDeclaration, int, program::FunctionDeclaration::comparer> const& functionDict,
+    program::Scope const& block, int* count) {
   program_.instructions.push_back(InstructionEnums::IncreaseRegister);
   program_.instructions.push_back(block.num_variable_declarations);
   *count += 2;
 
   // Insert variable declaration and defintion of the argument list
   for (auto itI = block.statements.begin(); itI != block.statements.end(); ++itI) {
-    if (!enroleStatement(functionDict, *itI, count))
-      return false;
+    if (!enroleStatement(functionDict, *itI, count)) return false;
   }
 
   program_.instructions.push_back(InstructionEnums::DecreaseRegister);
@@ -182,22 +175,19 @@ bool Compiler::enroleBlock(std::map<program::FunctionDeclaration, int, program::
 }
 
 bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration::comparer> const& functionDict,
-                               Statement const& statement, int *count) {
+                               Statement const& statement, int* count) {
   auto tokenType = statement.value->token_type;
   if (tokenType == Base::TokenTypeEnum::ConstantInt) {
     program_.instructions.push_back(InstructionEnums::PushConst);
     program_.instructions.push_back(statement.value->ByteCode());
     *count += 2;
-  } 
-  else if (tokenType == Base::TokenTypeEnum::Label)
-  {
+  } else if (tokenType == Base::TokenTypeEnum::Label) {
     if (dynamic_cast<Label*>(statement.value)->kind == Label::KindEnum::Function) {
       auto label = dynamic_cast<Label*>(statement.value);
 
       auto argTypes = std::list<VariableDeclaration>();
       for (auto it = statement.arguments.begin(); it != statement.arguments.end(); ++it) {
-        if (!enroleStatement(functionDict, *it, count))
-          return false;
+        if (!enroleStatement(functionDict, *it, count)) return false;
         argTypes.push_back(it->value->type);
       }
       auto dec = FunctionDeclaration(label->label_string, VariableDeclaration::Length, argTypes);
@@ -220,9 +210,7 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
         program_.instructions.push_back(it->second);
         *count += 2;
       }
-    }
-    else if (dynamic_cast<Label*>(statement.value)->kind == Label::KindEnum::Variable)
-    {
+    } else if (dynamic_cast<Label*>(statement.value)->kind == Label::KindEnum::Variable) {
       Label* label = dynamic_cast<Label*>(statement.value);
       int address = label->register_address();
       if (address > -1) {
@@ -234,8 +222,7 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
         return false;
       }
     }
-  }
-  else if (tokenType == Base::TokenTypeEnum::Operator) {
+  } else if (tokenType == Base::TokenTypeEnum::Operator) {
     auto op = dynamic_cast<Operator*>(statement.value);
     if (op->assigner) {
       auto itAddress = statement.arguments.begin();
@@ -244,8 +231,7 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
 
       // TODO(lochbrunner): asign operators can also be used to push values: e.g. i = j++;
       if (op->token_chidren_position == Base::TokenChidrenPosEnum::LeftAndRight) {
-        if (!enroleStatement(functionDict, *++itAddress, count))
-          return false;
+        if (!enroleStatement(functionDict, *++itAddress, count)) return false;
       }
       program_.instructions.push_back(op->ByteCode());
       program_.instructions.push_back(address);
@@ -256,8 +242,7 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
       *count += 2;
     } else {
       for (auto it = statement.arguments.begin(); it != statement.arguments.end(); ++it) {
-        if (!enroleStatement(functionDict, *it, count))
-          return false;
+        if (!enroleStatement(functionDict, *it, count)) return false;
       }
       program_.instructions.push_back(statement.value->ByteCode());
       ++*count;
@@ -283,8 +268,7 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
       auto block = (++statement.arguments.begin())->block;
       enroleBlock(functionDict, *block, count);
       *itAlt = *count;
-    }
-    else if (dynamic_cast<const ControlFlow*>(statement.value)->kind == ControlFlow::KindEnum::While) {
+    } else if (dynamic_cast<const ControlFlow*>(statement.value)->kind == ControlFlow::KindEnum::While) {
       // Should have exactly two arguments: First a statement, second a block
       assert(statement.arguments.begin() != statement.arguments.end());
       assert(++++statement.arguments.begin() == statement.arguments.end());
@@ -309,74 +293,31 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
       program_.instructions.push_back(InstructionEnums::Jump);
       program_.instructions.push_back(begin);
       *count += 2;
-      
+
       *itAlt = *count;
     }
   }
   return true;
 }
 
-int Compiler::Run(int argn, char** argv) const {
-  list<int>::const_iterator it = program_.instructions.begin();
-  if (it == program_.instructions.end())
-    return false;
+std::unique_ptr<State> Compiler::GetProgram() {
+  auto it = program_.instructions.cbegin();
+  if (it == program_.instructions.cend()) return std::unique_ptr<State>(nullptr);
 
-  auto state = State();
-  state.external_function_manager = &external_function_manager;
-  // state.alu_stack.push(argn);
-  // state.alu_stack.push(reinterpret_cast<int>(argv));
+  auto state = std::make_unique<State>();
+  state->external_function_manager = &external_function_manager;
 
+  // Skip version byte
   int version = (*it++);
 
-  if (version != BYTECODE_VERSION) {
-    ERROR_MESSAGE_MAKE_CODE("Wrong bytecode version");
-    return -1;
-  }
-
   for (; it != program_.instructions.end(); ++it) {
-    state.program.push_back(*it);
+    state->program.push_back(*it);
   }
 
-  while (state.pos > -1/* && !state.call_stack.empty()*/) {
-    int r = InstructionManager::Instructions[state.program[state.pos]](state);
-    if (r < 0)
-      break;
-  }
-  if (state.alu_stack.empty())
-    return 0;
-  return state.alu_stack.top();
+  return state;
 }
 
-int Compiler::Run() const {
-  list<int>::const_iterator it = program_.instructions.begin();
-  if (it == program_.instructions.end())
-    return false;
-
-  auto state = State();
-  state.external_function_manager = &external_function_manager;
-
-  int version = (*it++);
-
-  if (version != BYTECODE_VERSION) {
-    ERROR_MESSAGE_MAKE_CODE("Wrong bytecode version");
-    return -1;
-  }
-
-  for (; it != program_.instructions.end(); ++it) {
-    state.program.push_back(*it);
-  }
-
-  while (state.pos > -1/* && !state.call_stack.empty()*/) {
-    int r = InstructionManager::Instructions[state.program[state.pos]](state);
-    if (r < 0)
-      break;
-  }
-  if (state.alu_stack.empty())
-    return 0;
-  return state.alu_stack.top();
-}
 }  // namespace charlie
 
 #undef ERROR_MESSAGE_MAKE_CODE
 #undef ERROR_MESSAGE_WITH_POS_MAKE_CODE
-

@@ -7,6 +7,7 @@ add_library(charlie
     ./vm/register.cc
     ./vm/instruction.cc
     ./vm/state.cc
+    ./vm/runtime.cc
     ./api/external_function_manager.cc
     ./program/function_declaration.cc
     ./program/variable_declaration.cc

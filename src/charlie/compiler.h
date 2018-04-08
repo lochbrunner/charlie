@@ -25,21 +25,23 @@
  * SUCH DAMAGE.
  */
 
-#ifndef  CHARLIE_COMPILER_H
+#ifndef CHARLIE_COMPILER_H
 #define CHARLIE_COMPILER_H
 
-#include <map>
-#include <string>
 #include <functional>
+#include <map>
+#include <memory>
+#include <string>
 #include "common/exportDefs.h"
 #include "common/logging_component.h"
 
 #include "program/function_declaration.h"
-#include "program/unresolved_program.h"
 #include "program/statement.h"
+#include "program/unresolved_program.h"
+
+#include "vm/state.h"
 
 #include "api/external_function_manager.h"
-
 
 namespace charlie {
 // This is the central class where as for now all APIs of this library can be called.
@@ -61,10 +63,8 @@ class Compiler : public common::LoggingComponent {
   // Saves the current porgram to the file. Optional binary or as readable textfile.
   // Returns true if succeeded.
   xprt bool SaveProgram(std::string const &filename, bool binary = true) const;
-  // Runs the current program. Returns the program exit code.
-  // Optional with console arguments. (Not supported yet!)
-  xprt int Run() const;
-  xprt int Run(int argn, char** argv) const;
+  // Returns the state containing the current program.
+  xprt std::unique_ptr<vm::State> GetProgram();
   // External function manager
   api::ExternalFunctionManager external_function_manager;
 
@@ -72,11 +72,13 @@ class Compiler : public common::LoggingComponent {
   // Compiles the syntax tree to bytecode.
   bool compile();
   // Enroles a block of the syntax tree to bytecode.
-  bool enroleBlock(std::map<program::FunctionDeclaration, int, program::FunctionDeclaration::comparer> const& functionDict,
-    program::Scope const& block, int *count);
+  bool enroleBlock(
+      std::map<program::FunctionDeclaration, int, program::FunctionDeclaration::comparer> const &functionDict,
+      program::Scope const &block, int *count);
   // Enroles a statement of the syntax tree to bytecode.
-  bool enroleStatement(std::map<program::FunctionDeclaration, int, program::FunctionDeclaration::comparer> const& functionDict,
-    program::Statement const& statement, int *count);
+  bool enroleStatement(
+      std::map<program::FunctionDeclaration, int, program::FunctionDeclaration::comparer> const &functionDict,
+      program::Statement const &statement, int *count);
   // The current program data.
   program::UnresolvedProgram program_;
 };

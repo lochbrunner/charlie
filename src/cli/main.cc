@@ -35,6 +35,7 @@
 
 #include "common/comparer_string.h"
 #include "compiler.h"
+#include "vm/runtime.h"
 
 using std::cerr;
 using std::cout;
@@ -111,7 +112,9 @@ int main(int argn, char **argv) {
         if (compiler.SaveProgram(file, true)) cerr << "Saving program to " << file << ".bc" << endl;
       }
       cerr << "Running program ..\n\n";
-      int result = compiler.Run();
+
+      charlie::vm::Runtime runtime(compiler.GetProgram());
+      int result = runtime.Run();
       cerr << endl;
       if (vm.count("log") > 0) Log::Save(file);
       if (result != 0) cerr << "Program exited with " << result << endl;
