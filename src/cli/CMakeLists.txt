@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(charlie)
 
-FIND_PACKAGE( Boost 1.40 COMPONENTS program_options REQUIRED )
+set(Boost_LIBRARIES "/usr/local/lib/libboost_program_options.so")
+# find_package( Boost 1.40 COMPONENTS program_options REQUIRED )
 
 include_directories(
     ../charlie

@@ -1,0 +1,35 @@
+{
+  "name": "charlie",
+  "version": "0.0.1",
+  "description": "Rich charlie language support for Visual Studio Code",
+  "main": "./dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "proto": "protoc --proto_path ../../charlie/protobuf --js_out=library=./dist/debug,binary:. ../../charlie/protobuf/debug.proto",
+    "start": "node ./dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lochbrunner/charlie.git"
+  },
+  "keywords": [
+    "vscode",
+    "debug",
+    "adapter",
+    "charlie"
+  ],
+  "author": "Matthias Lochbrunner",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lochbrunner/charlie/issues"
+  },
+  "homepage": "https://github.com/lochbrunner/charlie#readme",
+  "devDependencies": {
+    "@types/node": "^9.6.2",
+    "typescript": "^2.8.1"
+  },
+  "dependencies": {
+    "split": "^1.0.1"
+  }
+}

@@ -1,6 +1,17 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(charlie)
 
+find_package(Protobuf REQUIRED)
+# find_package(Boost 1.66.0 REQUIRED system)
+set(Boost_LIBRARIES "/usr/local/lib/libboost_system.so")
+
+include_directories(
+    ${Protobuf_INCLUDE_DIRS}
+    ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${CMAKE_CURRENT_SOURCE_DIR}/protobuf/debug.proto)
+
 add_library(charlie
     ./scanner.cc
     ./compiler.cc
@@ -19,4 +30,11 @@ add_library(charlie
     ./common/comparer_string.cc
     ./common/io.cc
     ./token/base.cc
+    ${PROTO_SRCS}
+    ${PROTO_HDRS}
+)
+
+target_link_libraries(charlie
+    ${Protobuf_LIBRARIES}
+    ${Boost_LIBRARIES}
 )

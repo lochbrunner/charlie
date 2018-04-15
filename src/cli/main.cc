@@ -86,11 +86,18 @@ int main(int argn, char **argv) {
     cerr << global;
   } else if (cmd == "run") {
     po::positional_options_description run_pos;
-    run_pos.add("file", -1);
+    run_pos.add("file", 1);
 
     po::options_description run_desc("run options");
-    run_desc.add_options()("log,l", "logs the output")("ascii,a", "saves the program in ascii format")(
-        "binary,b", "saves the program in binary format")("file", po::value<std::string>(), "Arguments for command");
+    // clang-format off
+    run_desc.add_options()
+      ("log,l", "logs the output")
+      ("ascii,a", "saves the program in ascii format")
+      ("binary,b", "saves the program in binary format")
+      ("debug", po::value<int>() ,"Debug mode")
+      // ("debug-port", po::value<int>() ,"Debug mode <port>")
+      ("file", po::value<std::string>(), "Arguments for command");
+    // clang-format on
 
     auto opts = po::collect_unrecognized(parsed.options, po::include_positional);
     opts.erase(opts.begin());
@@ -108,13 +115,19 @@ int main(int argn, char **argv) {
       if (vm.count("ascii") > 0) {
         if (compiler.SaveProgram(file, false)) cerr << "Saving program to " << file << ".bc.txt" << endl;
       }
-      if (vm.count("bingitary") > 0) {
+      if (vm.count("binary") > 0) {
         if (compiler.SaveProgram(file, true)) cerr << "Saving program to " << file << ".bc" << endl;
       }
       cerr << "Running program ..\n\n";
 
       charlie::vm::Runtime runtime(compiler.GetProgram());
-      int result = runtime.Run();
+      int result;
+      if (vm.count("debug") > 0) {
+        result = runtime.Debug(vm["debug"].as<int>());
+        // result = runtime.Debug(3232);
+      } else {
+        result = runtime.Run();
+      }
       cerr << endl;
       if (vm.count("log") > 0) Log::Save(file);
       if (result != 0) cerr << "Program exited with " << result << endl;

@@ -35,6 +35,19 @@
         "type_traits": "cpp",
         "typeinfo": "cpp",
         "utility": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "future": "cpp",
+        "*.ipp": "cpp",
+        "sstream": "cpp",
+        "hash_map": "cpp",
+        "hash_set": "cpp",
+        "fstream": "cpp",
+        "functional": "cpp",
+        "iomanip": "cpp",
+        "istream": "cpp",
+        "new": "cpp",
+        "optional": "cpp",
+        "ostream": "cpp",
+        "streambuf": "cpp"
     }
 }

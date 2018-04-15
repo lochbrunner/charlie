@@ -37,6 +37,8 @@ class Runtime {
  public:
   explicit Runtime(std::unique_ptr<State> state);
   int Run();
+  int Debug(int port);
+
  private:
   std::unique_ptr<State> state_;
 };

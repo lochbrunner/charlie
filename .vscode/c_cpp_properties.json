@@ -12,7 +12,8 @@
                 "/usr/include/x86_64-linux-gnu",
                 "/usr/include",
                 "${workspaceFolder}/src/charlie",
-                "${workspaceFolder}/src/charlie"
+                "${workspaceFolder}/src/charlie",
+                "${workspaceFolder}/build-debug/src/charlie"
             ],
             "defines": [],
             "intelliSenseMode": "clang-x64",

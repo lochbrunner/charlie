@@ -1,2 +1,7 @@
 build
 build-debug
+
+# vs code adapter
+node_modules
+dist
+*.log

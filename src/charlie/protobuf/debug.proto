@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package charlie.debug;
+
+message Variable {
+  string name = 1;
+  int32 value = 2;
+}
+
+message Position {
+  int32 line = 1;
+}
+
+message Event {
+  int32 bytecode = 1;
+  Position position = 2;
+
+  message State {
+    repeated Variable variable = 1;
+    repeated int32 callstack_item = 2;
+  }
+
+  State state = 3;
+}
+
+message Command {
+  enum Type {
+    NEXT_STEP = 0;
+    SET_BREAKPOINT = 1;
+  }
+  Type type = 1;
+  Position position = 2;
+}
