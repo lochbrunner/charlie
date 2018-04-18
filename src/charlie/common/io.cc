@@ -1,50 +1,47 @@
 /*
-* Copyright (c) 2016, Matthias Lochbrunner <matthias_lochbrunner@live.de>
-* All rights reserved.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions
-* are met:
-*
-* 1. Redistributions of source code must retain the above copyright
-*    notice, this list of conditions and the following disclaimer.
-* 2. Redistributions in binary form must reproduce the above copyright
-*    notice, this list of conditions and the following disclaimer in the
-*    documentation and/or other materials provided with the distribution.
-*
-* THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
-* ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-* IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-* ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
-* FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-* DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-* OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-* LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-* OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-* SUCH DAMAGE.
-*/
-
+ * Copyright (c) 2016, Matthias Lochbrunner <matthias_lochbrunner@live.de>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
 
 #include "io.h"
 #include <fstream>
-#include <sstream>
 #include <list>
 #include <queue>
+#include <sstream>
 
 #include "../vm/instruction.h"
 
-using std::list;
-using std::queue;
-using std::string;
-using std::ofstream;
 using std::ifstream;
 using std::ios;
+using std::list;
+using std::ofstream;
+using std::queue;
+using std::string;
 
-namespace charlie {
-namespace common {
-namespace io {
-bool ascii2string(std::string const& filename, std::string *result) {
+namespace charlie::common::io {
+bool ascii2string(std::string const& filename, std::string* result) {
   string fullfilename = filename;
   // fullfilename.append(".cc");
   ifstream file(fullfilename);
@@ -60,9 +57,8 @@ bool ascii2string(std::string const& filename, std::string *result) {
   return true;
 }
 bool saveProgramAscii(std::string const& filename, program::UnresolvedProgram const& program) {
-  list<int>::const_iterator it = program.instructions.begin();
-  if (it == program.instructions.end())
-    return false;
+  auto it = program.instructions.cbegin();
+  if (it == program.instructions.end()) return false;
 
   std::string fullfilename = filename;
   fullfilename.append(".bc.txt");
@@ -72,9 +68,8 @@ bool saveProgramAscii(std::string const& filename, program::UnresolvedProgram co
   }
   file << (*it) << "\t// Version\n";
   auto comments = queue<const char*>();
-  for (++it; it != program.instructions.end(); ++it) {
-    if (comments.empty())
-      vm::InstructionManager::GetLegend((*it), &comments);
+  for (++it; it != program.instructions.cend(); ++it) {
+    if (comments.empty()) vm::InstructionManager::GetLegend((*it), &comments);
     file << (*it);
     if (!comments.empty()) {
       file << "\t// " << comments.front();
@@ -87,20 +82,18 @@ bool saveProgramAscii(std::string const& filename, program::UnresolvedProgram co
   return true;
 }
 bool saveProgramBinary(std::string const& filename, program::UnresolvedProgram const& program) {
-  std::string fullfilename = filename;
+  auto fullfilename = filename;
   fullfilename.append(".bc");
   ofstream file(fullfilename, ios::binary | ios::out | ios::trunc);
   if (!file.is_open()) {
     return false;
   }
-  list<int>::const_iterator it = program.instructions.begin();
-  for (; it != program.instructions.end(); ++it) {
+  auto it = program.instructions.cbegin();
+  for (; it != program.instructions.cend(); ++it) {
     file << (*it);
   }
 
   file.close();
   return true;
 }
-}  // namespace io
-}  // namespace common
-}  // namespace charlie
+}  // namespace charlie::common::io

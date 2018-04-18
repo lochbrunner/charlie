@@ -17,7 +17,7 @@ message Event {
 
   message State {
     repeated Variable variable = 1;
-    repeated int32 callstack_item = 2;
+    repeated string callstack_item = 2;
   }
 
   State state = 3;
@@ -27,6 +27,7 @@ message Command {
   enum Type {
     NEXT_STEP = 0;
     SET_BREAKPOINT = 1;
+    RUN = 2;  // Same as continue in gdb
   }
   Type type = 1;
   Position position = 2;

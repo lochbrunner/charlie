@@ -25,26 +25,36 @@
  * SUCH DAMAGE.
  */
 
-#ifndef CHARLIE_VM_RUNTIME_H
-#define CHARLIE_VM_RUNTIME_H
+#include "mapping.h"
 
-#include <memory>
+#include "mapping.pb.h"
 
-#include "state.h"
+#include <fstream>
 
-#include "../program/mapping.h"
+namespace charlie::program {
 
-namespace charlie::vm {
-class Runtime {
- public:
-  explicit Runtime(std::unique_ptr<State> state, std::shared_ptr<program::Mapping> mapping = nullptr);
-  int Run();
-  int Debug(int port);
+bool Mapping::Save(const std::string &filename) const {
+  std::string fullfilename = filename;
+  fullfilename.append(".map");
+  std::ofstream file(fullfilename);
 
- private:
-  std::unique_ptr<State> state_;
-  std::shared_ptr<program::Mapping> mapping_;
-};
-}  // namespace charlie::vm
+  if (!file.is_open()) {
+    return false;
+  }
+  file.close();
+  return true;
+}
 
-#endif
+bool Mapping::Load(const std::string &filename) {
+  std::string fullfilename = filename;
+  fullfilename.append(".map");
+  std::ifstream file(fullfilename);
+  if (!file.is_open()) {
+    return false;
+  }
+
+  file.close();
+  return true;
+}
+
+}  // namespace charlie::program

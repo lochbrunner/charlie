@@ -37,6 +37,8 @@
 #include "common/definitions.h"
 #include "common/io.h"
 
+#include "program/mapping.h"
+
 #include "vm/instruction.h"
 
 #define ERROR_MESSAGE_MAKE_CODE(message) error_message(message, __FILE__, __LINE__)
@@ -56,6 +58,7 @@ using common::io::saveProgramAscii;
 using common::io::saveProgramBinary;
 
 using program::FunctionDeclaration;
+using program::Mapping;
 using program::Statement;
 using program::VariableDeclaration;
 
@@ -73,7 +76,7 @@ Compiler::Compiler() : LoggingComponent(), external_function_manager(), program_
 Compiler::Compiler(function<void(string const& message)> messageDelegate)
     : LoggingComponent(messageDelegate), external_function_manager(), program_() {}
 
-bool Compiler::Build(string const& filename) {
+bool Compiler::Build(string const& filename, bool sourcemaps) {
   string code;
   if (!ascii2string(filename, &code)) {
     std::stringstream str;
@@ -82,14 +85,14 @@ bool Compiler::Build(string const& filename) {
     return false;
   }
 
-  Scanner scanner = Scanner(&program_, &external_function_manager, _messageDelegate);
+  Scanner scanner(&program_, &external_function_manager, _messageDelegate);
 
   if (!scanner.Scan(code)) {
     error_message("Scanning failed!");
     return false;
   }
   codeInfo_.set(&code);
-  if (!compile()) {
+  if (!compile(sourcemaps)) {
     error_message("Compiling failed!");
     return false;
   }
@@ -98,14 +101,16 @@ bool Compiler::Build(string const& filename) {
   return true;
 }
 
-bool Compiler::SaveProgram(std::string const& filename, bool binary) const {
+bool Compiler::SaveProgram(std::string const& filename, bool binary, bool mapping) const {
+  if (mapping) mapping_->Save(filename);
   if (binary)
     return saveProgramBinary(filename, program_);
   else
     return saveProgramAscii(filename, program_);
 }
 
-bool Compiler::compile() {
+bool Compiler::compile(bool sourcemaps) {
+  if (sourcemaps) mapping_ = std::make_shared<program::Mapping>();
   auto funcPositions = map<FunctionDeclaration, int, FunctionDeclaration::comparer>();
 
   program_.instructions.push_back(BYTECODE_VERSION);
@@ -123,8 +128,9 @@ bool Compiler::compile() {
   auto itMainAddress = --program_.instructions.end();
   program_.instructions.push_back(InstructionEnums::Exit);
   count += 3;
-
-  for (auto itF = program_.function_declarations.begin(); itF != program_.function_declarations.end(); ++itF) {
+  // Store function definitions
+  for (auto itF = program_.function_declarations.cbegin(); itF != program_.function_declarations.cend(); ++itF) {
+    int func_begin = count;
     if (!itF->has_definition) {
       stringstream st;
       st << "Missing defintion for function: " << (*itF);
@@ -136,6 +142,12 @@ bool Compiler::compile() {
     if (!enroleBlock(funcPositions, itF->definition, &count)) return false;
 
     program_.instructions.push_back(InstructionEnums::Return);
+    if (sourcemaps) {
+      auto fun_map = std::make_unique<program::Mapping::Function>(itF->label);
+      fun_map->scope.begin = func_begin;
+      fun_map->scope.end = count;
+      mapping_->Functions.push_back(std::move(fun_map));
+    }
     ++count;
   }
 
@@ -185,12 +197,12 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
     if (dynamic_cast<Label*>(statement.value)->kind == Label::KindEnum::Function) {
       auto label = dynamic_cast<Label*>(statement.value);
 
-      auto argTypes = std::list<VariableDeclaration>();
+      std::list<VariableDeclaration> argTypes;
       for (auto it = statement.arguments.begin(); it != statement.arguments.end(); ++it) {
         if (!enroleStatement(functionDict, *it, count)) return false;
         argTypes.push_back(it->value->type);
       }
-      auto dec = FunctionDeclaration(label->label_string, VariableDeclaration::Length, argTypes);
+      FunctionDeclaration dec(label->label_string, VariableDeclaration::Length, argTypes);
 
       int id = external_function_manager.GetId(dec);
       if (id > -1) {
@@ -211,7 +223,7 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
         *count += 2;
       }
     } else if (dynamic_cast<Label*>(statement.value)->kind == Label::KindEnum::Variable) {
-      Label* label = dynamic_cast<Label*>(statement.value);
+      auto label = dynamic_cast<Label*>(statement.value);
       int address = label->register_address();
       if (address > -1) {
         program_.instructions.push_back(InstructionEnums::Push);
@@ -316,6 +328,8 @@ std::unique_ptr<State> Compiler::GetProgram() {
 
   return state;
 }
+
+xprt std::shared_ptr<program::Mapping> Compiler::GetMapping() { return mapping_; }
 
 }  // namespace charlie
 

@@ -10,7 +10,10 @@ include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${CMAKE_CURRENT_SOURCE_DIR}/protobuf/debug.proto)
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS 
+    ${CMAKE_CURRENT_SOURCE_DIR}/protobuf/debug.proto
+    ${CMAKE_CURRENT_SOURCE_DIR}/protobuf/mapping.proto
+)
 
 add_library(charlie
     ./scanner.cc
@@ -23,6 +26,7 @@ add_library(charlie
     ./program/function_declaration.cc
     ./program/variable_declaration.cc
     ./program/functionDef.cc
+    ./program/mapping.cc
     ./program/statement.cc
     ./program/scope.cc
     ./program/unresolved_program.cc

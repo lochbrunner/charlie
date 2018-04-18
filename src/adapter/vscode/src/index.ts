@@ -31,7 +31,13 @@ client.on('data', (data: string) => {
     }
     const chunk = data.substr(4, chunkLength);
     data = data.substr(4 + chunkLength);
-    client.emit('event', JSON.parse(chunk));
+    if (chunk.length > 0) {
+      try {
+        client.emit('event', JSON.parse(chunk));
+      } catch (e) {
+        console.log(`Could not parse event Json '${chunk}': ${e}`);
+      }
+    }
   }
 });
 

@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package charlie.mapping.storage;
+
+message SourceLocation {
+  int32 line = 1;
+  int32 column = 2;
+  string filename = 3;
+}
+
+message ByteCodeLocation {
+  int32 index = 1;
+}
+
+message Variable {
+  string name = 1;
+  int32 position = 2;  // Position on the register of that scope
+}
+
+message Scope {
+  ByteCodeLocation begin = 1;
+  ByteCodeLocation end = 2;
+  repeated Variable register = 3;
+}
+
+message Function {
+  string name = 1;
+  Scope scope = 2;
+}
+
+message Mapping {
+  repeated Scope scopes = 1;
+  repeated Function functions = 2;
+}

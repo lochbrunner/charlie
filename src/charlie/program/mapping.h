@@ -25,26 +25,36 @@
  * SUCH DAMAGE.
  */
 
-#ifndef CHARLIE_VM_RUNTIME_H
-#define CHARLIE_VM_RUNTIME_H
+#ifndef CHARLIE_PROGRAM_MAPPING_H
+#define CHARLIE_PROGRAM_MAPPING_H
 
 #include <memory>
+#include <string>
+#include <vector>
 
-#include "state.h"
-
-#include "../program/mapping.h"
-
-namespace charlie::vm {
-class Runtime {
+namespace charlie::program {
+class Mapping {
  public:
-  explicit Runtime(std::unique_ptr<State> state, std::shared_ptr<program::Mapping> mapping = nullptr);
-  int Run();
-  int Debug(int port);
+  struct Scope {
+    int begin;
+    int end;
+  };
+
+  struct Function {
+    Function(const std::string &name) : name(name) {}
+    std::string name;
+    Scope scope;
+  };
+
+  std::vector<std::unique_ptr<Function>> Functions;
+
+  bool Save(const std::string &filename) const;
+
+  bool Load(const std::string &filename);
 
  private:
-  std::unique_ptr<State> state_;
-  std::shared_ptr<program::Mapping> mapping_;
+  std::vector<Function> functions_;
 };
-}  // namespace charlie::vm
+}  // namespace charlie::program
 
 #endif

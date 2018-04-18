@@ -111,18 +111,19 @@ int main(int argn, char **argv) {
     Compiler compiler([](string const &message) { cerr << message << endl; });
 
     addExternalFunctions(&compiler);
-    if (compiler.Build(file)) {
+    bool debug = vm.count("debug") > 0;
+    if (compiler.Build(file, debug)) {
       if (vm.count("ascii") > 0) {
-        if (compiler.SaveProgram(file, false)) cerr << "Saving program to " << file << ".bc.txt" << endl;
+        if (compiler.SaveProgram(file, false, debug)) cerr << "Saving program to " << file << ".bc.txt" << endl;
       }
       if (vm.count("binary") > 0) {
-        if (compiler.SaveProgram(file, true)) cerr << "Saving program to " << file << ".bc" << endl;
+        if (compiler.SaveProgram(file, true, debug)) cerr << "Saving program to " << file << ".bc" << endl;
       }
       cerr << "Running program ..\n\n";
 
-      charlie::vm::Runtime runtime(compiler.GetProgram());
+      charlie::vm::Runtime runtime(compiler.GetProgram(), compiler.GetMapping());
       int result;
-      if (vm.count("debug") > 0) {
+      if (debug) {
         result = runtime.Debug(vm["debug"].as<int>());
         // result = runtime.Debug(3232);
       } else {

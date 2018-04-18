@@ -125,7 +125,8 @@ class DebugConnection {
   tcp::acceptor acceptor_;
 };  // namespace charlie::vm
 
-Runtime::Runtime(std::unique_ptr<State> state) : state_(std::move(state)) {}
+Runtime::Runtime(std::unique_ptr<State> state, std::shared_ptr<program::Mapping> mapping)
+    : state_(std::move(state)), mapping_(mapping) {}
 int Runtime::Run() {
   while (state_->pos > -1 /* && !state.call_stack.empty()*/) {
     int r = InstructionManager::Instructions[state_->program[state_->pos]](*state_);
@@ -147,11 +148,30 @@ void add_variables(const Register& reg, charlie::debug::Event::State* state) {
   }
 }
 
-void add_callstack(const State& state, charlie::debug::Event::State* proto_state) {
+std::string try_function_name(const std::vector<std::unique_ptr<program::Mapping::Function>>& functions_map, int pos) {
+  for (auto& func : functions_map) {
+    if (func->scope.begin <= pos && func->scope.end >= pos) {
+      return func->name;
+      // proto_state->add_callstack_item(func->name);
+    }
+  }
+  return "__global__";  // For initialisations beside the main() function
+}
+
+void add_callstack(const State& state, std::shared_ptr<program::Mapping> mapping,
+                   charlie::debug::Event::State* proto_state) {
   auto call_stack = state.call_stack;
+  if (mapping == nullptr) {
+    return;
+  }
+
+  *(proto_state->add_callstack_item()) = try_function_name(mapping->Functions, state.pos);
+
   while (!call_stack.empty()) {
-    proto_state->add_callstack_item(call_stack.top());
+    int pos = call_stack.top();
     call_stack.pop();
+    *(proto_state->add_callstack_item()) = try_function_name(mapping->Functions, pos);
+    // proto_state->add_callstack_item(call_stack.top());
   }
 }
 
@@ -176,7 +196,7 @@ int Runtime::Debug(int port) {
 
         auto state = new charlie::debug::Event::State();
         add_variables(state_->reg, state);
-        add_callstack(*state_, state);
+        add_callstack(*state_, mapping_, state);
 
         event.set_allocated_state(state);
 
@@ -187,6 +207,8 @@ int Runtime::Debug(int port) {
       int r = InstructionManager::Instructions[code](*state_);
       if (r < 0) break;
     }
+    // Wait for client to stop
+    sleep(100);
     if (state_->alu_stack.empty()) return 0;
     return state_->alu_stack.top();
   } catch (std::exception& e) {

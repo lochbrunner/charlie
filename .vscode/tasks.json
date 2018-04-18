@@ -26,7 +26,8 @@
             },
             "options": {
                 "cwd": "${workspaceRoot}/build-debug"
-            }
+            },
+            "problemMatcher": "$gcc"
         }
     ]
 }

@@ -34,7 +34,7 @@ using std::array;
 using std::queue;
 
 array<functionType, InstructionEnums::Length> InstructionManager::Create() {
-  array<functionType, InstructionEnums::Length> types = array<functionType, InstructionEnums::Length>();
+  auto types = array<functionType, InstructionEnums::Length>();
   types[InstructionEnums::IncreaseRegister] = [](State& state) {
     int addition = state.program[++state.pos];
     state.reg.Increase(addition);

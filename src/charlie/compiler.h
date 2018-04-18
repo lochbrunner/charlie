@@ -36,6 +36,7 @@
 #include "common/logging_component.h"
 
 #include "program/function_declaration.h"
+#include "program/mapping.h"
 #include "program/statement.h"
 #include "program/unresolved_program.h"
 
@@ -59,18 +60,20 @@ class Compiler : public common::LoggingComponent {
   // Creates an object with the specified message delegate.
   xprt Compiler(std::function<void(std::string const &message)> messageDelegate);
   // Compiles the speciefed C source file to bytecode. Returns true if succeeded.
-  xprt bool Build(std::string const &filename);
+  xprt bool Build(std::string const &filename, bool sourcemaps);
   // Saves the current porgram to the file. Optional binary or as readable textfile.
   // Returns true if succeeded.
-  xprt bool SaveProgram(std::string const &filename, bool binary = true) const;
+  xprt bool SaveProgram(std::string const &filename, bool binary = true, bool mapping = false) const;
   // Returns the state containing the current program.
   xprt std::unique_ptr<vm::State> GetProgram();
+  // Returns the mapping of available, otherwise return nullptr
+  xprt std::shared_ptr<program::Mapping> GetMapping();  // TODO: create a struct containing mapping and bytecode
   // External function manager
   api::ExternalFunctionManager external_function_manager;
 
  private:
   // Compiles the syntax tree to bytecode.
-  bool compile();
+  bool compile(bool sourcemaps);
   // Enroles a block of the syntax tree to bytecode.
   bool enroleBlock(
       std::map<program::FunctionDeclaration, int, program::FunctionDeclaration::comparer> const &functionDict,
@@ -81,6 +84,7 @@ class Compiler : public common::LoggingComponent {
       program::Statement const &statement, int *count);
   // The current program data.
   program::UnresolvedProgram program_;
+  std::shared_ptr<program::Mapping> mapping_;
 };
 }  // namespace charlie
 

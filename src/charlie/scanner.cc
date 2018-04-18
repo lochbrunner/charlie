@@ -1,29 +1,29 @@
 /*
-* Copyright (c) 2016, Matthias Lochbrunner <matthias_lochbrunner@live.de>
-* All rights reserved.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions
-* are met:
-*
-* 1. Redistributions of source code must retain the above copyright
-*    notice, this list of conditions and the following disclaimer.
-* 2. Redistributions in binary form must reproduce the above copyright
-*    notice, this list of conditions and the following disclaimer in the
-*    documentation and/or other materials provided with the distribution.
-*
-* THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
-* ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-* IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-* ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
-* FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-* DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-* OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-* LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-* OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-* SUCH DAMAGE.
-*/
+ * Copyright (c) 2016, Matthias Lochbrunner <matthias_lochbrunner@live.de>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
 
 #include <map>
 #include <set>
@@ -40,40 +40,39 @@
 #define ERROR_MESSAGE_MAKE_CODE_AND_POS(message) error_message_to_code(message, __FILE__, __LINE__)
 #define ERROR_MESSAGE_WITH_POS_MAKE_CODE(message, pos) error_message_to_code(message, pos, __FILE__, __LINE__)
 
-
 namespace charlie {
 
+using std::function;
 using std::list;
 using std::map;
 using std::string;
 using std::stringstream;
-using std::function;
 
 using token::Base;
 using token::Bracket;
-using token::ControlFlow;
-using token::Operator;
-using token::Label;
-using token::ConstantInt;
 using token::CodePostion;
 using token::Comma;
 using token::Constant;
+using token::ConstantInt;
+using token::ControlFlow;
+using token::Label;
+using token::Operator;
 
-using program::VariableDeclaration;
 using program::FunctionDeclaration;
 using program::Scope;
 using program::Statement;
+using program::VariableDeclaration;
 
 using common::comparer_string;
 
-inline bool isBracketToken(Base* token, Bracket::DirectionEnum direction, Bracket::KindEnum kind) {
-  return token->token_type == Base::TokenTypeEnum::Bracket && dynamic_cast<Bracket*>(token)->kind == kind &&
-    dynamic_cast<Bracket*>(token)->direction == direction;
+inline bool isBracketToken(Base *token, Bracket::DirectionEnum direction, Bracket::KindEnum kind) {
+  return token->token_type == Base::TokenTypeEnum::Bracket && dynamic_cast<Bracket *>(token)->kind == kind &&
+         dynamic_cast<Bracket *>(token)->direction == direction;
 }
 
 struct TypeDict {
-  static map<const char*, VariableDeclaration::TypeEnum, comparer_string> create() {
-    map<const char*, VariableDeclaration::TypeEnum, comparer_string> types;
+  static map<const char *, VariableDeclaration::TypeEnum, comparer_string> create() {
+    map<const char *, VariableDeclaration::TypeEnum, comparer_string> types;
     types["int"] = VariableDeclaration::Int;
     types["long"] = VariableDeclaration::Long;
     types["float"] = VariableDeclaration::Float;
@@ -83,19 +82,17 @@ struct TypeDict {
     types["void"] = VariableDeclaration::Void;
     return types;
   }
-  static const map<const char*, VariableDeclaration::TypeEnum, comparer_string> Types;
-  static bool Contains(const char* name) {
-    return TypeDict::Types.count(name) > 0;
-  }
-  static VariableDeclaration::TypeEnum Get(const char* name) {
+  static const map<const char *, VariableDeclaration::TypeEnum, comparer_string> Types;
+  static bool Contains(const char *name) { return TypeDict::Types.count(name) > 0; }
+  static VariableDeclaration::TypeEnum Get(const char *name) {
     auto it = TypeDict::Types.find(name);
     return it->second;
   }
 };
 
 struct ControlFlowDict {
-  static map<const char*, ControlFlow::KindEnum, comparer_string> create() {
-    map<const char*, ControlFlow::KindEnum, comparer_string> types;
+  static map<const char *, ControlFlow::KindEnum, comparer_string> create() {
+    map<const char *, ControlFlow::KindEnum, comparer_string> types;
     types["while"] = ControlFlow::KindEnum::While;
     types["for"] = ControlFlow::KindEnum::For;
     types["do"] = ControlFlow::KindEnum::Do;
@@ -107,28 +104,23 @@ struct ControlFlowDict {
     types["goto"] = ControlFlow::KindEnum::Goto;
     return types;
   }
-  static const map<const char*, ControlFlow::KindEnum, comparer_string> Controls;
-  static bool Contains(const char* name) {
-    return ControlFlowDict::Controls.count(name) > 0;
-  }
-  static ControlFlow::KindEnum Get(const char* name) {
+  static const map<const char *, ControlFlow::KindEnum, comparer_string> Controls;
+  static bool Contains(const char *name) { return ControlFlowDict::Controls.count(name) > 0; }
+  static ControlFlow::KindEnum Get(const char *name) {
     auto it = ControlFlowDict::Controls.find(name);
     return it->second;
   }
 };
 
-const map<const char*, VariableDeclaration::TypeEnum, comparer_string> TypeDict::Types = TypeDict::create();
-const map<const char*, ControlFlow::KindEnum, comparer_string> ControlFlowDict::Controls = ControlFlowDict::create();
+const map<const char *, VariableDeclaration::TypeEnum, comparer_string> TypeDict::Types = TypeDict::create();
+const map<const char *, ControlFlow::KindEnum, comparer_string> ControlFlowDict::Controls = ControlFlowDict::create();
 
-
-Scanner::Scanner(program::UnresolvedProgram *program, api::ExternalFunctionManager *external_function_manager) :
-  LoggingComponent(), program_(program), external_function_manager_(external_function_manager) {
-}
+Scanner::Scanner(program::UnresolvedProgram *program, api::ExternalFunctionManager *external_function_manager)
+    : LoggingComponent(), program_(program), external_function_manager_(external_function_manager) {}
 
 Scanner::Scanner(program::UnresolvedProgram *program, api::ExternalFunctionManager *external_function_manager,
-  function<void(string const&message)> messageDelegate) :
-  LoggingComponent(messageDelegate), program_(program), external_function_manager_(external_function_manager) {
-}
+                 function<void(string const &message)> messageDelegate)
+    : LoggingComponent(messageDelegate), program_(program), external_function_manager_(external_function_manager) {}
 
 bool Scanner::Scan(string const &code) {
   codeInfo_.set(&code);
@@ -141,8 +133,7 @@ bool Scanner::Scan(string const &code) {
   while (codeInfo_.pos != -1 && codeInfo_.pos < codeInfo_.length) {
     getNextWord(&word, &wordType);
     // A single simikolon does not make sense but it is still valid
-    if (wordType == WordType::Semikolon)
-      continue;
+    if (wordType == WordType::Semikolon) continue;
     if (wordType != WordType::Name) {
       stringstream st;
       st << "Unexpected word \"" << word << "\" found!";
@@ -167,11 +158,9 @@ bool Scanner::Scan(string const &code) {
       getNextWord(&word, &wordType);
       if (code[codeInfo_.pos] == '(') {
         ++codeInfo_.pos;
-        list<VariableDeclaration> args = list<VariableDeclaration>();
-        if (!getFunctionDecArguments(&args))
-          return false;
-        if (codeInfo_.pos == -1)
-          return false;
+        auto args = list<VariableDeclaration>();
+        if (!getFunctionDecArguments(&args)) return false;
+        if (codeInfo_.pos == -1) return false;
         // is there a function definition following?
         getNextWord(&word, &wordType);
         if (wordType == WordType::Semikolon) {
@@ -181,12 +170,10 @@ bool Scanner::Scan(string const &code) {
         } else if (wordType == WordType::Bracket && code[codeInfo_.pos] == '{') {
           ++codeInfo_.pos;
           auto dec = FunctionDeclaration(variableName, type, args, &program_->root);
-          if (!getFunctionDefinition(&dec))
-            return false;
+          if (!getFunctionDefinition(&dec)) return false;
           dec.has_definition = true;
           program_->function_declarations.push_back(dec);
-          if (codeInfo_.pos == -1)
-            return false;
+          if (codeInfo_.pos == -1) return false;
 
         } else {
           ERROR_MESSAGE_MAKE_CODE_AND_POS("Unexpected symbol after function declaration");
@@ -195,10 +182,10 @@ bool Scanner::Scan(string const &code) {
 
       } else if (code[codeInfo_.pos] == ';') {
         ++codeInfo_.pos;
-        VariableDeclaration dec = VariableDeclaration(variableName, type);
+        VariableDeclaration dec(variableName, type);
         program_->root.AddVariableDec(dec);
       } else if (word.length() == 1 && word[0] == '=') {
-        VariableDeclaration dec = VariableDeclaration(variableName, type);
+        VariableDeclaration dec(variableName, type);
         program_->root.AddVariableDec(dec);
         --codeInfo_.pos;
         getStatement(variableName, &program_->root);
@@ -219,29 +206,22 @@ bool Scanner::Scan(string const &code) {
 }
 
 bool Scanner::is_beginnging_of_label(char c) {
-  if (c <= 'z' &&  c >= 'a')
-    return true;
-  if (c <= 'Z' &&  c >= 'A')
-    return true;
-  if (c == '_')
-    return true;
+  if (c <= 'z' && c >= 'a') return true;
+  if (c <= 'Z' && c >= 'A') return true;
+  if (c == '_') return true;
   return false;
 }
 
 bool Scanner::is_operator(char c) {
-  return (c == '/' || c == '*' || c == '+' || c == '-' ||
-    c == '!' || c == '^' || c == '=' || c == '~' ||
-    c == '<' || c == '>' || c == '|' || c == '%');
+  return (c == '/' || c == '*' || c == '+' || c == '-' || c == '!' || c == '^' || c == '=' || c == '~' || c == '<' ||
+          c == '>' || c == '|' || c == '%');
 }
 
 bool Scanner::is_bracket(char c) {
-  return (c == '(' || c == ')' || c == '[' || c == ']' ||
-    c == '{' || c == '}' || c == '<' || c == '>');
+  return (c == '(' || c == ')' || c == '[' || c == ']' || c == '{' || c == '}' || c == '<' || c == '>');
 }
 
-bool Scanner::is_numerical(char c) {
-  return c <= '9' && c >= '0';
-}
+bool Scanner::is_numerical(char c) { return c <= '9' && c >= '0'; }
 
 bool Scanner::end_of_line_comment() {
   codeInfo_.pos = codeInfo_.code->find("\n", codeInfo_.pos);
@@ -250,8 +230,7 @@ bool Scanner::end_of_line_comment() {
 
 bool Scanner::end_of_block_comment() {
   codeInfo_.pos = codeInfo_.code->find("*/", codeInfo_.pos);
-  if (codeInfo_.pos < 0)
-    return false;
+  if (codeInfo_.pos < 0) return false;
   ++codeInfo_.pos;
   return true;
 }
@@ -328,8 +307,7 @@ void Scanner::getNextWord(std::string *word, WordType *type) {
     } else if (is_operator(c)) {
       if (c == '/' && codeInfo_.length > codeInfo_.pos + 1) {
         if (codeInfo_.at(codeInfo_.pos + 1) == '/') {
-          if (!end_of_line_comment())
-            return;
+          if (!end_of_line_comment()) return;
 
           if (*type != WordType::None)
             break;
@@ -368,8 +346,7 @@ void Scanner::getNextWord(std::string *word, WordType *type) {
         break;
       }
     } else if (c == '\'') {
-      if (oldStart < codeInfo_.pos && codeInfo_.at(codeInfo_.pos - 1) == '\\' && *type == WordType::String)
-        continue;
+      if (oldStart < codeInfo_.pos && codeInfo_.at(codeInfo_.pos - 1) == '\\' && *type == WordType::String) continue;
       if (codeInfo_.pos > codeInfo_.length - 2) {
         if (codeInfo_.at(codeInfo_.pos + 1) == '\\') {
           if (codeInfo_.pos > codeInfo_.length - 3) {
@@ -410,8 +387,7 @@ void Scanner::getNextWord(std::string *word, WordType *type) {
       else
         break;
     } else {
-      if (*type == WordType::String)
-        continue;
+      if (*type == WordType::String) continue;
       stringstream st;
       st << "Unkown character found \'" << c << "\'";
       ERROR_MESSAGE_MAKE_CODE_AND_POS(st);
@@ -420,36 +396,36 @@ void Scanner::getNextWord(std::string *word, WordType *type) {
     }
   }
   switch (*type) {
-  case WordType::None:
-    *word = "";
-    return;
-  case WordType::Name:
-    *word = codeInfo_.code->substr(begin, codeInfo_.pos - begin);
-    return;
-  case WordType::Number:
-    *word = codeInfo_.code->substr(begin, codeInfo_.pos - begin);
-    return;
-  case WordType::Operator:
-    *word = codeInfo_.code->substr(begin, codeInfo_.pos - begin);
-    return;
-  case WordType::Bracket:
-    return;
-  case WordType::Comma:
-  case WordType::Semikolon:
-    return;
-  case WordType::Char:
-    *word = codeInfo_.code->substr(begin, codeInfo_.pos - begin);
-    return;
-  case WordType::String:
-    *word = codeInfo_.code->substr(begin, codeInfo_.pos - begin);
-    return;
-  default:
-    break;
+    case WordType::None:
+      *word = "";
+      return;
+    case WordType::Name:
+      *word = codeInfo_.code->substr(begin, codeInfo_.pos - begin);
+      return;
+    case WordType::Number:
+      *word = codeInfo_.code->substr(begin, codeInfo_.pos - begin);
+      return;
+    case WordType::Operator:
+      *word = codeInfo_.code->substr(begin, codeInfo_.pos - begin);
+      return;
+    case WordType::Bracket:
+      return;
+    case WordType::Comma:
+    case WordType::Semikolon:
+      return;
+    case WordType::Char:
+      *word = codeInfo_.code->substr(begin, codeInfo_.pos - begin);
+      return;
+    case WordType::String:
+      *word = codeInfo_.code->substr(begin, codeInfo_.pos - begin);
+      return;
+    default:
+      break;
   }
   if (*type != WordType::None)
     *word = codeInfo_.code->substr(begin, codeInfo_.pos - begin);
   else
-    * word = "";
+    *word = "";
 }
 // Call this after opening bracket: i.e "int main ("
 bool Scanner::getFunctionDecArguments(std::list<VariableDeclaration> *args) {
@@ -512,7 +488,6 @@ bool Scanner::getFunctionDecArguments(std::list<VariableDeclaration> *args) {
     first = false;
   }
 
-
   return true;
 }
 
@@ -545,10 +520,10 @@ bool Scanner::getFunctionDefinition(FunctionDeclaration *dec) {
   return getBlock(*dec, &dec->definition);
 }
 
-bool Scanner::getBlock(FunctionDeclaration const& dec, Scope *scope) {
+bool Scanner::getBlock(FunctionDeclaration const &dec, Scope *scope) {
   WordType wordType;
   string word;
-  const char* wordBuffer;
+  const char *wordBuffer;
 
   while (codeInfo_.pos < codeInfo_.length && codeInfo_.pos != -1) {
     getNextWord(&word, &wordType);
@@ -561,12 +536,12 @@ bool Scanner::getBlock(FunctionDeclaration const& dec, Scope *scope) {
     if (wordType == WordType::Semikolon) {
       ++codeInfo_.pos;
       continue;
-    // Prefix operator?
+      // Prefix operator?
     } else if (wordType == WordType::Operator) {
       // TODO(lochbrunner): prefix operators i.e. ++i;
       ERROR_MESSAGE_MAKE_CODE_AND_POS("Sorry: Prefix operators are not implemented yet!");
       return false;
-    // Anything else but not name?
+      // Anything else but not name?
     } else if (wordType != WordType::Name) {
       ERROR_MESSAGE_MAKE_CODE_AND_POS("Unexpected symbol in function definition");
       return false;
@@ -590,96 +565,93 @@ bool Scanner::getBlock(FunctionDeclaration const& dec, Scope *scope) {
         ERROR_MESSAGE_MAKE_CODE_AND_POS("Unexpected symbol in function definition");
         return false;
       }
-    // A new block?
-    } 
-    else if (ControlFlowDict::Contains(wordBuffer)) {
+      // A new block?
+    } else if (ControlFlowDict::Contains(wordBuffer)) {
       auto control = ControlFlowDict::Get(wordBuffer);
       switch (control) {
-      case ControlFlow::KindEnum::For:
-        getNextWord(&word, &wordType);
-        if (wordType != WordType::Bracket || codeInfo_.current_char() != '(') {
-          ERROR_MESSAGE_MAKE_CODE_AND_POS("Expected opening bracket after for");
-          return false;
-        } else {
-          ERROR_MESSAGE_MAKE_CODE_AND_POS("For loop is not implemented yet!");
-          return false;
-        }
-        break;
-      case ControlFlow::KindEnum::Do:
-        break;
-      case ControlFlow::KindEnum::If:
-      case ControlFlow::KindEnum::While:
-        getNextWord(&word, &wordType);
-        if (wordType != WordType::Bracket || codeInfo_.current_char() != '(') {
-          stringstream st;
-          st << "Expected opening bracket after " << word;
-          ERROR_MESSAGE_MAKE_CODE_AND_POS(st);
-          return false;
-        } else {
-          ++codeInfo_.pos;
-          Scope expression = Scope(scope);
-          getExpression(&expression, true);
-          // Is there exactly one statment
-          if (expression.statements.begin() == expression.statements.end() ||
-            ++expression.statements.begin() != expression.statements.end()) {
+        case ControlFlow::KindEnum::For:
+          getNextWord(&word, &wordType);
+          if (wordType != WordType::Bracket || codeInfo_.current_char() != '(') {
+            ERROR_MESSAGE_MAKE_CODE_AND_POS("Expected opening bracket after for");
+            return false;
+          } else {
+            ERROR_MESSAGE_MAKE_CODE_AND_POS("For loop is not implemented yet!");
+            return false;
+          }
+          break;
+        case ControlFlow::KindEnum::Do:
+          break;
+        case ControlFlow::KindEnum::If:
+        case ControlFlow::KindEnum::While:
+          getNextWord(&word, &wordType);
+          if (wordType != WordType::Bracket || codeInfo_.current_char() != '(') {
             stringstream st;
-            st << "Expected one expression in " << word << "(...)";
+            st << "Expected opening bracket after " << word;
             ERROR_MESSAGE_MAKE_CODE_AND_POS(st);
             return false;
+          } else {
+            ++codeInfo_.pos;
+            Scope expression = Scope(scope);
+            getExpression(&expression, true);
+            // Is there exactly one statment
+            if (expression.statements.begin() == expression.statements.end() ||
+                ++expression.statements.begin() != expression.statements.end()) {
+              stringstream st;
+              st << "Expected one expression in " << word << "(...)";
+              ERROR_MESSAGE_MAKE_CODE_AND_POS(st);
+              return false;
+            }
+            getNextWord(&word, &wordType);
+            if (wordType != WordType::Bracket || codeInfo_.current_char() != '{') {
+              // Single statement block
+              // TODO(lochbrunner)
+              ERROR_MESSAGE_MAKE_CODE_AND_POS("Sorry: Single statement blocks are not implemented yet!");
+              return false;
+            } else {
+              auto block = new Scope(scope);
+              ++codeInfo_.pos;
+              if (!getBlock(dec, block)) return false;
+              auto cflow = new ControlFlow(control, CodePostion(codeInfo_.pos));
+              auto statement = Statement(cflow);
+              statement.arguments.push_back(*expression.statements.begin());
+              statement.arguments.push_back(block);
+              scope->statements.push_back(statement);
+            }
           }
-          getNextWord(&word, &wordType);
-          if (wordType != WordType::Bracket || codeInfo_.current_char() != '{') {
-            // Single statement block
-            // TODO(lochbrunner)
-            ERROR_MESSAGE_MAKE_CODE_AND_POS("Sorry: Single statement blocks are not implemented yet!");
+          break;
+        case ControlFlow::KindEnum::Else:
+          break;
+        case ControlFlow::KindEnum::Break:
+          break;
+        case ControlFlow::KindEnum::Continue:
+          break;
+        case ControlFlow::KindEnum::Return:
+          if (dec.image_type != VariableDeclaration::Void) {
+            if (getExpression(scope)) {
+              scope->statements.push_back(Statement(new ControlFlow(control, CodePostion(codeInfo_.pos))));
+              break;
+            }
             return false;
           } else {
-            auto block = new Scope(scope);
-            ++codeInfo_.pos;
-            if(!getBlock(dec, block))
-              return false;
-            auto cflow = new ControlFlow(control, CodePostion(codeInfo_.pos));
-            auto statement = Statement(cflow);
-            statement.arguments.push_back(*expression.statements.begin());
-            statement.arguments.push_back(block);
-            scope->statements.push_back(statement);
+            getNextWord(&word, &wordType);
+            if (wordType == WordType::Semikolon) {
+              scope->statements.push_back(Statement(new ControlFlow(control, CodePostion(codeInfo_.pos))));
+              break;
+            } else {
+              ERROR_MESSAGE_MAKE_CODE_AND_POS("This function has returning type of void and nothing else!");
+            }
           }
-        }
-        break;
-      case ControlFlow::KindEnum::Else:
-        break;
-      case ControlFlow::KindEnum::Break:
-        break;
-      case ControlFlow::KindEnum::Continue:
-        break;
-      case ControlFlow::KindEnum::Return:
-        if (dec.image_type != VariableDeclaration::Void) {
-          if (getExpression(scope)) {
-            scope->statements.push_back(Statement(new ControlFlow(control, CodePostion(codeInfo_.pos))));
-            break;
-          }
-          return false;
-        } else {
-          getNextWord(&word, &wordType);
-          if (wordType == WordType::Semikolon) {
-            scope->statements.push_back(Statement(new ControlFlow(control, CodePostion(codeInfo_.pos))));
-            break;
-          } else {
-            ERROR_MESSAGE_MAKE_CODE_AND_POS("This function has returning type of void and nothing else!");
-          }
-        }
-      case ControlFlow::KindEnum::Switch:
-        break;
-      case ControlFlow::KindEnum::Case:
-        break;
-      case ControlFlow::KindEnum::Goto:
-        break;
-      default:
-        break;
+        case ControlFlow::KindEnum::Switch:
+          break;
+        case ControlFlow::KindEnum::Case:
+          break;
+        case ControlFlow::KindEnum::Goto:
+          break;
+        default:
+          break;
       }
-    // Must be a statement
-    }
-    else {
+      // Must be a statement
+    } else {
       if (!getStatement(word, scope)) {
         return false;
       }
@@ -689,13 +661,12 @@ bool Scanner::getBlock(FunctionDeclaration const& dec, Scope *scope) {
 }
 
 bool Scanner::getExpression(Scope *prog, bool inBracket) {
-  Statement tokens = Statement();
+  Statement tokens;
 
   int num = getStatemantTokens(&tokens, inBracket);
   if (num > 0) {
-    Statement statement = Statement();
-    if (!treeifyStatement(*prog, &tokens.arguments, &statement))
-      return false;
+    Statement statement;
+    if (!treeifyStatement(*prog, &tokens.arguments, &statement)) return false;
     prog->statements.push_back(statement);
   } else if (num < 0)
     return false;
@@ -703,22 +674,21 @@ bool Scanner::getExpression(Scope *prog, bool inBracket) {
 }
 
 bool Scanner::getStatement(string const &word, Scope *prog) {
-  Statement tokens = Statement();
+  Statement tokens;
 
   tokens.arguments.push_back(new Label(word, CodePostion(codeInfo_.pos)));
 
   int num = getStatemantTokens(&tokens);
   if (num > 0) {
-    Statement statement = Statement();
-    if (!treeifyStatement(prog, &tokens.arguments, &statement))
-      return false;
+    Statement statement;
+    if (!treeifyStatement(prog, &tokens.arguments, &statement)) return false;
     prog->statements.push_back(statement);
   } else if (num < 0)
     return false;
   return true;
 }
 
-bool Scanner::treeifyStatement(program::Scope const& scope, list<Statement> *linearStatements, Statement *statement) {
+bool Scanner::treeifyStatement(program::Scope const &scope, list<Statement> *linearStatements, Statement *statement) {
   if (++(linearStatements->begin()) == linearStatements->end() && linearStatements->begin()->value->finished) {
     *statement = *linearStatements->begin();
     return true;
@@ -741,7 +711,8 @@ bool Scanner::treeifyStatement(program::Scope const& scope, list<Statement> *lin
         *statement = *linearStatements->begin();
         return true;
       } else {
-        ERROR_MESSAGE_WITH_POS_MAKE_CODE("Could not proceed statement", linearStatements->begin()->value->position.character_position);
+        ERROR_MESSAGE_WITH_POS_MAKE_CODE("Could not proceed statement",
+                                         linearStatements->begin()->value->position.character_position);
         return false;
       }
     }
@@ -749,129 +720,129 @@ bool Scanner::treeifyStatement(program::Scope const& scope, list<Statement> *lin
     std::list<Statement>::const_iterator itTemp;
     auto tokenType = itMax->value->token_type;
     switch (tokenType) {
-    case Base::TokenTypeEnum::Label:
-      // Function or variable?
-      itTemp = itMax;
-      ++itTemp;
-      if (itTemp == linearStatements->end() || !isBracketToken(itTemp->value, Bracket::DirectionEnum::Opening, Bracket::KindEnum::Round)) {
-        if (!try_get_type_of_variable(scope, itMax->value)) {
-          stringstream st;
-          st << "Not declared \"" << itMax->value->ToString() << "\" variable used";
-          ERROR_MESSAGE_WITH_POS_MAKE_CODE(st, itTemp->value->position.character_position);
-          return 0;
-        }
-        itMax->value->finished = true;
-      } 
-      else {
-        auto functionNode = *itMax;
-        dynamic_cast<Label*>(functionNode.value)->kind = Label::KindEnum::Function;
-        getBracket(itTemp, linearStatements, &functionNode.arguments);
-        if (++(functionNode.arguments.begin()) == functionNode.arguments.end()) {
-          auto arg = functionNode.arguments.begin();
-          if (arg->value->token_type == Base::TokenTypeEnum::Label && !try_get_type_of_variable(scope, arg->value)) {
+      case Base::TokenTypeEnum::Label:
+        // Function or variable?
+        itTemp = itMax;
+        ++itTemp;
+        if (itTemp == linearStatements->end() ||
+            !isBracketToken(itTemp->value, Bracket::DirectionEnum::Opening, Bracket::KindEnum::Round)) {
+          if (!try_get_type_of_variable(scope, itMax->value)) {
             stringstream st;
-            st << "Can not resolve type of \"" << arg->value->ToString() << "\" !";
+            st << "Not declared \"" << itMax->value->ToString() << "\" variable used";
             ERROR_MESSAGE_WITH_POS_MAKE_CODE(st, itTemp->value->position.character_position);
-            return false;
+            return 0;
           }
-          functionNode.value->finished = true;
-          *statement = functionNode;
-          return true;
-        } else {
-          if (!treeifyStatement(scope, &functionNode.arguments, statement))
-            return false;
-          functionNode.value->finished = true;
-          itMax->arguments.push_back(*statement);
           itMax->value->finished = true;
-        }
-      }
-      break;
-    case Base::TokenTypeEnum::Operator:
-      if (itMax->value->token_chidren_position == Base::TokenChidrenPosEnum::LeftAndRight) {
-        std::list<Statement>::const_iterator prev = itMax;
-        --prev;
-        std::list<Statement>::const_iterator post = itMax;
-        ++post;
-
-        if (prev == linearStatements->end()) {
-          ERROR_MESSAGE_MAKE_CODE_AND_POS("Missing symbol on the left side of an operator");
-          return false;
-        }
-        if (post == linearStatements->end()) {
-          ERROR_MESSAGE_MAKE_CODE_AND_POS("Missing symbol on the right side of an operator");
-          return false;
-        }
-        if (prev->value->token_type == Base::TokenTypeEnum::Label && dynamic_cast<Label*>(prev->value)->kind != Label::KindEnum::Function &&
-          !try_get_type_of_variable(scope, prev->value))
-          return false;
-        if (post->value->token_type == Base::TokenTypeEnum::Label && dynamic_cast<Label*>(post->value)->kind != Label::KindEnum::Function &&
-          !try_get_type_of_variable(scope, post->value))
-          return false;
-
-        if (prev->value->finished && prev->value->type == VariableDeclaration::Int ||
-          prev->value->finished && prev->value->type == VariableDeclaration::Length) {
-          if (post->value->finished && post->value->type == VariableDeclaration::Int) {
-            itMax->value->finished = true;
-            itMax->value->type = VariableDeclaration::Int;
-            itMax->arguments.push_back(*prev);
-            linearStatements->erase(prev);
-            itMax->arguments.push_back(*post);
-            linearStatements->erase(post);
+        } else {
+          auto functionNode = *itMax;
+          dynamic_cast<Label *>(functionNode.value)->kind = Label::KindEnum::Function;
+          getBracket(itTemp, linearStatements, &functionNode.arguments);
+          if (++(functionNode.arguments.begin()) == functionNode.arguments.end()) {
+            auto arg = functionNode.arguments.begin();
+            if (arg->value->token_type == Base::TokenTypeEnum::Label && !try_get_type_of_variable(scope, arg->value)) {
+              stringstream st;
+              st << "Can not resolve type of \"" << arg->value->ToString() << "\" !";
+              ERROR_MESSAGE_WITH_POS_MAKE_CODE(st, itTemp->value->position.character_position);
+              return false;
+            }
+            functionNode.value->finished = true;
+            *statement = functionNode;
+            return true;
           } else {
-            ERROR_MESSAGE_MAKE_CODE_AND_POS("Right symbol should be an int!");
+            if (!treeifyStatement(scope, &functionNode.arguments, statement)) return false;
+            functionNode.value->finished = true;
+            itMax->arguments.push_back(*statement);
+            itMax->value->finished = true;
+          }
+        }
+        break;
+      case Base::TokenTypeEnum::Operator:
+        if (itMax->value->token_chidren_position == Base::TokenChidrenPosEnum::LeftAndRight) {
+          std::list<Statement>::const_iterator prev = itMax;
+          --prev;
+          std::list<Statement>::const_iterator post = itMax;
+          ++post;
+
+          if (prev == linearStatements->end()) {
+            ERROR_MESSAGE_MAKE_CODE_AND_POS("Missing symbol on the left side of an operator");
             return false;
           }
-        } else {
-          ERROR_MESSAGE_MAKE_CODE_AND_POS("Unspecified error");
-          return false;
-        }
-      }
-      else if (itMax->value->token_chidren_position == Base::TokenChidrenPosEnum::LeftOrRight) {
-        std::list<Statement>::const_iterator prev = itMax;
-        --prev;
-        std::list<Statement>::const_iterator post = itMax;
-        ++post;
-        if (post == linearStatements->end() && prev == linearStatements->end()) {
-          stringstream st;
-          st << "Operator \"" << itMax->value->ToString() << "\" does not have any symbol either on the left side nor on the right side!";
-          ERROR_MESSAGE_MAKE_CODE_AND_POS(st);
-          return false;
-        }
-        // Postfix operator?
-        if (prev != linearStatements->end()) {
-          if (prev->value->token_type == Base::TokenTypeEnum::Label && dynamic_cast<Label*>(prev->value)->kind != Label::KindEnum::Function &&
-            !try_get_type_of_variable(scope, prev->value)) {
+          if (post == linearStatements->end()) {
+            ERROR_MESSAGE_MAKE_CODE_AND_POS("Missing symbol on the right side of an operator");
+            return false;
+          }
+          if (prev->value->token_type == Base::TokenTypeEnum::Label &&
+              dynamic_cast<Label *>(prev->value)->kind != Label::KindEnum::Function &&
+              !try_get_type_of_variable(scope, prev->value))
+            return false;
+          if (post->value->token_type == Base::TokenTypeEnum::Label &&
+              dynamic_cast<Label *>(post->value)->kind != Label::KindEnum::Function &&
+              !try_get_type_of_variable(scope, post->value))
+            return false;
+
+          if (prev->value->finished && prev->value->type == VariableDeclaration::Int ||
+              prev->value->finished && prev->value->type == VariableDeclaration::Length) {
+            if (post->value->finished && post->value->type == VariableDeclaration::Int) {
+              itMax->value->finished = true;
+              itMax->value->type = VariableDeclaration::Int;
+              itMax->arguments.push_back(*prev);
+              linearStatements->erase(prev);
+              itMax->arguments.push_back(*post);
+              linearStatements->erase(post);
+            } else {
+              ERROR_MESSAGE_MAKE_CODE_AND_POS("Right symbol should be an int!");
+              return false;
+            }
+          } else {
+            ERROR_MESSAGE_MAKE_CODE_AND_POS("Unspecified error");
+            return false;
+          }
+        } else if (itMax->value->token_chidren_position == Base::TokenChidrenPosEnum::LeftOrRight) {
+          std::list<Statement>::const_iterator prev = itMax;
+          --prev;
+          std::list<Statement>::const_iterator post = itMax;
+          ++post;
+          if (post == linearStatements->end() && prev == linearStatements->end()) {
             stringstream st;
-            st << "Could not get the type of \"" << prev->value->ToString() << "\"!";
+            st << "Operator \"" << itMax->value->ToString()
+               << "\" does not have any symbol either on the left side nor on the right side!";
             ERROR_MESSAGE_MAKE_CODE_AND_POS(st);
             return false;
           }
-          if (prev->value->finished && prev->value->type == VariableDeclaration::Int) {
-            itMax->value->finished = true;
-            itMax->value->type = VariableDeclaration::Int;
-            itMax->arguments.push_back(*prev);
-            linearStatements->erase(prev);
-          }
-          else {
-            ERROR_MESSAGE_MAKE_CODE_AND_POS("Not implemented exception!");
-            return false;
+          // Postfix operator?
+          if (prev != linearStatements->end()) {
+            if (prev->value->token_type == Base::TokenTypeEnum::Label &&
+                dynamic_cast<Label *>(prev->value)->kind != Label::KindEnum::Function &&
+                !try_get_type_of_variable(scope, prev->value)) {
+              stringstream st;
+              st << "Could not get the type of \"" << prev->value->ToString() << "\"!";
+              ERROR_MESSAGE_MAKE_CODE_AND_POS(st);
+              return false;
+            }
+            if (prev->value->finished && prev->value->type == VariableDeclaration::Int) {
+              itMax->value->finished = true;
+              itMax->value->type = VariableDeclaration::Int;
+              itMax->arguments.push_back(*prev);
+              linearStatements->erase(prev);
+            } else {
+              ERROR_MESSAGE_MAKE_CODE_AND_POS("Not implemented exception!");
+              return false;
+            }
           }
         }
-      }
-      break;
-    case Base::TokenTypeEnum::ConstantInt:
-      break;
-    default:
-      break;
+        break;
+      case Base::TokenTypeEnum::ConstantInt:
+        break;
+      default:
+        break;
     }
   }
-
 
   return true;
 }
 
 int Scanner::getStatemantTokens(Statement *linearStatements, bool inBracket) {
-  string  word;
+  string word;
   WordType wordType;
   int i;
   int count = 0;
@@ -884,185 +855,203 @@ int Scanner::getStatemantTokens(Statement *linearStatements, bool inBracket) {
     getNextWord(&word, &wordType);
     ++count;
     switch (wordType) {
-    case WordType::Bracket:
-      switch (codeInfo_.current_char()) {
-      case '(':
-        linearStatements->arguments.push_back(new Bracket(Bracket::KindEnum::Round, Bracket::DirectionEnum::Opening,
-                                              CodePostion(codeInfo_.pos)));
-        ++bracketStateRound;
+      case WordType::Bracket:
+        switch (codeInfo_.current_char()) {
+          case '(':
+            linearStatements->arguments.push_back(
+                new Bracket(Bracket::KindEnum::Round, Bracket::DirectionEnum::Opening, CodePostion(codeInfo_.pos)));
+            ++bracketStateRound;
+            break;
+          case ')':
+            if (bracketStateRound <= 0) {
+              if (inBracket) {
+                ++codeInfo_.pos;
+                return count - 1;
+              }
+              ERROR_MESSAGE_MAKE_CODE_AND_POS("There is nothing to close with a round bracket");
+              return -1;
+            }
+            linearStatements->arguments.push_back(
+                new Bracket(Bracket::KindEnum::Round, Bracket::DirectionEnum::Closing, CodePostion(codeInfo_.pos)));
+            --bracketStateRound;
+            break;
+          case '[':
+            linearStatements->arguments.push_back(
+                new Bracket(Bracket::KindEnum::Square, Bracket::DirectionEnum::Opening, CodePostion(codeInfo_.pos)));
+            ++bracketStateSquare;
+            break;
+          case ']':
+            if (bracketStateSquare <= 0) {
+              ERROR_MESSAGE_MAKE_CODE_AND_POS("There is nothing to close with a square bracket");
+              return -1;
+            }
+            linearStatements->arguments.push_back(
+                new Bracket(Bracket::KindEnum::Square, Bracket::DirectionEnum::Closing, CodePostion(codeInfo_.pos)));
+            --bracketStateSquare;
+            break;
+          case '{':
+            linearStatements->arguments.push_back(
+                new Bracket(Bracket::KindEnum::Curly, Bracket::DirectionEnum::Opening, CodePostion(codeInfo_.pos)));
+            ++bracketStateCurly;
+            break;
+          case '}':
+            if (bracketStateCurly <= 0) {
+              ERROR_MESSAGE_MAKE_CODE_AND_POS("There is nothing to close with a curly bracket");
+              return -1;
+            }
+            linearStatements->arguments.push_back(
+                new Bracket(Bracket::KindEnum::Curly, Bracket::DirectionEnum::Closing, CodePostion(codeInfo_.pos)));
+            --bracketStateCurly;
+            break;
+          case '<':
+            linearStatements->arguments.push_back(
+                new Bracket(Bracket::KindEnum::Triangle, Bracket::DirectionEnum::Opening, CodePostion(codeInfo_.pos)));
+            break;
+          case '>':
+            linearStatements->arguments.push_back(
+                new Bracket(Bracket::KindEnum::Triangle, Bracket::DirectionEnum::Closing, CodePostion(codeInfo_.pos)));
+            break;
+          default:
+            break;
+        }
+        ++codeInfo_.pos;
         break;
-      case ')':
-        if (bracketStateRound <= 0) {
-          if (inBracket) {
-            ++codeInfo_.pos;
-            return count - 1;
+      case WordType::Char:
+        linearStatements->arguments.push_back(
+            new Constant(Constant::KindEnum::Char, new char(codeInfo_.current_char()), CodePostion(codeInfo_.pos)));
+        break;
+      case WordType::Comma:
+        linearStatements->arguments.push_back(new Comma(CodePostion(codeInfo_.pos)));
+        ++codeInfo_.pos;
+        break;
+      case WordType::Name:
+        linearStatements->arguments.push_back(new Label(word, CodePostion(codeInfo_.pos)));
+        break;
+      case WordType::Number:
+        i = atoi(word.c_str());
+        linearStatements->arguments.push_back(new ConstantInt(i, CodePostion(codeInfo_.pos)));
+        break;
+      case WordType::Operator:
+        if (word.length() == 1) {
+          switch (word[0]) {
+            case '+':
+              linearStatements->arguments.push_back(new Operator(Operator::KindEnum::Add, CodePostion(codeInfo_.pos)));
+              break;
+            case '-':
+              linearStatements->arguments.push_back(
+                  new Operator(Operator::KindEnum::Substract, CodePostion(codeInfo_.pos)));
+              break;
+            case '*':
+              linearStatements->arguments.push_back(
+                  new Operator(Operator::KindEnum::Multipply, CodePostion(codeInfo_.pos)));
+              break;
+            case '/':
+              linearStatements->arguments.push_back(
+                  new Operator(Operator::KindEnum::Divide, CodePostion(codeInfo_.pos)));
+              break;
+            case '%':
+              linearStatements->arguments.push_back(
+                  new Operator(Operator::KindEnum::Modulo, CodePostion(codeInfo_.pos)));
+              break;
+            case '=':
+              linearStatements->arguments.push_back(new Operator(Operator::KindEnum::Copy, CodePostion(codeInfo_.pos)));
+              break;
+            case '>':
+              linearStatements->arguments.push_back(
+                  new Operator(Operator::KindEnum::Greater, CodePostion(codeInfo_.pos)));
+              break;
+            case '<':
+              linearStatements->arguments.push_back(new Operator(Operator::KindEnum::Less, CodePostion(codeInfo_.pos)));
+              break;
+            case '|':
+              linearStatements->arguments.push_back(
+                  new Operator(Operator::KindEnum::BitOr, CodePostion(codeInfo_.pos)));
+              break;
+            case '&':
+              linearStatements->arguments.push_back(
+                  new Operator(Operator::KindEnum::BitAnd, CodePostion(codeInfo_.pos)));
+              break;
+            case '^':
+              linearStatements->arguments.push_back(
+                  new Operator(Operator::KindEnum::BitXor, CodePostion(codeInfo_.pos)));
+              break;
+            default:
+              ERROR_MESSAGE_MAKE_CODE_AND_POS("Unexpected operator type");
+              return -1;
           }
-          ERROR_MESSAGE_MAKE_CODE_AND_POS("There is nothing to close with a round bracket");
-          return -1;
-        }
-        linearStatements->arguments.push_back(new Bracket(Bracket::KindEnum::Round, Bracket::DirectionEnum::Closing,
-                                              CodePostion(codeInfo_.pos)));
-        --bracketStateRound;
+        } else if (word.length() == 2 && word[1] == '=') {
+          switch (word[0]) {
+            case '=':
+              linearStatements->arguments.push_back(
+                  new Operator(Operator::KindEnum::Equal, CodePostion(codeInfo_.pos)));
+              break;
+            case '!':
+              linearStatements->arguments.push_back(
+                  new Operator(Operator::KindEnum::NotEqual, CodePostion(codeInfo_.pos)));
+              break;
+            case '>':
+              linearStatements->arguments.push_back(
+                  new Operator(Operator::KindEnum::GreaterEqual, CodePostion(codeInfo_.pos)));
+              break;
+            case '<':
+              linearStatements->arguments.push_back(
+                  new Operator(Operator::KindEnum::LessEqual, CodePostion(codeInfo_.pos)));
+              break;
+            case '+':
+              linearStatements->arguments.push_back(
+                  new Operator(Operator::KindEnum::AddTo, CodePostion(codeInfo_.pos)));
+              break;
+            case '-':
+              linearStatements->arguments.push_back(
+                  new Operator(Operator::KindEnum::SubstractTo, CodePostion(codeInfo_.pos)));
+              break;
+            case '*':
+              linearStatements->arguments.push_back(
+                  new Operator(Operator::KindEnum::MultiplyTo, CodePostion(codeInfo_.pos)));
+              break;
+            case '/':
+              linearStatements->arguments.push_back(
+                  new Operator(Operator::KindEnum::DivideTo, CodePostion(codeInfo_.pos)));
+              break;
+            case '%':
+              linearStatements->arguments.push_back(
+                  new Operator(Operator::KindEnum::ModuloTo, CodePostion(codeInfo_.pos)));
+              break;
+            case '&':
+              linearStatements->arguments.push_back(
+                  new Operator(Operator::KindEnum::AndTo, CodePostion(codeInfo_.pos)));
+              break;
+            case '|':
+              linearStatements->arguments.push_back(new Operator(Operator::KindEnum::OrTo, CodePostion(codeInfo_.pos)));
+              break;
+            case '^':
+              linearStatements->arguments.push_back(
+                  new Operator(Operator::KindEnum::XorTo, CodePostion(codeInfo_.pos)));
+              break;
+            default:
+              ERROR_MESSAGE_MAKE_CODE_AND_POS("Unexpected operator type");
+              return -1;
+          }
+        } else if (word.length() == 2 && word[0] == '+' && word[1] == '+')
+          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::Increase, CodePostion(codeInfo_.pos)));
+        else if (word.length() == 2 && word[0] == '-' && word[1] == '-')
+          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::Decrease, CodePostion(codeInfo_.pos)));
+        else if (word.length() == 2 && word[0] == '&' && word[1] == '&')
+          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::LogicAnd, CodePostion(codeInfo_.pos)));
+        else if (word.length() == 2 && word[0] == '|' && word[1] == '|')
+          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::LogicOr, CodePostion(codeInfo_.pos)));
         break;
-      case '[':
-        linearStatements->arguments.push_back(new Bracket(Bracket::KindEnum::Square, Bracket::DirectionEnum::Opening,
-                                              CodePostion(codeInfo_.pos)));
-        ++bracketStateSquare;
+      case WordType::Semikolon:
+        ++codeInfo_.pos;
         break;
-      case ']':
-        if (bracketStateSquare <= 0) {
-          ERROR_MESSAGE_MAKE_CODE_AND_POS("There is nothing to close with a square bracket");
-          return -1;
-        }
-        linearStatements->arguments.push_back(new Bracket(Bracket::KindEnum::Square, Bracket::DirectionEnum::Closing,
-                                              CodePostion(codeInfo_.pos)));
-        --bracketStateSquare;
-        break;
-      case '{':
-        linearStatements->arguments.push_back(new Bracket(Bracket::KindEnum::Curly, Bracket::DirectionEnum::Opening,
-                                              CodePostion(codeInfo_.pos)));
-        ++bracketStateCurly;
-        break;
-      case '}':
-        if (bracketStateCurly <= 0) {
-          ERROR_MESSAGE_MAKE_CODE_AND_POS("There is nothing to close with a curly bracket");
-          return -1;
-        }
-        linearStatements->arguments.push_back(new Bracket(Bracket::KindEnum::Curly, Bracket::DirectionEnum::Closing,
-                                              CodePostion(codeInfo_.pos)));
-        --bracketStateCurly;
-        break;
-      case '<':
-        linearStatements->arguments.push_back(new Bracket(Bracket::KindEnum::Triangle, Bracket::DirectionEnum::Opening,
-                                              CodePostion(codeInfo_.pos)));
-        break;
-      case '>':
-        linearStatements->arguments.push_back(new Bracket(Bracket::KindEnum::Triangle, Bracket::DirectionEnum::Closing,
-                                              CodePostion(codeInfo_.pos)));
+      case WordType::String:
+        proceess_controlsequences(&word);
+        linearStatements->arguments.push_back(
+            new Constant(Constant::KindEnum::String, new string(word), CodePostion(codeInfo_.pos)));
         break;
       default:
-        break;
-      }
-      ++codeInfo_.pos;
-      break;
-    case WordType::Char:
-      linearStatements->arguments.push_back(new Constant(Constant::KindEnum::Char, new char(codeInfo_.current_char()),
-                                            CodePostion(codeInfo_.pos)));
-      break;
-    case WordType::Comma:
-      linearStatements->arguments.push_back(new Comma(CodePostion(codeInfo_.pos)));
-      ++codeInfo_.pos;
-      break;
-    case WordType::Name:
-      linearStatements->arguments.push_back(new Label(word, CodePostion(codeInfo_.pos)));
-      break;
-    case WordType::Number:
-      i = atoi(word.c_str());
-      linearStatements->arguments.push_back(new ConstantInt(i, CodePostion(codeInfo_.pos)));
-      break;
-    case WordType::Operator:
-      if (word.length() == 1) {
-        switch (word[0]) {
-        case '+':
-          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::Add, CodePostion(codeInfo_.pos)));
-          break;
-        case '-':
-          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::Substract, CodePostion(codeInfo_.pos)));
-          break;
-        case '*':
-          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::Multipply, CodePostion(codeInfo_.pos)));
-          break;
-        case '/':
-          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::Divide, CodePostion(codeInfo_.pos)));
-          break;
-        case '%':
-          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::Modulo, CodePostion(codeInfo_.pos)));
-          break;
-        case '=':
-          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::Copy, CodePostion(codeInfo_.pos)));
-          break;
-        case '>':
-          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::Greater, CodePostion(codeInfo_.pos)));
-          break;
-        case '<':
-          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::Less, CodePostion(codeInfo_.pos)));
-          break;
-        case '|':
-          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::BitOr, CodePostion(codeInfo_.pos)));
-          break;
-        case '&':
-          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::BitAnd, CodePostion(codeInfo_.pos)));
-          break;
-        case '^':
-          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::BitXor, CodePostion(codeInfo_.pos)));
-          break;
-        default:
-          ERROR_MESSAGE_MAKE_CODE_AND_POS("Unexpected operator type");
-          return -1;
-        }
-      }
-      else if (word.length() == 2 && word[1] == '=') {
-        switch (word[0]) {
-        case '=':
-          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::Equal, CodePostion(codeInfo_.pos)));
-          break;
-        case '!':
-          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::NotEqual, CodePostion(codeInfo_.pos)));
-          break;
-        case '>':
-          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::GreaterEqual, CodePostion(codeInfo_.pos)));
-          break;
-        case '<':
-          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::LessEqual, CodePostion(codeInfo_.pos)));
-          break;
-        case '+':
-          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::AddTo, CodePostion(codeInfo_.pos)));
-          break;
-        case '-':
-          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::SubstractTo, CodePostion(codeInfo_.pos)));
-          break;
-        case '*':
-          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::MultiplyTo, CodePostion(codeInfo_.pos)));
-          break;
-        case '/':
-          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::DivideTo, CodePostion(codeInfo_.pos)));
-          break;
-        case '%':
-          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::ModuloTo, CodePostion(codeInfo_.pos)));
-          break;
-        case '&':
-          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::AndTo, CodePostion(codeInfo_.pos)));
-          break;
-        case '|':
-          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::OrTo, CodePostion(codeInfo_.pos)));
-          break;
-        case '^':
-          linearStatements->arguments.push_back(new Operator(Operator::KindEnum::XorTo, CodePostion(codeInfo_.pos)));
-          break;
-        default:
-          ERROR_MESSAGE_MAKE_CODE_AND_POS("Unexpected operator type");
-          return -1;
-        }
-      }
-      else if (word.length() == 2 && word[0] == '+' && word[1] == '+')
-        linearStatements->arguments.push_back(new Operator(Operator::KindEnum::Increase, CodePostion(codeInfo_.pos)));
-      else if (word.length() == 2 && word[0] == '-' && word[1] == '-')
-        linearStatements->arguments.push_back(new Operator(Operator::KindEnum::Decrease, CodePostion(codeInfo_.pos)));
-      else if (word.length() == 2 && word[0] == '&' && word[1] == '&')
-        linearStatements->arguments.push_back(new Operator(Operator::KindEnum::LogicAnd, CodePostion(codeInfo_.pos)));
-      else if (word.length() == 2 && word[0] == '|' && word[1] == '|')
-        linearStatements->arguments.push_back(new Operator(Operator::KindEnum::LogicOr, CodePostion(codeInfo_.pos)));
-      break;
-    case WordType::Semikolon:
-      ++codeInfo_.pos;
-      break;
-    case WordType::String:
-      proceess_controlsequences(&word);
-      linearStatements->arguments.push_back(new Constant(Constant::KindEnum::String, new string(word), CodePostion(codeInfo_.pos)));
-      break;
-    default:
-      ERROR_MESSAGE_MAKE_CODE_AND_POS("Unexpected word type");
-      return -1;
+        ERROR_MESSAGE_MAKE_CODE_AND_POS("Unexpected word type");
+        return -1;
     }
   } while (wordType != WordType::Semikolon);
   if (bracketStateRound != 0) {
@@ -1077,12 +1066,11 @@ int Scanner::getStatemantTokens(Statement *linearStatements, bool inBracket) {
   return count - 1;
 }
 
-
 // Call this after opening bracket
-bool Scanner::getBracket(list<Statement>::const_iterator const& itOpening,
-  list<Statement> *linearStatements, list<program::Statement> *outList) {
+bool Scanner::getBracket(list<Statement>::const_iterator const &itOpening, list<Statement> *linearStatements,
+                         list<program::Statement> *outList) {
   auto it = itOpening;
-  list<Statement>::const_iterator itClosing = linearStatements->end();
+  auto itClosing = linearStatements->cend();
 
   int openBrackets = 1;
 
@@ -1108,9 +1096,9 @@ bool Scanner::getBracket(list<Statement>::const_iterator const& itOpening,
   return true;
 }
 
-bool Scanner::try_get_type_of_variable(program::Scope const& scope, Base *token) {
+bool Scanner::try_get_type_of_variable(program::Scope const &scope, Base *token) {
   if (token->token_type == Base::TokenTypeEnum::Label) {
-    if (dynamic_cast<Label*>(token)->kind == Label::KindEnum::Function) {
+    if (dynamic_cast<Label *>(token)->kind == Label::KindEnum::Function) {
       //  if(token->type == VariableDeclaration::Length)
       //  {
       //    stringstream st;
@@ -1120,18 +1108,18 @@ bool Scanner::try_get_type_of_variable(program::Scope const& scope, Base *token)
       //  }
     } else {
       if (token->type == VariableDeclaration::Length) {
-        auto dec = VariableDeclaration(dynamic_cast<Label*>(token)->label_string, VariableDeclaration::Length);
+        auto dec = VariableDeclaration(dynamic_cast<Label *>(token)->label_string, VariableDeclaration::Length);
         auto info = scope.GetVariableInfo(dec);
 
         if (info.offset == 0) {
           stringstream st;
-          st << "Unknown Variable found: \"" << dynamic_cast<Label*>(token)->label_string << "\"!";
+          st << "Unknown Variable found: \"" << dynamic_cast<Label *>(token)->label_string << "\"!";
           ERROR_MESSAGE_MAKE_CODE_AND_POS(st);
           return false;
         }
         token->type = info.type;
-        dynamic_cast<Label*>(token)->register_address = info.offset;
-        dynamic_cast<Label*>(token)->kind = Label::KindEnum::Variable;
+        dynamic_cast<Label *>(token)->register_address = info.offset;
+        dynamic_cast<Label *>(token)->kind = Label::KindEnum::Variable;
       }
     }
   }

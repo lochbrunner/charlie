@@ -33,13 +33,12 @@
 #include <map>
 
 #include "function_declaration.h"
-#include "variable_declaration.h"
 #include "scope.h"
+#include "variable_declaration.h"
 
 #include "../common/exportDefs.h"
 
-namespace charlie {
-namespace program {
+namespace charlie::program {
 // Stores on the one hand the whole syntax tree and function definitions and on the other hand the
 // linear bytecode
 class UnresolvedProgram {
@@ -49,14 +48,12 @@ class UnresolvedProgram {
   // Deletes all the hidden pointers of this and member instances.
   xprt void Dispose();
   // The bytecode
-  std::list<int> instructions;
+  std::list<int> instructions;  // TODO: Use std::vector<int>
   // All function declarations
   std::list<FunctionDeclaration> function_declarations;
   // The root scope for the syntax tree
   Scope root;
 };
-}  // namespace program
-}  // namespace charlie
-
+}  // namespace charlie::program
 
 #endif  // !CHARLIE_PROGRAM_UNRESOLVEDPROGRAM_H
