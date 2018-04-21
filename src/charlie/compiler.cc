@@ -134,43 +134,40 @@ bool Compiler::compile(bool sourcemaps) {
   // Global variables
   program_.instructions.push_back(InstructionEnums::IncreaseRegister);
   program_.instructions.push_back(program_.root.num_variable_declarations);
-  int count = 2;
 
   for (auto itI = program_.root.statements.begin(); itI != program_.root.statements.end(); ++itI) {
-    if (!enroleStatement(funcPositions, *itI, &count, sourcemaps)) return false;
+    if (!enroleStatement(funcPositions, *itI, sourcemaps)) return false;
   }
 
   program_.instructions.push_back(InstructionEnums::Call);
-  auto itMainAddress = --program_.instructions.end();
+  program_.instructions.push_back(0);  // Placeholder for the call of the main function
+  int itMainAddress = program_.instructions.size() - 1;
   program_.instructions.push_back(InstructionEnums::Exit);
-  count += 3;
   // Store function definitions
   for (auto itF = program_.function_declarations.cbegin(); itF != program_.function_declarations.cend(); ++itF) {
-    int func_begin = count;
+    int func_begin = program_.instructions.size() - 1;
     if (!itF->has_definition) {
       stringstream st;
       st << "Missing defintion for function: " << (*itF);
       ERROR_MESSAGE_MAKE_CODE(st);
       return false;
     }
-    funcPositions.insert(make_pair((*itF), count));
-    if (!enroleBlock(funcPositions, itF->definition, &count, sourcemaps)) return false;
+    funcPositions.insert(make_pair((*itF), program_.instructions.size() - 1));
+    if (!enroleBlock(funcPositions, itF->definition, sourcemaps)) return false;
 
     program_.instructions.push_back(InstructionEnums::Return);
     if (sourcemaps) {
       auto fun_map = std::make_unique<program::Mapping::Function>(itF->label);
       fun_map->scope.begin = func_begin;
-      fun_map->scope.end = count;
+      fun_map->scope.end = program_.instructions.size() - 1;
       mapping_->Functions.push_back(std::move(fun_map));
     }
-    ++count;
   }
 
   program_.instructions.push_back(InstructionEnums::DecreaseRegister);
   if (sourcemaps) {
-    write_scope_to_mapping(program_.root, 1, count, mapping_);
+    write_scope_to_mapping(program_.root, 1, program_.instructions.size() - 1, mapping_);
   }
-  count += 1;
 
   // Find entryPoint
   auto args = list<VariableDeclaration>();
@@ -182,46 +179,43 @@ bool Compiler::compile(bool sourcemaps) {
     return false;
   }
 
-  program_.instructions.insert(++itMainAddress, main->second);
+  program_.instructions[itMainAddress] = main->second;
   program_.Dispose();
   return true;
 }
 
 bool Compiler::enroleBlock(
     std::map<program::FunctionDeclaration, int, program::FunctionDeclaration::comparer> const& functionDict,
-    program::Scope const& block, int* count, bool sourcemaps) {
-  int begin = *count;
+    program::Scope const& block, bool sourcemaps) {
+  int begin = program_.instructions.size() - 1;
   program_.instructions.push_back(InstructionEnums::IncreaseRegister);
   program_.instructions.push_back(block.num_variable_declarations);
-  *count += 2;
 
   // Insert variable declaration and defintion of the argument list
   for (auto itI = block.statements.cbegin(); itI != block.statements.cend(); ++itI) {
-    if (!enroleStatement(functionDict, *itI, count, sourcemaps)) return false;
+    if (!enroleStatement(functionDict, *itI, sourcemaps)) return false;
   }
 
   if (sourcemaps) {
-    write_scope_to_mapping(block, begin, *count, mapping_);
+    write_scope_to_mapping(block, begin, program_.instructions.size() - 1, mapping_);
   }
   program_.instructions.push_back(InstructionEnums::DecreaseRegister);
-  *count += 1;
   return true;
 }
 
 bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration::comparer> const& functionDict,
-                               Statement const& statement, int* count, bool sourcemaps) {
+                               Statement const& statement, bool sourcemaps) {
   auto tokenType = statement.value->token_type;
   if (tokenType == Base::TokenTypeEnum::ConstantInt) {
     program_.instructions.push_back(InstructionEnums::PushConst);
     program_.instructions.push_back(statement.value->ByteCode());
-    *count += 2;
   } else if (tokenType == Base::TokenTypeEnum::Label) {
     if (dynamic_cast<Label*>(statement.value)->kind == Label::KindEnum::Function) {
       auto label = dynamic_cast<Label*>(statement.value);
 
       std::list<VariableDeclaration> argTypes;
       for (auto it = statement.arguments.begin(); it != statement.arguments.end(); ++it) {
-        if (!enroleStatement(functionDict, *it, count, sourcemaps)) return false;
+        if (!enroleStatement(functionDict, *it, sourcemaps)) return false;
         argTypes.push_back(it->value->type);
       }
       FunctionDeclaration dec(label->label_string, VariableDeclaration::Length, argTypes);
@@ -230,7 +224,6 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
       if (id > -1) {
         program_.instructions.push_back(InstructionEnums::CallEx);
         program_.instructions.push_back(id);
-        *count += 2;
       } else {
         auto it = functionDict.find(dec);
         if (it == functionDict.end()) {
@@ -242,7 +235,6 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
         label->type = it->first.image_type;
         program_.instructions.push_back(InstructionEnums::Call);
         program_.instructions.push_back(it->second);
-        *count += 2;
       }
     } else if (dynamic_cast<Label*>(statement.value)->kind == Label::KindEnum::Variable) {
       auto label = dynamic_cast<Label*>(statement.value);
@@ -250,7 +242,6 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
       if (address > -1) {
         program_.instructions.push_back(InstructionEnums::Push);
         program_.instructions.push_back(address);
-        *count += 2;
       } else {
         ERROR_MESSAGE_WITH_POS_MAKE_CODE("Not addressed variable found!", label->position.character_position);
         return false;
@@ -265,21 +256,18 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
 
       // TODO(lochbrunner): asign operators can also be used to push values: e.g. i = j++;
       if (op->token_chidren_position == Base::TokenChidrenPosEnum::LeftAndRight) {
-        if (!enroleStatement(functionDict, *++itAddress, count, sourcemaps)) return false;
+        if (!enroleStatement(functionDict, *++itAddress, sourcemaps)) return false;
       }
       program_.instructions.push_back(op->ByteCode());
       program_.instructions.push_back(address);
-      *count += 2;
     } else if (op->kind == Operator::KindEnum::Pop) {
       program_.instructions.push_back(InstructionEnums::IntPop);
       program_.instructions.push_back(dynamic_cast<Label*>(statement.arguments.begin()->value)->register_address());
-      *count += 2;
     } else {
       for (auto it = statement.arguments.begin(); it != statement.arguments.end(); ++it) {
-        if (!enroleStatement(functionDict, *it, count, sourcemaps)) return false;
+        if (!enroleStatement(functionDict, *it, sourcemaps)) return false;
       }
       program_.instructions.push_back(statement.value->ByteCode());
-      ++*count;
     }
   } else if (tokenType == Base::TokenTypeEnum::ControlFlow) {
     if (dynamic_cast<const ControlFlow*>(statement.value)->kind == ControlFlow::KindEnum::If) {
@@ -291,17 +279,17 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
       assert((++statement.arguments.begin())->value == nullptr);
       assert((++statement.arguments.begin())->block != nullptr);
 
-      enroleStatement(functionDict, *statement.arguments.begin(), count, sourcemaps);
+      enroleStatement(functionDict, *statement.arguments.begin(), sourcemaps);
 
       program_.instructions.push_back(InstructionEnums::PushConst);
       program_.instructions.push_back(-1);
 
       auto itAlt = --program_.instructions.end();
       program_.instructions.push_back(InstructionEnums::JumpIf);
-      *count += 3;
       auto block = (++statement.arguments.begin())->block;
-      enroleBlock(functionDict, *block, count, sourcemaps);
-      *itAlt = *count;
+      enroleBlock(functionDict, *block, sourcemaps);
+      *itAlt = program_.instructions.size() - 1;
+
     } else if (dynamic_cast<const ControlFlow*>(statement.value)->kind == ControlFlow::KindEnum::While) {
       // Should have exactly two arguments: First a statement, second a block
       assert(statement.arguments.begin() != statement.arguments.end());
@@ -311,24 +299,22 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
       assert((++statement.arguments.begin())->value == nullptr);
       assert((++statement.arguments.begin())->block != nullptr);
 
-      int begin = *count;
-      enroleStatement(functionDict, *statement.arguments.begin(), count, sourcemaps);
+      int begin = program_.instructions.size() - 1;
+      enroleStatement(functionDict, *statement.arguments.begin(), sourcemaps);
 
       program_.instructions.push_back(InstructionEnums::PushConst);
       program_.instructions.push_back(-1);
 
       auto itAlt = --program_.instructions.end();
       program_.instructions.push_back(InstructionEnums::JumpIf);
-      *count += 3;
 
       auto block = (++statement.arguments.begin())->block;
-      enroleBlock(functionDict, *block, count, sourcemaps);
+      enroleBlock(functionDict, *block, sourcemaps);
 
       program_.instructions.push_back(InstructionEnums::Jump);
       program_.instructions.push_back(begin);
-      *count += 2;
 
-      *itAlt = *count;
+      *itAlt = program_.instructions.size() - 1;
     }
   }
   return true;

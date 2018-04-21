@@ -48,7 +48,7 @@ class UnresolvedProgram {
   // Deletes all the hidden pointers of this and member instances.
   xprt void Dispose();
   // The bytecode
-  std::list<int> instructions;  // TODO: Use std::vector<int>
+  std::vector<int> instructions;
   // All function declarations
   std::list<FunctionDeclaration> function_declarations;
   // The root scope for the syntax tree
