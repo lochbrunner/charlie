@@ -507,6 +507,7 @@ bool Scanner::getFunctionDefinition(FunctionDeclaration *dec) {
       auto pOp = new Operator(Operator::KindEnum::Pop, CodePostion(codeInfo_.pos));
       pOp->type = it->image_type;
       Statement statement(pOp);
+      statement.location = codeInfo_.location();
       auto pLa = new Label(it->name, CodePostion(codeInfo_.pos));
       try_get_type_of_variable(dec->definition, pLa);
       statement.arguments.push_back(pLa);
@@ -612,7 +613,7 @@ bool Scanner::getBlock(FunctionDeclaration const &dec, Scope *scope) {
               ++codeInfo_.pos;
               if (!getBlock(dec, block)) return false;
               auto cflow = new ControlFlow(control, CodePostion(codeInfo_.pos));
-              auto statement = Statement(cflow);
+              auto statement = Statement(cflow, codeInfo_.location());
               statement.arguments.push_back(*expression.statements.begin());
               statement.arguments.push_back(block);
               scope->statements.push_back(statement);
@@ -628,14 +629,16 @@ bool Scanner::getBlock(FunctionDeclaration const &dec, Scope *scope) {
         case ControlFlow::KindEnum::Return:
           if (dec.image_type != VariableDeclaration::Void) {
             if (getExpression(scope)) {
-              scope->statements.push_back(Statement(new ControlFlow(control, CodePostion(codeInfo_.pos))));
+              scope->statements.push_back(
+                  Statement(new ControlFlow(control, CodePostion(codeInfo_.pos)), codeInfo_.location()));
               break;
             }
             return false;
           } else {
             getNextWord(&word, &wordType);
             if (wordType == WordType::Semikolon) {
-              scope->statements.push_back(Statement(new ControlFlow(control, CodePostion(codeInfo_.pos))));
+              scope->statements.push_back(
+                  Statement(new ControlFlow(control, CodePostion(codeInfo_.pos)), codeInfo_.location()));
               break;
             } else {
               ERROR_MESSAGE_MAKE_CODE_AND_POS("This function has returning type of void and nothing else!");
@@ -667,6 +670,7 @@ bool Scanner::getExpression(Scope *prog, bool inBracket) {
   if (num > 0) {
     Statement statement;
     if (!treeifyStatement(*prog, &tokens.arguments, &statement)) return false;
+    statement.location = codeInfo_.location();
     prog->statements.push_back(statement);
   } else if (num < 0)
     return false;
@@ -681,7 +685,9 @@ bool Scanner::getStatement(string const &word, Scope *prog) {
   int num = getStatemantTokens(&tokens);
   if (num > 0) {
     Statement statement;
+    statement.location.column = 0;
     if (!treeifyStatement(prog, &tokens.arguments, &statement)) return false;
+    statement.location = codeInfo_.location();
     prog->statements.push_back(statement);
   } else if (num < 0)
     return false;

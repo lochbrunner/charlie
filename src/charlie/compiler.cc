@@ -206,6 +206,9 @@ bool Compiler::enroleBlock(
 bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration::comparer> const& functionDict,
                                Statement const& statement, bool sourcemaps) {
   auto tokenType = statement.value->token_type;
+  if (sourcemaps) {
+    mapping_->Instructions.insert({program_.instructions.size() - 1, statement.location});
+  }
   if (tokenType == Base::TokenTypeEnum::ConstantInt) {
     program_.instructions.push_back(InstructionEnums::PushConst);
     program_.instructions.push_back(statement.value->ByteCode());

@@ -1,53 +1,51 @@
 /*
-* Copyright (c) 2016, Matthias Lochbrunner <matthias_lochbrunner@live.de>
-* All rights reserved.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions
-* are met:
-*
-* 1. Redistributions of source code must retain the above copyright
-*    notice, this list of conditions and the following disclaimer.
-* 2. Redistributions in binary form must reproduce the above copyright
-*    notice, this list of conditions and the following disclaimer in the
-*    documentation and/or other materials provided with the distribution.
-*
-* THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
-* ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-* IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-* ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
-* FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-* DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-* OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-* LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-* OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-* SUCH DAMAGE.
-*/
+ * Copyright (c) 2016, Matthias Lochbrunner <matthias_lochbrunner@live.de>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
 
 #ifndef CHARLIE_PROGRAM_STATEMENT_H
 #define CHARLIE_PROGRAM_STATEMENT_H
 
 #include <list>
 
-namespace charlie {
-namespace program {
+namespace charlie::program {
 class Statement;
-}  // namespace program
-}  // namespace charlie
+}  // namespace charlie::program
 
-#include "scope.h"
 #include "../token/base.h"
+#include "mapping.h"
+#include "scope.h"
 
-
-namespace charlie {
-namespace program {
+namespace charlie::program {
 // Statements are use als lower nodes in the syntax tree.
 // It can either store a block or a token.
 class Statement {
  public:
   // Creates an object out of a pointer to the token.
   Statement(token::Base* value);
+  Statement(token::Base* value, const Mapping::Location& location);
   // Creates an object out of a pointer to a block.
   Statement(Scope* block);
   // Creates an empty object
@@ -67,9 +65,9 @@ class Statement {
   Scope* block;
   // Children or arguments of this statement. E.g. "a" and "b" when a+b
   std::list<Statement> arguments;
-};
-}  // namespace program
-}  // namespace charlie
 
+  Mapping::Location location;
+};
+}  // namespace charlie::program
 
 #endif  // !CHARLIE_PROGRAM_STATEMENT_H

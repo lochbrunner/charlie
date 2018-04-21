@@ -195,13 +195,19 @@ int Runtime::Debug(int port) {
       if (debug_state == DebugState::TO_NEXT_LINE) {
         charlie::debug::Event event;
         event.set_bytecode(code);
-        auto position = new charlie::debug::Position();
-        position->set_line(state_->pos);
-        event.set_allocated_position(position);
 
         auto state = new charlie::debug::Event::State();
         add_variables(mapping_->Scopes, state_->pos, state_->reg, state);
         add_callstack(*state_, mapping_, state);
+
+        auto statement_it = mapping_->Instructions.find(state_->pos);
+        if (statement_it != mapping_->Instructions.end()) {
+          auto position = new charlie::debug::Position();
+          auto loc_in_file = statement_it->second;
+          position->set_line(loc_in_file.line);
+          position->set_column(loc_in_file.column);
+          event.set_allocated_position(position);
+        }
 
         event.set_allocated_state(state);
 

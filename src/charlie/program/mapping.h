@@ -30,6 +30,7 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace charlie::program {
@@ -53,8 +54,23 @@ class Mapping {
     Scope scope;
   };
 
+  struct Location {
+    Location() {}
+    Location(int line, int column) : line(line), column(column) {}
+    int filename_id;
+    int line;
+    int column;
+  };
+
+  struct Instruction {
+    int bytecode_address;
+  };
+
   std::vector<std::unique_ptr<Function>> Functions;
   std::vector<std::unique_ptr<Scope>> Scopes;
+
+  std::unordered_map<int, Location> Instructions;
+  std::vector<std::string> Filenames;  // key: filename id
 
   bool Save(const std::string &filename) const;
 

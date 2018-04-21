@@ -1,43 +1,43 @@
 /*
-* Copyright (c) 2016, Matthias Lochbrunner <matthias_lochbrunner@live.de>
-* All rights reserved.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions
-* are met:
-*
-* 1. Redistributions of source code must retain the above copyright
-*    notice, this list of conditions and the following disclaimer.
-* 2. Redistributions in binary form must reproduce the above copyright
-*    notice, this list of conditions and the following disclaimer in the
-*    documentation and/or other materials provided with the distribution.
-*
-* THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
-* ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-* IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-* ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
-* FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-* DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-* OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-* LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-* OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-* SUCH DAMAGE.
-*/
+ * Copyright (c) 2016, Matthias Lochbrunner <matthias_lochbrunner@live.de>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
 
 #ifndef CHARLIE_COMMON_LOGGIN_COMPONENT_H
 #define CHARLIE_COMMON_LOGGIN_COMPONENT_H
 
-#include <string>
-#include <sstream>
 #include <functional>
+#include <sstream>
+#include <string>
 
 #include "../token/base.h"
 
 #include "../common/exportDefs.h"
+#include "../program/mapping.h"
 
-namespace charlie {
-namespace common {
+namespace charlie::common {
 // Base class for all components which works on code files and uses logging functionality
 class LoggingComponent {
  public:
@@ -66,30 +66,37 @@ class LoggingComponent {
     int pos;
     // Stores the length of the current code to avoid additional function calls to std::string::length().
     int length;
+    // returns a human readable location reprentation in file
+    program::Mapping::Location location() const;
+
+   private:
+    // Store the location of the linebreaks in order to make line-finding faster
+    std::vector<int> linebreaks_;
+    void create_cache();
   };
   // Send the specifed message to the delegate if set
   // and includes the code position.
   // Optional generates compile error code out of the file and linenumber of the compiler implementation.
   // In order to find the position where this message was raised much faster. E.g. "C0124"
-  void error_message_to_code(std::string const& message) const;
-  void error_message_to_code(std::stringstream const& message) const;
-  void error_message_to_code(std::string const& message, int pos) const;
-  void error_message_to_code(std::stringstream const& message, int pos) const;
-  void error_message_to_code(std::string const& message, const char *codefileName, int lineNumber) const;
-  void error_message_to_code(std::stringstream const& message, const char *codefileName, int lineNumber) const;
-  void error_message_to_code(std::string const& message, int pos, const char *codefileName, int lineNumber) const;
-  void error_message_to_code(std::stringstream const& message, int pos, const char *codefileName, int lineNumber) const;
+  void error_message_to_code(std::string const &message) const;
+  void error_message_to_code(std::stringstream const &message) const;
+  void error_message_to_code(std::string const &message, int pos) const;
+  void error_message_to_code(std::stringstream const &message, int pos) const;
+  void error_message_to_code(std::string const &message, const char *codefileName, int lineNumber) const;
+  void error_message_to_code(std::stringstream const &message, const char *codefileName, int lineNumber) const;
+  void error_message_to_code(std::string const &message, int pos, const char *codefileName, int lineNumber) const;
+  void error_message_to_code(std::stringstream const &message, int pos, const char *codefileName, int lineNumber) const;
   // Send the specifed message to the delegate if set.
   // Optional generates compile error code out of the file and linenumber of the compiler implementation.
   // In order to find the position where this message was raised much faster. E.g. C0124 in order
-  void error_message(std::string const& message, const char *codefileName, int lineNumber) const;
-  void error_message(std::stringstream const& message, const char *codefileName, int lineNumber) const;
-  void error_message(std::string const& message) const;
-  void error_message(std::stringstream const& message) const;
+  void error_message(std::string const &message, const char *codefileName, int lineNumber) const;
+  void error_message(std::stringstream const &message, const char *codefileName, int lineNumber) const;
+  void error_message(std::string const &message) const;
+  void error_message(std::stringstream const &message) const;
   // Current code information object.
   CodeFileInfo codeInfo_;
   // A function pointer to the message output. If this is null, no message can be print.
-  std::function<void(std::string const& message)> _messageDelegate;
+  std::function<void(std::string const &message)> _messageDelegate;
 
  private:
   // Gets the line number and column position of the caret.
@@ -101,7 +108,6 @@ class LoggingComponent {
   // Adds the information of the specified position to the stringstream.
   void getPositionString(int pos, std::stringstream *st) const;
 };
-}  // namespace common
-}  // namespace charlie
+}  // namespace charlie::common
 
 #endif  // !CHARLIE_COMMON_LOGGIN_COMPONENT_H

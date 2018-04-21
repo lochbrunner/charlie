@@ -1,46 +1,45 @@
 /*
-* Copyright (c) 2016, Matthias Lochbrunner <matthias_lochbrunner@live.de>
-* All rights reserved.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions
-* are met:
-*
-* 1. Redistributions of source code must retain the above copyright
-*    notice, this list of conditions and the following disclaimer.
-* 2. Redistributions in binary form must reproduce the above copyright
-*    notice, this list of conditions and the following disclaimer in the
-*    documentation and/or other materials provided with the distribution.
-*
-* THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
-* ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-* IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-* ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
-* FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-* DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-* OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-* LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-* OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-* SUCH DAMAGE.
-*/
+ * Copyright (c) 2016, Matthias Lochbrunner <matthias_lochbrunner@live.de>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
 
 #include "logging_component.h"
 
 #include <assert.h>
 
-#include <sstream>
+#include <algorithm>
 #include <iomanip>
+#include <sstream>
 
-namespace charlie {
-namespace common {
+namespace charlie::common {
 
-using std::string;
-using std::stringstream;
 using std::function;
 using std::setfill;
 using std::setw;
-
+using std::string;
+using std::stringstream;
 
 char significantChar(const char* codefileName) {
   auto path = string(codefileName);
@@ -49,38 +48,50 @@ char significantChar(const char* codefileName) {
 }
 
 LoggingComponent::CodeFileInfo::CodeFileInfo(const std::string* code) : code(code), pos(0) {
-  if (code != nullptr)
-    this->length = code->length();
+  if (code == nullptr) return;
+  this->length = code->length();
+  create_cache();
 }
 
 void LoggingComponent::CodeFileInfo::set(const std::string* code) {
+  if (code == nullptr) return;
   this->code = code;
-  if (code != nullptr)
-    this->length = code->length();
+  this->length = code->length();
+  create_cache();
 }
 
 const char LoggingComponent::CodeFileInfo::at(int pos) const {
-  if (code != nullptr)
-    return code->at(pos);
+  if (code != nullptr) return code->at(pos);
   return '\0';
 }
 
 const char LoggingComponent::CodeFileInfo::current_char() const {
-  if (code != nullptr)
-    return code->at(pos);
+  if (code != nullptr) return code->at(pos);
   return '\0';
 }
 
-const bool LoggingComponent::CodeFileInfo::valid() const {
-  return pos < length;
+const bool LoggingComponent::CodeFileInfo::valid() const { return pos < length; }
+
+program::Mapping::Location LoggingComponent::CodeFileInfo::location() const {
+  auto it = std::lower_bound(linebreaks_.cbegin(), linebreaks_.cend(), pos);
+  int line = std::distance(linebreaks_.cbegin(), it);
+  assert(line > 1);
+  int last_linebreak = linebreaks_[line - 1];
+  return program::Mapping::Location(line + 1, pos - last_linebreak);
 }
 
-LoggingComponent::LoggingComponent() : _messageDelegate(0), codeInfo_(nullptr) {
+void LoggingComponent::CodeFileInfo::create_cache() {
+  for (int i = 0; i < this->length; ++i) {
+    if (this->code->at(i) == '\n') {
+      linebreaks_.push_back(i);
+    }
+  }
 }
 
-LoggingComponent::LoggingComponent(function<void(string const&message)> messageDelegate) :
-  _messageDelegate(messageDelegate), codeInfo_(nullptr) {
-}
+LoggingComponent::LoggingComponent() : _messageDelegate(0), codeInfo_(nullptr) {}
+
+LoggingComponent::LoggingComponent(function<void(string const& message)> messageDelegate)
+    : _messageDelegate(messageDelegate), codeInfo_(nullptr) {}
 
 void LoggingComponent::error_message_to_code(string const& message) const {
   if (_messageDelegate != NULL) {
@@ -119,16 +130,14 @@ void LoggingComponent::error_message_to_code(stringstream const& message, int po
 }
 
 void LoggingComponent::error_message(string const& message) const {
-  if (_messageDelegate != NULL)
-    _messageDelegate(message);
+  if (_messageDelegate != NULL) _messageDelegate(message);
 }
 
 void LoggingComponent::error_message(stringstream const& message) const {
-  if (_messageDelegate != NULL)
-    _messageDelegate(message.str());
+  if (_messageDelegate != NULL) _messageDelegate(message.str());
 }
 
-void LoggingComponent::error_message_to_code(string const& message, const char *codefileName, int lineNumber) const {
+void LoggingComponent::error_message_to_code(string const& message, const char* codefileName, int lineNumber) const {
   if (_messageDelegate != NULL) {
     stringstream st;
     st << significantChar(codefileName) << setfill('0') << setw(4) << lineNumber << ": " << message;
@@ -137,7 +146,8 @@ void LoggingComponent::error_message_to_code(string const& message, const char *
   }
 }
 
-void LoggingComponent::error_message_to_code(stringstream const& message, const char *codefileName, int lineNumber) const {
+void LoggingComponent::error_message_to_code(stringstream const& message, const char* codefileName,
+                                             int lineNumber) const {
   if (_messageDelegate != NULL) {
     stringstream st;
     st << significantChar(codefileName) << setfill('0') << setw(4) << lineNumber << ": " << message.str();
@@ -146,7 +156,8 @@ void LoggingComponent::error_message_to_code(stringstream const& message, const 
   }
 }
 
-void LoggingComponent::error_message_to_code(string const& message, int pos, const char *codefileName, int lineNumber) const {
+void LoggingComponent::error_message_to_code(string const& message, int pos, const char* codefileName,
+                                             int lineNumber) const {
   if (_messageDelegate != NULL) {
     stringstream st;
     st << significantChar(codefileName) << setfill('0') << setw(4) << lineNumber << ": " << message;
@@ -155,7 +166,8 @@ void LoggingComponent::error_message_to_code(string const& message, int pos, con
   }
 }
 
-void LoggingComponent::error_message_to_code(stringstream const& message, int pos, const char *codefileName, int lineNumber) const {
+void LoggingComponent::error_message_to_code(stringstream const& message, int pos, const char* codefileName,
+                                             int lineNumber) const {
   if (_messageDelegate != NULL) {
     stringstream st;
     st << significantChar(codefileName) << setfill('0') << setw(4) << lineNumber << ": " << message.str();
@@ -164,7 +176,7 @@ void LoggingComponent::error_message_to_code(stringstream const& message, int po
   }
 }
 
-void LoggingComponent::error_message(string const& message, const char *codefileName, int lineNumber) const {
+void LoggingComponent::error_message(string const& message, const char* codefileName, int lineNumber) const {
   if (_messageDelegate != NULL) {
     stringstream st;
     st << significantChar(codefileName) << setfill('0') << setw(4) << lineNumber << ": " << message;
@@ -172,7 +184,7 @@ void LoggingComponent::error_message(string const& message, const char *codefile
   }
 }
 
-void LoggingComponent::error_message(stringstream const& message, const char *codefileName, int lineNumber) const {
+void LoggingComponent::error_message(stringstream const& message, const char* codefileName, int lineNumber) const {
   if (_messageDelegate != NULL) {
     stringstream st;
     st << significantChar(codefileName) << setfill('0') << setw(4) << lineNumber << ": " << message.str();
@@ -180,7 +192,7 @@ void LoggingComponent::error_message(stringstream const& message, const char *co
   }
 }
 
-void LoggingComponent::getPositionString(std::stringstream *st) const {
+void LoggingComponent::getPositionString(std::stringstream* st) const {
   if (codeInfo_.pos < 0) {
     *st << " at unspecifed position";
     return;
@@ -192,26 +204,24 @@ void LoggingComponent::getPositionString(std::stringstream *st) const {
   *st << " at line: " << line << " columns: " << column;
 }
 
-void LoggingComponent::getLineNumberAndColumnPos(int *line, int *column) const {
+void LoggingComponent::getLineNumberAndColumnPos(int* line, int* column) const {
   if (codeInfo_.length != 0) {
     *column = 0;
     *line = 1;
-    if (codeInfo_.length <= codeInfo_.pos)
-      return;
+    if (codeInfo_.length <= codeInfo_.pos) return;
     for (int i = 0; i <= codeInfo_.pos; ++i) {
       if (codeInfo_.at(i) == '\n') {
         ++*line;
         column = 0;
       } else {
-        if (codeInfo_.at(i) == '\r')
-          continue;
+        if (codeInfo_.at(i) == '\r') continue;
       }
       ++column;
     }
   }
 }
 
-void LoggingComponent::getPositionString(int pos, std::stringstream *st) const {
+void LoggingComponent::getPositionString(int pos, std::stringstream* st) const {
   if (pos < 0) {
     *st << " at unspecifed position";
     return;
@@ -223,24 +233,21 @@ void LoggingComponent::getPositionString(int pos, std::stringstream *st) const {
   *st << " at line: " << line << " columns: " << column;
 }
 
-void LoggingComponent::getLineNumberAndColumnPos(int pos, int *line, int *column) const {
+void LoggingComponent::getLineNumberAndColumnPos(int pos, int* line, int* column) const {
   if (codeInfo_.length != 0) {
     *column = 0;
     *line = 1;
-    if (codeInfo_.length <= pos)
-      return;
+    if (codeInfo_.length <= pos) return;
     for (int i = 0; i <= pos; ++i) {
       if (codeInfo_.at(i) == '\n') {
         ++*line;
         *column = 0;
       } else {
-        if (codeInfo_.at(i) == '\r')
-          continue;
+        if (codeInfo_.at(i) == '\r') continue;
       }
       ++*column;
     }
   }
 }
 
-}  // namespace common
-}  // namespace charlie
+}  // namespace charlie::common
