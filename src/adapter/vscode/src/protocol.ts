@@ -3,21 +3,23 @@
 export interface Variable {
   name: string;
   value: number;
+  type: string;
 }
 
-export interface Position {
+export interface Location {
   line: number;
   column: number;
+  filename: string;
 }
 
 export interface State {
   variable: Variable[];
-  callstack_item: number[];
+  callstackItem: string[];
 }
 
 export interface Event {
   bytecode: number;
-  position: number;
+  position: Location;
   state: State;
 }
 

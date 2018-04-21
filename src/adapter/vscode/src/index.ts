@@ -52,6 +52,6 @@ process.stdin.pipe(require('split')()).on('data', line => {
 })
 
 client.on('close', () => {
-  console.log('Connection closed');
-  process.exit(-1);
+  console.log('Connection closed by debug server');
+  process.exit(0);
 });
