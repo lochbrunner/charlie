@@ -51,6 +51,15 @@ Scope::VariableInfo Scope::GetVariableInfo(VariableDeclaration const& dec) const
 }
 int Scope::AddVariableDec(VariableDeclaration const& dec) {
   variable_declarations_.insert(make_pair(dec, num_variable_declarations++));
+  auto par = parent_;
+  int pos = variable_informations.size();
+  VariableInfo info(
+      [=]() {
+        if (par == 0) return pos;
+        return pos + par->ParentOffset() + par->num_variable_declarations;
+      },
+      dec.image_type, dec.name);
+  variable_informations.push_back(info);
   return num_variable_declarations;
 }
 
@@ -63,6 +72,7 @@ void Scope::Dispose() {
   for (auto it = statements.begin(); it != statements.end(); ++it) it->Dispose();
 }
 
-Scope::VariableInfo::VariableInfo(function<int()> offset, VariableDeclaration::TypeEnum type)
-    : offset(offset), type(type) {}
+Scope::VariableInfo::VariableInfo(function<int()> offset, VariableDeclaration::TypeEnum type, const std::string& name)
+    : offset(offset), type(type), name(name) {}
+
 }  // namespace charlie::program

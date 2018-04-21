@@ -77,11 +77,11 @@ class Compiler : public common::LoggingComponent {
   // Enroles a block of the syntax tree to bytecode.
   bool enroleBlock(
       std::map<program::FunctionDeclaration, int, program::FunctionDeclaration::comparer> const &functionDict,
-      program::Scope const &block, int *count);
+      program::Scope const &block, int *count, bool sourcemaps);
   // Enroles a statement of the syntax tree to bytecode.
   bool enroleStatement(
       std::map<program::FunctionDeclaration, int, program::FunctionDeclaration::comparer> const &functionDict,
-      program::Statement const &statement, int *count);
+      program::Statement const &statement, int *count, bool sourcemaps);
   // The current program data.
   program::UnresolvedProgram program_;
   std::shared_ptr<program::Mapping> mapping_;

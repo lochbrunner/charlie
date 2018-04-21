@@ -136,15 +136,21 @@ int Runtime::Run() {
   return state_->alu_stack.top();
 }
 
-void add_variables(const Register& reg, charlie::debug::Event::State* state) {
-  for (int i = 0; i < reg.GetSize(); ++i) {
-    auto variable = state->add_variable();
-    int value;
-    reg.GetValue(i, &value);
-    variable->set_value(value);
-    std::stringstream ss;
-    ss << "i" << i;
-    variable->set_name(ss.str());
+void add_variables(const std::vector<std::unique_ptr<program::Mapping::Scope>>& scopes_map, int pos,
+                   const Register& reg, charlie::debug::Event::State* proto_state) {
+  // Find scopes
+  for (auto& scope : scopes_map) {
+    if (scope->begin < pos && scope->end >= pos) {
+      for (auto& variable : scope->variables) {
+        program::Mapping::Variable v;
+        auto proto_var = proto_state->add_variable();
+        int value = 0;  // For everything is an integer
+        reg.GetValue(variable->position, &value);
+        proto_var->set_value(value);
+        proto_var->set_name(variable->name);
+        proto_var->set_type(variable->type);
+      }
+    }
   }
 }
 
@@ -152,7 +158,6 @@ std::string try_function_name(const std::vector<std::unique_ptr<program::Mapping
   for (auto& func : functions_map) {
     if (func->scope.begin <= pos && func->scope.end >= pos) {
       return func->name;
-      // proto_state->add_callstack_item(func->name);
     }
   }
   return "__global__";  // For initialisations beside the main() function
@@ -195,7 +200,7 @@ int Runtime::Debug(int port) {
         event.set_allocated_position(position);
 
         auto state = new charlie::debug::Event::State();
-        add_variables(state_->reg, state);
+        add_variables(mapping_->Scopes, state_->pos, state_->reg, state);
         add_callstack(*state_, mapping_, state);
 
         event.set_allocated_state(state);
@@ -208,7 +213,7 @@ int Runtime::Debug(int port) {
       if (r < 0) break;
     }
     // Wait for client to stop
-    sleep(100);
+    sleep(100);  // TODO: Wait for QUIT command from client
     if (state_->alu_stack.empty()) return 0;
     return state_->alu_stack.top();
   } catch (std::exception& e) {

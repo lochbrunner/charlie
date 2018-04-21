@@ -20,7 +20,7 @@ message Variable {
 message Scope {
   ByteCodeLocation begin = 1;
   ByteCodeLocation end = 2;
-  repeated Variable register = 3;
+  repeated Variable register = 3;   // Dont use in Function
 }
 
 message Function {

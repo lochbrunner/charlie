@@ -35,9 +35,16 @@
 namespace charlie::program {
 class Mapping {
  public:
+  struct Variable {
+    std::string name;
+    int position;
+    std::string type;
+  };
+
   struct Scope {
     int begin;
     int end;
+    std::vector<std::unique_ptr<Variable>> variables;
   };
 
   struct Function {
@@ -47,6 +54,7 @@ class Mapping {
   };
 
   std::vector<std::unique_ptr<Function>> Functions;
+  std::vector<std::unique_ptr<Scope>> Scopes;
 
   bool Save(const std::string &filename) const;
 

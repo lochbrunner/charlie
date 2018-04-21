@@ -32,18 +32,16 @@
 #include <list>
 #include <map>
 #include <string>
+#include <vector>
 
-namespace charlie {
-namespace program {
+namespace charlie::program {
 class Scope;
-}  // namespace program
-}  // namespace charlie
+}  // namespace charlie::program
 
 #include "statement.h"
 #include "variable_declaration.h"
 
-namespace charlie {
-namespace program {
+namespace charlie::program {
 // Stores variable declarations and statements of one scope.
 class Scope {
  public:
@@ -51,7 +49,10 @@ class Scope {
   // to get the index of the variable in the register.
   struct VariableInfo {
     // Creates the object. All members must be defined.
-    VariableInfo(std::function<int()> offset, VariableDeclaration::TypeEnum type);
+    explicit VariableInfo(std::function<int()> offset, VariableDeclaration::TypeEnum type,
+                          const std::string& name = "");
+    // Use this constructor for tracing and debugging
+    // explicit VariableInfo(VariableDeclaration::TypeEnum type, const std::string& name);
     // Variable type
     VariableDeclaration::TypeEnum type;
     // Position in the VMs register
@@ -89,15 +90,16 @@ class Scope {
   // List of all statements in the order as they appeared in the source code.
   std::list<Statement> statements;
 
+  std::vector<VariableInfo> variable_informations;
+
  private:
   // Stores all the variable declarations of this scope.
-  // The types are ignored, because it is not allowed to get multiple variable declarations with differen types in one
+  // The types are ignored, because it is not allowed to get multiple variable declarations with different types in one
   // scope.
   std::map<VariableDeclaration, int, VariableDeclaration::comparer_only_name> variable_declarations_;
   // The parent scope. Scope is root-scope iff this pointer is nullptr.
   Scope* parent_;
 };
-}  // namespace program
-}  // namespace charlie
+}  // namespace charlie::program
 
 #endif  // !CHARLIE_PROGRAM_SCOPE_H
