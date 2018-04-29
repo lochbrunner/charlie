@@ -71,44 +71,55 @@ class DebugConnection {
     std::cerr << " connected\n";
   }
 
-  // For now, ignore multiple commands
-  std::unique_ptr<charlie::debug::Command> poll_command() {
-    if (socket_.available() > 0) {
-      auto available_bytes = socket_.available();
-      boost::system::error_code error;
-      std::vector<char> received_buffer(available_bytes + 1);
-      size_t len = socket_.read_some(boost::asio::buffer(received_buffer), error);
+  std::unique_ptr<charlie::debug::Command> wait_for_command() {
+    auto available_bytes = socket_.available();
+    boost::system::error_code error;
+    std::vector<char> received_buffer(available_bytes + 1);
+    size_t len = socket_.read_some(boost::asio::buffer(received_buffer), error);
 
-      if (error == boost::asio::error::eof) {
-        std::cerr << "Debug client closed the connection!\n";
-        return nullptr;
-      } else if (error) {
-        std::cerr << "Unexpected connection-error to debug client. Errorcode: " << error << std::endl;
-      }
-      buffer_ << std::string(received_buffer.begin(), received_buffer.end());
-      char header[6];
-      buffer_.read(header, sizeof(header) - 1);
-      header[sizeof(header) - 1] = '\0';
-      int length = atoi(&header[1]);
+    if (error == boost::asio::error::eof) {
+      std::cerr << "Debug client closed the connection!\n";
+      return nullptr;
+    } else if (error) {
+      std::cerr << "Unexpected connection-error to debug client. Errorcode: " << error << std::endl;
+    }
+    buffer_ << std::string(received_buffer.begin(), received_buffer.end());
+    char header[6];
+    buffer_.read(header, sizeof(header) - 1);
+    header[sizeof(header) - 1] = '\0';
+    int length = atoi(&header[1]);
 
-      // Copy the relevant json code into std::string
-      // if (buffer_.gcount() >= length) {
+    // Copy the relevant json code into std::string
+    if (available_bytes - 5 >= length) {
       std::vector<char> body_vec(length + 1);
-      buffer_.read(&body_vec[0], length);
-      body_vec[length] = '\0';
+      buffer_.read(&body_vec[0], length + 1);
+      // body_vec[length] = '\0';
       auto body = std::string(&body_vec[0], &body_vec[length]);
       auto command = std::make_unique<charlie::debug::Command>();
       auto status = google::protobuf::util::JsonStringToMessage(body, command.get());
       if (status.ok()) {
-        return command;
+        return std::move(command);
       }
       std::cerr << status.error_message();
-      // }
+    }
+  }
+
+  // For now, ignore multiple commands
+  std::unique_ptr<charlie::debug::Command> poll_command() {
+    if (socket_.available() > 0) {
+      return std::move(wait_for_command());
     }
     return nullptr;
   }
 
-  void send_event(const charlie::debug::Event& event) {
+  std::unique_ptr<charlie::debug::Command> get_command(bool blocking) {
+    if (blocking || socket_.available() > 0) {
+      return std::move(wait_for_command());
+    }
+    return nullptr;
+  }
+
+  void send_event(const debug::Event& event) {
     std::string event_json;
 
     google::protobuf::util::JsonPrintOptions options;
@@ -180,44 +191,95 @@ void add_callstack(const State& state, std::shared_ptr<program::Mapping> mapping
   }
 }
 
+program::Mapping::Location* Runtime::get_location(int pos) {
+  auto statement_it = mapping_->Instructions.find(pos);
+  if (statement_it != mapping_->Instructions.end()) {
+    return &(statement_it->second);
+  }
+  return nullptr;
+}
+
+void Runtime::send_event(int code, DebugConnection* connection) {
+  charlie::debug::Event event;
+  event.set_bytecode(code);
+
+  auto state = new charlie::debug::Event::State();
+  add_variables(mapping_->Scopes, state_->pos, state_->reg, state);
+  add_callstack(*state_, mapping_, state);
+
+  auto loc = get_location(state_->pos);
+  if (loc != nullptr) {
+    auto position = new charlie::debug::Position();
+    position->set_line(loc->line);
+    position->set_column(loc->column);
+    event.set_allocated_position(position);
+  }
+
+  event.set_allocated_state(state);
+  connection->send_event(event);
+}
+
 enum class DebugState { RUNNING, PAUSED, TO_NEXT_LINE };
 
 int Runtime::Debug(int port) {
+  std::set<int> breakpoints;  // Ignoring filename and column for now
+  int last_line;              // Needed for stepping line by line
+  int next_line;
   try {
     DebugConnection connection(port);
     connection.listen();
 
-    auto debug_state = DebugState::TO_NEXT_LINE;
+    auto debug_state = DebugState::PAUSED;
 
     while (state_->pos > -1 /* && !state.call_stack.empty()*/) {
-      int code = state_->program[state_->pos];
-      // Communicate
-      if (debug_state == DebugState::TO_NEXT_LINE) {
-        charlie::debug::Event event;
-        event.set_bytecode(code);
-
-        auto state = new charlie::debug::Event::State();
-        add_variables(mapping_->Scopes, state_->pos, state_->reg, state);
-        add_callstack(*state_, mapping_, state);
-
-        auto statement_it = mapping_->Instructions.find(state_->pos);
-        if (statement_it != mapping_->Instructions.end()) {
-          auto position = new charlie::debug::Position();
-          auto loc_in_file = statement_it->second;
-          position->set_line(loc_in_file.line);
-          position->set_column(loc_in_file.column);
-          event.set_allocated_position(position);
+      // Process commands
+      auto command = connection.get_command(debug_state == DebugState::PAUSED);
+      if (command) switch (command->type()) {
+          case debug::Command::NEXT_STEP:
+            next_line = last_line;
+            debug_state = DebugState::TO_NEXT_LINE;
+            break;
+          case debug::Command::RUN:
+            debug_state = DebugState::RUNNING;
+            break;
+          case debug::Command::SET_BREAKPOINT:
+            breakpoints.insert(command->position().line());
+            break;
+          case debug::Command::QUIT:
+            std::cerr << "Client requested a quit\n";
+            return 0;
         }
 
-        event.set_allocated_state(state);
-
-        connection.send_event(event);
+      int code = state_->program[state_->pos];
+      auto loc = get_location(state_->pos);
+      // Communicate
+      switch (debug_state) {
+        case DebugState::RUNNING: {
+          // Hitting an breakpoint?
+          if ((loc != nullptr) && breakpoints.find(loc->line) != breakpoints.end()) {
+            last_line = loc->line;
+            send_event(code, &connection);
+            debug_state = DebugState::PAUSED;
+            continue;
+          }
+          int r = InstructionManager::Instructions[code](*state_);
+          if (r < 0) goto end;
+        } break;
+        case DebugState::TO_NEXT_LINE: {
+          // int code = state_->program[state_->pos];
+          // auto loc = get_location(state_->pos);
+          if (loc && last_line != loc->line) {
+            last_line = loc->line;
+            send_event(code, &connection);
+            debug_state = DebugState::PAUSED;
+            continue;
+          }
+          int r = InstructionManager::Instructions[code](*state_);
+          if (r < 0) goto end;
+        } break;
       }
-      auto command = connection.poll_command();
-
-      int r = InstructionManager::Instructions[code](*state_);
-      if (r < 0) break;
     }
+  end:
     // Wait for client to stop
     sleep(100);  // TODO: Wait for QUIT command from client
     if (state_->alu_stack.empty()) return 0;

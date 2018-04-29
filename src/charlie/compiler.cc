@@ -340,7 +340,7 @@ std::unique_ptr<State> Compiler::GetProgram() {
   return state;
 }
 
-xprt std::shared_ptr<program::Mapping> Compiler::GetMapping() { return mapping_; }
+std::shared_ptr<program::Mapping> Compiler::GetMapping() { return mapping_; }
 
 }  // namespace charlie
 

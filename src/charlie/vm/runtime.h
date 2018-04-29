@@ -35,6 +35,8 @@
 #include "../program/mapping.h"
 
 namespace charlie::vm {
+class DebugConnection;
+
 class Runtime {
  public:
   explicit Runtime(std::unique_ptr<State> state, std::shared_ptr<program::Mapping> mapping = nullptr);
@@ -44,6 +46,8 @@ class Runtime {
  private:
   std::unique_ptr<State> state_;
   std::shared_ptr<program::Mapping> mapping_;
+  program::Mapping::Location* get_location(int pos);
+  void send_event(int code, DebugConnection* connection);
 };
 }  // namespace charlie::vm
 
