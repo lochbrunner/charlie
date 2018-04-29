@@ -24,7 +24,13 @@ export interface Event {
 }
 
 export enum Type {
-  NEXT_STEP = 0
+  NEXT_STEP = 0,
+  SET_BREAKPOINT = 1,
+  RUN = 2,
+  QUIT = 3
 }
 
-export interface Command { type: Type; }
+export interface Command {
+  type: Type;
+  position?: Location;
+}

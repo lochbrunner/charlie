@@ -41,13 +41,36 @@ client.on('data', (data: string) => {
   }
 });
 
-client.on('event', obj => {
+client.on('event', (obj: Event) => {
   console.log(`Received: ${JSON.stringify(obj)}`);
 });
 
 process.stdin.pipe(require('split')()).on('data', line => {
   client.write(line, 'utf8', obj => {
-    send_command({type: protocol.Type.NEXT_STEP});
+    switch (line) {
+      case 'r':
+        send_command({type: protocol.Type.RUN});
+        break;
+      case 'n':
+        send_command({type: protocol.Type.NEXT_STEP});
+        break;
+      case 'q':
+        send_command({type: protocol.Type.QUIT});
+        break;
+      default:
+        // Setting a breakpoint?
+        // b <filename>:<linenumber>
+        const reg = /b\W+([\w.]+):(\d+)\W*/g;
+        const match = reg.exec(line);
+        if (match) {
+          const filename = match[1];
+          const linenumber = parseInt(match[2]);
+          send_command({type: protocol.Type.SET_BREAKPOINT, position: {filename, line: linenumber, column: 0}});
+        } else {
+          console.error(`Unknown command '${line}' !`);
+        }
+        break;
+    }
   });
 })
 
