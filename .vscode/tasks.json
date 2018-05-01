@@ -28,6 +28,12 @@
                 "cwd": "${workspaceRoot}/build-debug"
             },
             "problemMatcher": "$gcc"
+        },
+        {
+            "type": "npm",
+            "script": "proto",
+            "path": "src/adapter/console/",
+            "problemMatcher": []
         }
     ]
 }

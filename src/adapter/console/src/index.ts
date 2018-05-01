@@ -13,9 +13,9 @@ let remaining_code = '';
 
 function send_command(command: protocol.Command) {
   const buffer = JSON.stringify(command);
-  const length = `0000${buffer.length}`.slice(-4);
-  client.write(length + buffer, 'utf8', obj => {
-    console.log(`Send command: '${length + buffer}'`);
+  const send_command = buffer + '\0';
+  client.write(send_command, 'utf8', obj => {
+    console.log(`Send command: '${send_command}'`);
   });
 }
 
@@ -45,33 +45,58 @@ client.on('event', (obj: Event) => {
   console.log(`Received: ${JSON.stringify(obj)}`);
 });
 
+function try_parse_b(line: string): protocol.Command|null {
+  // Setting a breakpoint?
+  // b <filename>:<linenumber>
+  const reg = /b\W+([\w.]+):(\d+)\W*/g;
+  const match = reg.exec(line);
+  if (match) {
+    const filename = match[1];
+    const linenumber = parseInt(match[2]);
+    return {type: protocol.Type.SET_BREAKPOINT, position: {filename, line: linenumber, column: 0}};
+  } else {
+    return null;
+  }
+}
+
+function try_parse_clear(line: string): protocol.Command|null {
+  // Removing a breakpoint?
+  // clear <filename>:<linenumber>
+  const reg = /clear\W+([\w.]+):(\d+)\W*/g;
+  const match = reg.exec(line);
+  if (match) {
+    const filename = match[1];
+    const linenumber = parseInt(match[2]);
+    return {type: protocol.Type.CLEAR_BREAKPOINT, position: {filename, line: linenumber, column: 0}};
+  } else {
+    return null;
+  }
+}
+
 process.stdin.pipe(require('split')()).on('data', line => {
-  client.write(line, 'utf8', obj => {
-    switch (line) {
-      case 'r':
-        send_command({type: protocol.Type.RUN});
-        break;
-      case 'n':
-        send_command({type: protocol.Type.NEXT_STEP});
-        break;
-      case 'q':
-        send_command({type: protocol.Type.QUIT});
-        break;
-      default:
-        // Setting a breakpoint?
-        // b <filename>:<linenumber>
-        const reg = /b\W+([\w.]+):(\d+)\W*/g;
-        const match = reg.exec(line);
-        if (match) {
-          const filename = match[1];
-          const linenumber = parseInt(match[2]);
-          send_command({type: protocol.Type.SET_BREAKPOINT, position: {filename, line: linenumber, column: 0}});
-        } else {
-          console.error(`Unknown command '${line}' !`);
-        }
-        break;
-    }
-  });
+  switch (line) {
+    case 'r':
+      send_command({type: protocol.Type.RUN});
+      break;
+    case 'n':
+      send_command({type: protocol.Type.NEXT_STEP});
+      break;
+    case 'q':
+      send_command({type: protocol.Type.QUIT});
+      break;
+    case 'list':
+      send_command({type: protocol.Type.LIST_BREAKPOINTS});
+      break;
+    default:
+      // Complex commands ?
+      const command = try_parse_b(line) || try_parse_clear(line);
+      if (command) {
+        send_command(command);
+      } else {
+        console.error(`Unknown command '${line}' !`);
+      }
+      break;
+  }
 })
 
 client.on('close', () => {

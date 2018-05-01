@@ -26,8 +26,10 @@ export interface Event {
 export enum Type {
   NEXT_STEP = 0,
   SET_BREAKPOINT = 1,
-  RUN = 2,
-  QUIT = 3
+  CLEAR_BREAKPOINT = 2,
+  RUN = 3,
+  QUIT = 4,
+  LIST_BREAKPOINTS = 5
 }
 
 export interface Command {

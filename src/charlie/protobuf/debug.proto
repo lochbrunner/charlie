@@ -26,12 +26,18 @@ message Event {
   State state = 3;
 }
 
+message BreakpointsList{
+  repeated Position position = 1; 
+}
+
 message Command {
   enum Type {
     NEXT_STEP = 0;
     SET_BREAKPOINT = 1;
-    RUN = 2;  // Same as continue in gdb
-    QUIT = 3;
+    CLEAR_BREAKPOINT = 2;
+    RUN = 3;  // Same as continue in gdb
+    QUIT = 4;
+    LIST_BREAKPOINTS = 5;
   }
   Type type = 1;
   Position position = 2;

@@ -72,10 +72,21 @@ class DebugConnection {
   }
 
   std::unique_ptr<charlie::debug::Command> wait_for_command() {
-    auto available_bytes = socket_.available();
+    auto available_bytes = static_cast<int>(socket_.available());
     boost::system::error_code error;
-    std::vector<char> received_buffer(available_bytes + 1);
+    if (available_bytes == 0) {
+      std::vector<char> received_buffer(1);
+      auto l = socket_.read_some(boost::asio::buffer(received_buffer), error);
+      auto s = std::string(received_buffer.begin(), received_buffer.end());
+      if (s != "n") {
+        buffer_ << s;
+      }
+
+      available_bytes = static_cast<int>(socket_.available());
+    }
+    std::vector<char> received_buffer(available_bytes);
     size_t len = socket_.read_some(boost::asio::buffer(received_buffer), error);
+    if (len == 0) return nullptr;
 
     if (error == boost::asio::error::eof) {
       std::cerr << "Debug client closed the connection!\n";
@@ -83,25 +94,20 @@ class DebugConnection {
     } else if (error) {
       std::cerr << "Unexpected connection-error to debug client. Errorcode: " << error << std::endl;
     }
-    buffer_ << std::string(received_buffer.begin(), received_buffer.end());
-    char header[6];
-    buffer_.read(header, sizeof(header) - 1);
-    header[sizeof(header) - 1] = '\0';
-    int length = atoi(&header[1]);
-
-    // Copy the relevant json code into std::string
-    if (available_bytes - 5 >= length) {
-      std::vector<char> body_vec(length + 1);
-      buffer_.read(&body_vec[0], length + 1);
-      // body_vec[length] = '\0';
-      auto body = std::string(&body_vec[0], &body_vec[length]);
-      auto command = std::make_unique<charlie::debug::Command>();
-      auto status = google::protobuf::util::JsonStringToMessage(body, command.get());
-      if (status.ok()) {
-        return std::move(command);
-      }
-      std::cerr << status.error_message();
+    auto add = std::string(received_buffer.begin(), received_buffer.end());
+    buffer_ << add;
+    char body_vec[256];
+    buffer_.getline(body_vec, sizeof(body_vec), '\0');
+    auto flag = buffer_.rdstate();
+    auto body = std::string(body_vec);
+    auto command = std::make_unique<charlie::debug::Command>();
+    auto status = google::protobuf::util::JsonStringToMessage(body, command.get());
+    if (status.ok()) {
+      return std::move(command);
     }
+    std::cerr << status.error_message();
+    buffer_ << body_vec;
+    return nullptr;
   }
 
   // For now, ignore multiple commands
@@ -119,13 +125,13 @@ class DebugConnection {
     return nullptr;
   }
 
-  void send_event(const debug::Event& event) {
+  void send_message(const google::protobuf::Message& message) {
     std::string event_json;
 
     google::protobuf::util::JsonPrintOptions options;
     options.add_whitespace = true;
     options.always_print_primitive_fields = true;
-    MessageToJsonString(event, &event_json, options);
+    MessageToJsonString(message, &event_json, options);
     send_string(socket_, event_json);
   }
 
@@ -216,7 +222,16 @@ void Runtime::send_event(int code, DebugConnection* connection) {
   }
 
   event.set_allocated_state(state);
-  connection->send_event(event);
+  connection->send_message(event);
+}
+
+void send_breakpoints_list(const std::set<int>& breakpoints, DebugConnection* connection) {
+  charlie::debug::BreakpointsList breakoints_list;
+  for (auto& breakoint : breakpoints) {
+    auto protp_pos = breakoints_list.add_position();
+    protp_pos->set_line(breakoint);
+  }
+  connection->send_message(breakoints_list);
 }
 
 enum class DebugState { RUNNING, PAUSED, TO_NEXT_LINE };
@@ -245,9 +260,15 @@ int Runtime::Debug(int port) {
           case debug::Command::SET_BREAKPOINT:
             breakpoints.insert(command->position().line());
             break;
+          case debug::Command::CLEAR_BREAKPOINT:
+            breakpoints.erase(command->position().line());
+            break;
           case debug::Command::QUIT:
             std::cerr << "Client requested a quit\n";
             return 0;
+          case debug::Command::LIST_BREAKPOINTS:
+            send_breakpoints_list(breakpoints, &connection);
+            break;
         }
 
       int code = state_->program[state_->pos];
@@ -256,11 +277,14 @@ int Runtime::Debug(int port) {
       switch (debug_state) {
         case DebugState::RUNNING: {
           // Hitting an breakpoint?
-          if ((loc != nullptr) && breakpoints.find(loc->line) != breakpoints.end()) {
+          if (loc != nullptr) {
+            if (last_line != loc->line && breakpoints.find(loc->line) != breakpoints.end()) {
+              send_event(code, &connection);
+              debug_state = DebugState::PAUSED;
+              last_line = loc->line;
+              continue;
+            }
             last_line = loc->line;
-            send_event(code, &connection);
-            debug_state = DebugState::PAUSED;
-            continue;
           }
           int r = InstructionManager::Instructions[code](*state_);
           if (r < 0) goto end;
@@ -289,5 +313,5 @@ int Runtime::Debug(int port) {
     return -1;
   }
   return 0;
-}
+}  // namespace charlie::vm
 }  // namespace charlie::vm
