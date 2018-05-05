@@ -594,7 +594,7 @@ bool Scanner::getBlock(FunctionDeclaration const &dec, Scope *scope) {
             ++codeInfo_.pos;
             Scope expression = Scope(scope);
             getExpression(&expression, true);
-            // Is there exactly one statment
+            // Is there exactly one statement
             if (expression.statements.begin() == expression.statements.end() ||
                 ++expression.statements.begin() != expression.statements.end()) {
               stringstream st;

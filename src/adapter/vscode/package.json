@@ -1,0 +1,128 @@
+{
+  "name": "vscode-charlie-adapter",
+  "version": "0.0.1",
+  "publisher": "lochbrunner",
+  "description": "Rich Charlie support dor Visual Studio Code",
+  "author": {
+    "name": "Matthias Lochbrunner",
+    "url": "https://www.github.com/lochbrunner"
+  },
+  "license": "MIT",
+  "categories": [
+    "Programming Languages",
+    "Debuggers"
+  ],
+  "galleryBanner": {
+    "color": "#CFB69A",
+    "theme": "light"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lochbrunner/charlie.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lochbrunner/charlie/issues"
+  },
+  "homepage": "https://github.com/lochbrunner/charlie#readme",
+  "keywords": [
+    "charlie",
+    "debugger",
+    "vscode"
+  ],
+  "scripts": {
+    "build": "tsc"
+  },
+  "engines": {
+    "vscode": "^1.22.0"
+  },
+  "main": "./out/extension",
+  "activationEvents": [
+    "onDebug"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "charlie",
+        "aliases": [
+          "charlie"
+        ],
+        "extensions": [
+          "chl"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "breakpoints": [
+      {
+        "language": "charlie"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "charlie",
+        "extensions": [
+          "chl"
+        ],
+        "label": "Charlie Debug",
+        "program": "./out/charlie-debug.js",
+        "runtime": "node",
+        "configurationAttributes": {
+          "launch": {
+            "required": [
+              "program"
+            ],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "Absolute path to a text file.",
+                "default": "${workspaceFolder}/${command:AskForProgramName}"
+              },
+              "stopOnEntry": {
+                "type": "boolean",
+                "description": "Automatically stop after launch.",
+                "default": true
+              }
+            }
+          },
+          "attach": {
+            "required": [
+              "program",
+              "port"
+            ],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "Absolute path to a text file.",
+                "default": "${workspaceFolder}/${command:AskForProgramName}"
+              },
+              "port": {
+                "type": "number",
+                "description": "Port to the server.",
+                "default": 3232
+              }
+            }
+          }
+        },
+        "initialConfigurations": [
+          {
+            "type": "charlie",
+            "request": "attach",
+            "name": "Ask for file name",
+            "program": "${workspaceFolder}/${command:AskForProgramName}",
+            "port": 3232
+          }
+        ]
+      }
+    ]
+  },
+  "dependencies": {
+    "vscode-debugadapter": "^1.29.0",
+    "vscode-debugprotocol": "^1.29.0"
+  },
+  "devDependencies": {
+    "@types/node": "^10.0.3",
+    "typescript": "^2.8.3",
+    "vsce": "^1.39.0",
+    "vscode": "^1.1.10"
+  }
+}

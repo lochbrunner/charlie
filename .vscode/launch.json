@@ -13,7 +13,7 @@
                 "run",
                 "--debug",
                 "3232",
-                "./samples/simple.cc"
+                "./samples/simple.chl"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
