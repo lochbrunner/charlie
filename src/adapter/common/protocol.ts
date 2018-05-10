@@ -17,19 +17,28 @@ export interface State {
   callstackItem: string[];
 }
 
+export enum EventReason {
+  ON_ENTRY = 0,
+  ON_STEP = 1,
+  ON_BREAKPOINT = 2,
+  ON_EXCEPTION = 3
+}
+
 export interface Event {
   bytecode: number;
   position: Location;
   state: State;
+  reason: EventReason;
 }
 
 export enum Type {
   NEXT_STEP = 0,
   SET_BREAKPOINT = 1,
   CLEAR_BREAKPOINT = 2,
-  RUN = 3,
-  QUIT = 4,
-  LIST_BREAKPOINTS = 5
+  CLEAR_BREAKPOINTS = 3,
+  RUN = 4,
+  QUIT = 5,
+  LIST_BREAKPOINTS = 6
 }
 
 export interface Command {

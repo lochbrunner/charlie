@@ -23,7 +23,15 @@ message Event {
     repeated string callstack_item = 2;
   }
 
+  enum Reason {
+    ON_ENTRY = 0;
+    ON_STEP = 1;
+    ON_BREAKPOINT = 2;
+    ON_EXCEPTION = 3;
+  }
+
   State state = 3;
+  Reason reason = 4;
 }
 
 message BreakpointsList{
@@ -35,9 +43,10 @@ message Command {
     NEXT_STEP = 0;
     SET_BREAKPOINT = 1;
     CLEAR_BREAKPOINT = 2;
-    RUN = 3;  // Same as continue in gdb
-    QUIT = 4;
-    LIST_BREAKPOINTS = 5;
+    CLEAR_BREAKPOINTS = 3;
+    RUN = 4;  // Same as continue in gdb
+    QUIT = 5;
+    LIST_BREAKPOINTS = 6;
   }
   Type type = 1;
   Position position = 2;

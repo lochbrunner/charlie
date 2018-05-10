@@ -47,7 +47,7 @@ class Runtime {
   std::unique_ptr<State> state_;
   std::shared_ptr<program::Mapping> mapping_;
   program::Mapping::Location* get_location(int pos);
-  void send_event(int code, DebugConnection* connection);
+  void send_event(int code, DebugConnection* connection, int reason);
 };
 }  // namespace charlie::vm
 

@@ -1,7 +1,7 @@
 import * as net from 'net';
 import * as readline from 'readline';
 
-import * as protocol from './protocol';
+import * as protocol from '../../common/protocol';
 
 const client = new net.Socket();
 
