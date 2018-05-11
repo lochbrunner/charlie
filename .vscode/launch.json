@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Charlie CLI",
+            "name": "CLI",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build-debug/bin/charliec",
@@ -31,20 +31,47 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Vscode adapter",
+            "name": "Console adapter",
             "stopOnEntry": true,
-            "program": "${workspaceFolder}/src/adapter/vscode/src/index.ts",
+            "program": "${workspaceFolder}/src/adapter/console/src/index.ts",
             "outFiles": [
-                "${workspaceFolder}/src/adapter/vscode/dist/**/*.js"
+                "${workspaceFolder}/src/adapter/console/dist/**/*.js"
             ]
-        }
+        },
+        {
+            "type": "extensionHost",
+            "request": "launch",
+            "name": "Extension",
+            // "preLaunchTask": "npm",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}/src/adapter/vscode"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/src/adapter/vscode/out/**/*.js"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Server",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/src/adapter/vscode/src/debug-adapter.ts",
+            "args": [
+                "--server=4711"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/src/adapter/vscode/out/**/*.js"
+            ]
+        },
     ],
     "compounds": [
         {
-            "name": "Debug",
+            "name": "CLI + vscode",
             "configurations": [
-                "Charlie CLI",
-                "Vscode adapter"
+                "CLI",
+                "Extension",
+                "Server"
             ]
         }
     ]

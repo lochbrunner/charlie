@@ -7,12 +7,8 @@ export class ConnectorRuntime extends EventEmitter {
   private readonly client_ = new net.Socket();
   private remaining_code_ = '';
 
-  private last_state_: protocol.Event = {
-    bytecode: -1,
-    position: {column: -1, filename: '', line: -1},
-    reason: 1,
-    state: {callstackItem: [], variable: []}
-  };
+  private last_state_: protocol.Event =
+      {bytecode: -1, position: {column: -1, filename: '', line: -1}, reason: 1, state: {callstackItem: [], scope: []}};
 
   public start(program: string, hostname: string, port: number) {
     this.client_.connect(port, hostname, () => {});
@@ -84,11 +80,11 @@ export class ConnectorRuntime extends EventEmitter {
   }
 
   public scope() {
-    // return this.last_state_.state.variable.map(varaible => ({s: varaible.})
+    return this.last_state_.state.scope.map((scope, index) => ({name: index === 0 ? 'global' : 'local', id: index}));
   }
 
-  public variables() {
-    return this.last_state_.state.variable;
+  public variables(scopeId: number) {
+    return this.last_state_.state.scope[scopeId].variable;
   }
 
   private sendCommand(command: protocol.Command) {

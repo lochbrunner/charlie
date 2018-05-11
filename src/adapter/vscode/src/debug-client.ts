@@ -144,15 +144,20 @@ export class DebugSession extends LoggingDebugSession {
   }
 
   protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
-    // throw Error('Not implemented yet!');
-    console.error('scopesRequest not implemented yet!');
+    const scopes = this._runtime.scope().map(scope => (new Scope(scope.name, scope.id)));
+    response.body = {scopes};
     this.sendResponse(response);
   }
 
   protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): void {
-    const variables: Array<DebugProtocol.Variable> = this._runtime.variables().map(
-        variable =>
-            ({name: variable.name, value: variable.value.toString(), type: variable.type, variablesReference: 0}));
+    const id = this._variableHandles.get(args.variablesReference);
+    const variables: Array<DebugProtocol.Variable> =
+        this._runtime.variables(parseInt(id)).map(variable => ({
+                                                    name: variable.name,
+                                                    value: variable.value.toString(),
+                                                    type: variable.type,
+                                                    variablesReference: 0
+                                                  }));
 
     response.body = {variables};
     this.sendResponse(response);

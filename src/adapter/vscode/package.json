@@ -64,7 +64,7 @@
           "chl"
         ],
         "label": "Charlie Debug",
-        "program": "./out/charlie-debug.js",
+        "program": "./out/debug-adapter.js",
         "runtime": "node",
         "configurationAttributes": {
           "launch": {
