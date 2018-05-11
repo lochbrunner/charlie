@@ -157,11 +157,13 @@ void add_variables(const std::vector<std::unique_ptr<program::Mapping::Scope>>& 
                    const Register& reg, charlie::debug::Event::State* proto_state) {
   // Find scopes
   for (auto& scope : scopes_map) {
+    auto proto_scope = proto_state->add_scope();
+    // proto_scope->set_name(scope->);
     if (scope->begin < pos && scope->end >= pos) {
       for (auto& variable : scope->variables) {
         program::Mapping::Variable v;
-        auto proto_var = proto_state->add_variable();
-        int value = 0;  // For everything is an integer
+        auto proto_var = proto_scope->add_variable();
+        int value = 0;  // For now everything is an integer
         reg.GetValue(variable->position, &value);
         proto_var->set_value(value);
         proto_var->set_name(variable->name);

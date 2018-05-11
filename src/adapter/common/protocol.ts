@@ -5,6 +5,10 @@ export interface Variable {
   value: number;
   type: string;
 }
+export interface Scope {
+  name: string;
+  variable: Variable[];
+}
 
 export interface Location {
   line: number;
@@ -13,7 +17,7 @@ export interface Location {
 }
 
 export interface State {
-  variable: Variable[];
+  scope: Scope[];
   callstackItem: string[];
 }
 
