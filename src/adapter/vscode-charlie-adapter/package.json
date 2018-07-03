@@ -33,7 +33,8 @@
     "build": "tsc"
   },
   "engines": {
-    "vscode": "^1.22.0"
+    "vscode": "^1.22.0",
+    "node": "^7.9.0"
   },
   "main": "./out/extension",
   "activationEvents": [
@@ -47,7 +48,7 @@
           "charlie"
         ],
         "extensions": [
-          "chl"
+          ".chl"
         ],
         "configuration": "./language-configuration.json"
       }
@@ -98,10 +99,10 @@
               },
               "port": {
                 "type": "number",
-                "description": "Port to the server.",
+                "description": "Port of the server.",
                 "default": 3232
               },
-              "host": {
+              "hostname": {
                 "type": "string",
                 "description": "Hostname of the server",
                 "default": "localhost"
@@ -130,6 +131,6 @@
     "@types/node": "^10.0.3",
     "typescript": "^2.8.3",
     "vsce": "^1.39.0",
-    "vscode": "^1.1.10"
+    "vscode": "^1.1.17"
   }
 }

@@ -34,6 +34,31 @@
             "script": "proto",
             "path": "src/adapter/console/",
             "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "build",
+            "path": "src/adapter/vscode-charlie-adapter/",
+            "problemMatcher": [
+                "$tsc"
+            ]
+        },
+        {
+            "label": "build mock",
+            "type": "npm",
+            "identifier": "npm",
+            "script": "watch",
+            "problemMatcher": [
+                "$tsc-watch"
+            ],
+            "isBackground": true,
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "options": {
+                "cwd": "${workspaceRoot}/eval/build-debug"
+            },
         }
     ]
 }

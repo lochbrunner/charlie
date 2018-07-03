@@ -45,10 +45,10 @@
             // "preLaunchTask": "npm",
             "runtimeExecutable": "${execPath}",
             "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}/src/adapter/vscode"
+                "--extensionDevelopmentPath=${workspaceFolder}/src/adapter/vscode-charlie-adapter"
             ],
             "outFiles": [
-                "${workspaceFolder}/src/adapter/vscode/out/**/*.js"
+                "${workspaceFolder}/src/adapter/vscode-charlie-adapter/out/**/*.js"
             ]
         },
         {
@@ -56,12 +56,38 @@
             "request": "launch",
             "name": "Server",
             "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/src/adapter/vscode/src/debug-adapter.ts",
+            "program": "${workspaceFolder}/src/adapter/vscode-charlie-adapter/src/debug-adapter.ts",
             "args": [
                 "--server=4711"
             ],
             "outFiles": [
-                "${workspaceFolder}/src/adapter/vscode/out/**/*.js"
+                "${workspaceFolder}/src/adapter/vscode-charlie-adapter/out/**/*.js"
+            ]
+        },
+        {
+            "type": "extensionHost",
+            "request": "launch",
+            "name": "Extension Mock",
+            // "preLaunchTask": "npm",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}/eval/debug-mock"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/eval/debug-mock/out/**/*.js"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Server Mock",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/eval/debug-mock/src/debugAdapter.ts",
+            "args": [
+                "--server=4711"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/eval/debug-mock/out/**/*.js"
             ]
         },
     ],
@@ -72,6 +98,14 @@
                 "CLI",
                 "Extension",
                 "Server"
+            ]
+        },
+        {
+            "name": "mock",
+            "configurations": [
+                "Extension Mock",
+                "Server Mock",
+                "CLI"
             ]
         }
     ]

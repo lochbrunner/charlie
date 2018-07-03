@@ -1,8 +1,10 @@
 build
-build-debug
+build-*
 
 # vs code adapter
 node_modules
 dist
 *.log
 out
+out~
+*.bak
