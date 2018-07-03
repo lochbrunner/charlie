@@ -1,7 +1,10 @@
 # Charlie
+
 A learning project: Compiles C-Code to Byte-Code and runs it in a virtual machine.
 
-## Prerequisites 
+![](./docs/assets/charlie-vscode-debug.gif)
+
+## Prerequisites
 
 * Boost C++ Library
 * CMake
