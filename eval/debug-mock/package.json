@@ -2,7 +2,7 @@
 	"name": "vscode-charlie-adapter",
 	"version": "0.0.1",
 	"displayName": "Charlie Debug",
-	"publisher": "andreweinand",
+	"publisher": "lochbrunner",
 	"description": "Starter extension for developing debug adapters for VS Code.",
 	"author": {
 		"name": "Matthias Lochbrunner",

@@ -35,9 +35,6 @@ export class CharlieRuntime extends EventEmitter {
     return this._sourceFile;
   }
 
-  // the contents (= lines) of the one and only file
-  // private _sourceLines: string[];
-
   // This is the next line that will be 'executed'
   // private _currentLine = 0;
 
@@ -117,11 +114,6 @@ export class CharlieRuntime extends EventEmitter {
     });
 
 
-    // this.loadSource(program);
-    // this._currentLine = -1;
-
-    // this.verifyBreakpoints(this._sourceFile);
-
     if (stopOnEntry) {
       // we step once
       this.step();
@@ -156,18 +148,10 @@ export class CharlieRuntime extends EventEmitter {
    * Set breakpoint in file with given line.
    */
   public setBreakPoint(path: string, line: number): CharlieBreakpoint {
-    const bp = <CharlieBreakpoint>{verified: false, line, id: this._breakpointId++};
-    let bps = this._breakPoints.get(path);
-    if (!bps) {
-      bps = new Array<CharlieBreakpoint>();
-      this._breakPoints.set(path, bps);
-    }
+    const bp = <CharlieBreakpoint>{verified: true, line, id: this._breakpointId++};
+    ++line;
     const column = 0;
     this.send_command({type: protocol.Type.SET_BREAKPOINT, position: {filename: path, line, column}});
-    bps.push(bp);
-
-    // this.verifyBreakpoints(path);
-
     return bp;
   }
 
@@ -203,41 +187,6 @@ export class CharlieRuntime extends EventEmitter {
   }
 
   // private methods
-
-  // private loadSource(file: string) {
-  //   if (this._sourceFile !== file) {
-  //     this._sourceFile = file;
-  //     this._sourceLines = readFileSync(this._sourceFile).toString().split('\n');
-  //   }
-  // }
-
-
-  // private verifyBreakpoints(path: string): void {
-  //   let bps = this._breakPoints.get(path);
-  //   if (bps) {
-  //     this.loadSource(path);
-  //     bps.forEach(bp => {
-  //       if (!bp.verified && bp.line < this._sourceLines.length) {
-  //         const srcLine = this._sourceLines[bp.line].trim();
-
-  //         // if a line is empty or starts with '+' we don't allow to set a breakpoint but move the breakpoint down
-  //         if (srcLine.length === 0 || srcLine.indexOf('+') === 0) {
-  //           bp.line++;
-  //         }
-  //         // if a line starts with '-' we don't allow to set a breakpoint but move the breakpoint up
-  //         if (srcLine.indexOf('-') === 0) {
-  //           bp.line--;
-  //         }
-  //         // don't set 'verified' to true if the line contains the word 'lazy'
-  //         // in this case the breakpoint will be verified 'lazy' after hitting it once.
-  //         if (srcLine.indexOf('lazy') < 0) {
-  //           bp.verified = true;
-  //           this.sendEvent('breakpointValidated', bp);
-  //         }
-  //       }
-  //     });
-  //   }
-  // }
 
   private sendEvent(event: string, ...args: any[]) {
     setImmediate(_ => {

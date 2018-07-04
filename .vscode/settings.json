@@ -49,6 +49,17 @@
         "optional": "cpp",
         "ostream": "cpp",
         "streambuf": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "strstream": "cpp",
+        "bitset": "cpp",
+        "deque": "cpp",
+        "list": "cpp",
+        "unordered_map": "cpp",
+        "unordered_set": "cpp",
+        "vector": "cpp",
+        "slist": "cpp",
+        "numeric": "cpp",
+        "cinttypes": "cpp",
+        "typeindex": "cpp"
     }
 }

@@ -139,7 +139,7 @@ export class CharlieDebugSession extends LoggingDebugSession {
     const clientLines = args.lines || [];
 
     // clear all breakpoints for this file
-    this._runtime.clearBreakpoints(path);
+    // this._runtime.clearBreakpoints(path);
 
     // set and verify breakpoint locations
     const actualBreakpoints = clientLines.map(l => {
