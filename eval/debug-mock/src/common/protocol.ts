@@ -22,10 +22,10 @@ export interface State {
 }
 
 export enum EventReason {
-  ON_ENTRY = 0,
-  ON_STEP = 1,
-  ON_BREAKPOINT = 2,
-  ON_EXCEPTION = 3
+  ON_ENTRY = 'ON_ENTRY',
+  ON_STEP = 'ON_STEP',
+  ON_BREAKPOINT = 'ON_BREAKPOINT',
+  ON_EXCEPTION = 'ON_EXCEPTION'
 }
 
 export interface Event {

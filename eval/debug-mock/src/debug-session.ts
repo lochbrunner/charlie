@@ -177,8 +177,6 @@ export class CharlieDebugSession extends LoggingDebugSession {
   }
 
   protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
-    // Try map scopes on stack
-
     const scopes: Array<Scope> = this._runtime.scopes.map((s, i) => (new Scope(s.name, i + 1, false)));
 
     response.body = {scopes: scopes};

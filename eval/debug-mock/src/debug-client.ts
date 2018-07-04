@@ -4,7 +4,7 @@
 
 // import {throws} from 'assert';
 import {EventEmitter} from 'events';
-import {readFileSync} from 'fs';
+// import {readFileSync} from 'fs';
 import * as net from 'net';
 
 import * as protocol from './common/protocol';
@@ -24,15 +24,19 @@ export class CharlieRuntime extends EventEmitter {
   private remaining_socket_code_ = '';
   private readonly client_ = new net.Socket();
 
-  private last_state_: protocol.Event =
-      {bytecode: -1, position: {column: -1, filename: '', line: -1}, reason: 1, state: {callstackItem: [], scope: []}};
+  private last_state_: protocol.Event = {
+    bytecode: -1,
+    position: {column: -1, filename: '', line: -1},
+    reason: protocol.EventReason.ON_ENTRY,
+    state: {callstackItem: [], scope: []}
+  };
 
   public get sourceFile() {
     return this._sourceFile;
   }
 
   // the contents (= lines) of the one and only file
-  private _sourceLines: string[];
+  // private _sourceLines: string[];
 
   // This is the next line that will be 'executed'
   // private _currentLine = 0;
@@ -53,6 +57,7 @@ export class CharlieRuntime extends EventEmitter {
    * Start executing the given program.
    */
   public start(program: string, stopOnEntry: boolean, hostname: string, port: number) {
+    this._sourceFile = program;
     this.client_.connect(port, hostname, () => {});
     this.client_.on('data', (data: string) => {
       data = this.remaining_socket_code_ + data;
@@ -88,6 +93,8 @@ export class CharlieRuntime extends EventEmitter {
             scope.push({name: 'global', variable: state.scope[lastScope].variable});
             state.scope = scope;
 
+            // this.sendEvent('output', this.last_state_.reason, '', 1, 1);
+
             switch (this.last_state_.reason) {
               case protocol.EventReason.ON_ENTRY:
                 this.sendEvent('stopOnEntry', this.last_state_);
@@ -110,10 +117,10 @@ export class CharlieRuntime extends EventEmitter {
     });
 
 
-    this.loadSource(program);
+    // this.loadSource(program);
     // this._currentLine = -1;
 
-    this.verifyBreakpoints(this._sourceFile);
+    // this.verifyBreakpoints(this._sourceFile);
 
     if (stopOnEntry) {
       // we step once
@@ -127,21 +134,17 @@ export class CharlieRuntime extends EventEmitter {
   /**
    * Continue execution to the end/beginning.
    */
-  public continue() {}
+  public continue() {
+    this.send_command({type: protocol.Type.RUN});
+  }
 
   /**
    * Step to the next/previous non empty line.
    */
   public step() {
     this.send_command({type: protocol.Type.NEXT_STEP});
-    this.sendEvent('stopOnBreakpoint');
-
-    // this.sendEvent('output', 'Hello', '', 1, 1);
   }
 
-  /**
-   * Returns a fake 'stacktrace' where every 'stackframe' is a word from the current line.
-   */
   public stack(startFrame: number, endFrame: number): any {
     const line = this.last_state_.position.line - 1;
     const frames =
@@ -159,9 +162,11 @@ export class CharlieRuntime extends EventEmitter {
       bps = new Array<CharlieBreakpoint>();
       this._breakPoints.set(path, bps);
     }
+    const column = 0;
+    this.send_command({type: protocol.Type.SET_BREAKPOINT, position: {filename: path, line, column}});
     bps.push(bp);
 
-    this.verifyBreakpoints(path);
+    // this.verifyBreakpoints(path);
 
     return bp;
   }
@@ -176,6 +181,9 @@ export class CharlieRuntime extends EventEmitter {
       if (index >= 0) {
         const bp = bps[index];
         bps.splice(index, 1);
+        const column = 0;
+        this.send_command({type: protocol.Type.CLEAR_BREAKPOINT, position: {filename: path, line, column}});
+
         return bp;
       }
     }
@@ -187,6 +195,7 @@ export class CharlieRuntime extends EventEmitter {
    */
   public clearBreakpoints(path: string): void {
     this._breakPoints.delete(path);
+    this.send_command({type: protocol.Type.LIST_BREAKPOINTS});
   }
 
   public get scopes(): protocol.Scope[] {
@@ -195,40 +204,40 @@ export class CharlieRuntime extends EventEmitter {
 
   // private methods
 
-  private loadSource(file: string) {
-    if (this._sourceFile !== file) {
-      this._sourceFile = file;
-      this._sourceLines = readFileSync(this._sourceFile).toString().split('\n');
-    }
-  }
+  // private loadSource(file: string) {
+  //   if (this._sourceFile !== file) {
+  //     this._sourceFile = file;
+  //     this._sourceLines = readFileSync(this._sourceFile).toString().split('\n');
+  //   }
+  // }
 
 
-  private verifyBreakpoints(path: string): void {
-    let bps = this._breakPoints.get(path);
-    if (bps) {
-      this.loadSource(path);
-      bps.forEach(bp => {
-        if (!bp.verified && bp.line < this._sourceLines.length) {
-          const srcLine = this._sourceLines[bp.line].trim();
+  // private verifyBreakpoints(path: string): void {
+  //   let bps = this._breakPoints.get(path);
+  //   if (bps) {
+  //     this.loadSource(path);
+  //     bps.forEach(bp => {
+  //       if (!bp.verified && bp.line < this._sourceLines.length) {
+  //         const srcLine = this._sourceLines[bp.line].trim();
 
-          // if a line is empty or starts with '+' we don't allow to set a breakpoint but move the breakpoint down
-          if (srcLine.length === 0 || srcLine.indexOf('+') === 0) {
-            bp.line++;
-          }
-          // if a line starts with '-' we don't allow to set a breakpoint but move the breakpoint up
-          if (srcLine.indexOf('-') === 0) {
-            bp.line--;
-          }
-          // don't set 'verified' to true if the line contains the word 'lazy'
-          // in this case the breakpoint will be verified 'lazy' after hitting it once.
-          if (srcLine.indexOf('lazy') < 0) {
-            bp.verified = true;
-            this.sendEvent('breakpointValidated', bp);
-          }
-        }
-      });
-    }
-  }
+  //         // if a line is empty or starts with '+' we don't allow to set a breakpoint but move the breakpoint down
+  //         if (srcLine.length === 0 || srcLine.indexOf('+') === 0) {
+  //           bp.line++;
+  //         }
+  //         // if a line starts with '-' we don't allow to set a breakpoint but move the breakpoint up
+  //         if (srcLine.indexOf('-') === 0) {
+  //           bp.line--;
+  //         }
+  //         // don't set 'verified' to true if the line contains the word 'lazy'
+  //         // in this case the breakpoint will be verified 'lazy' after hitting it once.
+  //         if (srcLine.indexOf('lazy') < 0) {
+  //           bp.verified = true;
+  //           this.sendEvent('breakpointValidated', bp);
+  //         }
+  //       }
+  //     });
+  //   }
+  // }
 
   private sendEvent(event: string, ...args: any[]) {
     setImmediate(_ => {
