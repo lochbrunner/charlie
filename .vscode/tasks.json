@@ -42,23 +42,6 @@
             "problemMatcher": [
                 "$tsc"
             ]
-        },
-        {
-            "label": "build mock",
-            "type": "npm",
-            "identifier": "npm",
-            "script": "watch",
-            "problemMatcher": [
-                "$tsc-watch"
-            ],
-            "isBackground": true,
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "options": {
-                "cwd": "${workspaceRoot}/eval/build-debug"
-            },
         }
     ]
 }

@@ -16,7 +16,7 @@ export interface CharlieBreakpoint {
 }
 
 /**
- * A Mock runtime with minimal debugger functionality.
+ * A Charlie runtime with minimal debugger functionality.
  */
 export class CharlieRuntime extends EventEmitter {
   // the initial (and one and only) file we are 'debugging'
@@ -38,7 +38,7 @@ export class CharlieRuntime extends EventEmitter {
   // This is the next line that will be 'executed'
   // private _currentLine = 0;
 
-  // maps from sourceFile to array of Mock breakpoints
+  // maps from sourceFile to array of Charlie breakpoints
   private _breakPoints = new Map<string, CharlieBreakpoint[]>();
 
   // since we want to send breakpoint events, we will assign an id to every event

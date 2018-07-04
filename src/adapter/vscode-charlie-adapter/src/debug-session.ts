@@ -12,9 +12,9 @@ const {Subject} = require('await-notify');
 
 
 /**
- * This interface describes the mock-debug specific launch attributes
+ * This interface describes the charlie-debug specific launch attributes
  * (which are not part of the Debug Adapter Protocol).
- * The schema for these attributes lives in the package.json of the mock-debug extension.
+ * The schema for these attributes lives in the package.json of the charlie-debug extension.
  * The interface should always match this schema.
  */
 interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
@@ -46,7 +46,7 @@ export class CharlieDebugSession extends LoggingDebugSession {
    * We configure the default implementation of a debug adapter here.
    */
   public constructor() {
-    super('mock-debug.txt');
+    super('charlie-debug.txt');
 
     // this debugger uses zero-based lines and columns
     this.setDebuggerLinesStartAt1(false);
@@ -236,6 +236,6 @@ export class CharlieDebugSession extends LoggingDebugSession {
 
   private createSource(filePath: string): Source {
     return new Source(
-        basename(filePath), this.convertDebuggerPathToClient(filePath), undefined, undefined, 'mock-adapter-data');
+        basename(filePath), this.convertDebuggerPathToClient(filePath), undefined, undefined, 'charlie-adapter-data');
   }
 }

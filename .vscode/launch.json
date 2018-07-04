@@ -63,33 +63,7 @@
             "outFiles": [
                 "${workspaceFolder}/src/adapter/vscode-charlie-adapter/out/**/*.js"
             ]
-        },
-        {
-            "type": "extensionHost",
-            "request": "launch",
-            "name": "Extension Mock",
-            // "preLaunchTask": "npm",
-            "runtimeExecutable": "${execPath}",
-            "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}/eval/debug-mock"
-            ],
-            "outFiles": [
-                "${workspaceFolder}/eval/debug-mock/out/**/*.js"
-            ]
-        },
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Server Mock",
-            "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/eval/debug-mock/src/debug-adapter.ts",
-            "args": [
-                "--server=4711"
-            ],
-            "outFiles": [
-                "${workspaceFolder}/eval/debug-mock/out/**/*.js"
-            ]
-        },
+        }
     ],
     "compounds": [
         {
@@ -98,14 +72,6 @@
                 "CLI",
                 "Extension",
                 "Server"
-            ]
-        },
-        {
-            "name": "mock",
-            "configurations": [
-                "Extension Mock",
-                "Server Mock",
-                "CLI"
             ]
         }
     ]
