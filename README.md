@@ -2,7 +2,7 @@
 
 A learning project: Compiles C-Code to Byte-Code and runs it in a virtual machine.
 
-![](./docs/assets/charlie-vscode-debug.gif)
+![](./docs/assets/vscode-adapter.gif)
 
 ## Prerequisites
 

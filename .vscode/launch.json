@@ -45,10 +45,10 @@
             // "preLaunchTask": "npm",
             "runtimeExecutable": "${execPath}",
             "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}/src/adapter/vscode"
+                "--extensionDevelopmentPath=${workspaceFolder}/src/adapter/vscode-charlie-adapter"
             ],
             "outFiles": [
-                "${workspaceFolder}/src/adapter/vscode/out/**/*.js"
+                "${workspaceFolder}/src/adapter/vscode-charlie-adapter/out/**/*.js"
             ]
         },
         {
@@ -56,14 +56,14 @@
             "request": "launch",
             "name": "Server",
             "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/src/adapter/vscode/src/debug-adapter.ts",
+            "program": "${workspaceFolder}/src/adapter/vscode-charlie-adapter/src/debug-adapter.ts",
             "args": [
                 "--server=4711"
             ],
             "outFiles": [
-                "${workspaceFolder}/src/adapter/vscode/out/**/*.js"
+                "${workspaceFolder}/src/adapter/vscode-charlie-adapter/out/**/*.js"
             ]
-        },
+        }
     ],
     "compounds": [
         {
