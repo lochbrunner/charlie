@@ -202,7 +202,7 @@ export class MockDebugSession extends LoggingDebugSession {
 
   protected reverseContinueRequest(
       response: DebugProtocol.ReverseContinueResponse, args: DebugProtocol.ReverseContinueArguments): void {
-    this._runtime.continue(true);
+    this._runtime.continue();
     this.sendResponse(response);
   }
 
@@ -212,39 +212,20 @@ export class MockDebugSession extends LoggingDebugSession {
   }
 
   protected stepBackRequest(response: DebugProtocol.StepBackResponse, args: DebugProtocol.StepBackArguments): void {
-    this._runtime.step(true);
+    this._runtime.step();
     this.sendResponse(response);
   }
 
   protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void {
     let reply: string|undefined = undefined;
 
-    if (args.context === 'repl') {
-      // 'evaluate' supports to create and delete breakpoints from the 'repl':
-      const matches = /new +([0-9]+)/.exec(args.expression);
-      if (matches && matches.length === 2) {
-        const mbp = this._runtime.setBreakPoint(
-            this._runtime.sourceFile, this.convertClientLineToDebugger(parseInt(matches[1])));
-        const bp = <DebugProtocol.Breakpoint>new Breakpoint(
-            mbp.verified, this.convertDebuggerLineToClient(mbp.line), undefined,
-            this.createSource(this._runtime.sourceFile));
-        bp.id = mbp.id;
-        this.sendEvent(new BreakpointEvent('new', bp));
-        reply = `breakpoint created`;
-      } else {
-        const matches = /del +([0-9]+)/.exec(args.expression);
-        if (matches && matches.length === 2) {
-          const mbp = this._runtime.clearBreakPoint(
-              this._runtime.sourceFile, this.convertClientLineToDebugger(parseInt(matches[1])));
-          if (mbp) {
-            const bp = <DebugProtocol.Breakpoint>new Breakpoint(false);
-            bp.id = mbp.id;
-            this.sendEvent(new BreakpointEvent('removed', bp));
-            reply = `breakpoint deleted`;
-          }
-        }
-      }
-    }
+    // Find the variable in the scopes
+    const {scopes} = this._runtime;
+    reply = scopes.reduce(
+        (ps, s) => ps ||
+            s.variable.reduce(
+                (pv, v) => pv || (v.name === args.expression ? v.value.toString() : undefined), undefined),
+        undefined);
 
     response.body = {
       result: reply ? reply : `evaluate(context: '${args.context}', '${args.expression}')`,

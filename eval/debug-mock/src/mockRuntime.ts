@@ -35,7 +35,7 @@ export class MockRuntime extends EventEmitter {
   private _sourceLines: string[];
 
   // This is the next line that will be 'executed'
-  private _currentLine = 0;
+  // private _currentLine = 0;
 
   // maps from sourceFile to array of Mock breakpoints
   private _breakPoints = new Map<string, MockBreakpoint[]>();
@@ -67,7 +67,6 @@ export class MockRuntime extends EventEmitter {
         data = data.substr(4 + chunkLength);
         if (chunk.length > 0) {
           try {
-            // this.client_.emit('event', JSON.parse(chunk));
             const last_line = this.last_state_.position.line;
             this.last_state_ = JSON.parse(chunk) as protocol.Event;
             if (this.last_state_.position.line > 1000) {
@@ -76,15 +75,18 @@ export class MockRuntime extends EventEmitter {
 
             // Assign the scopes with the stack name
             const {state} = this.last_state_;
-            state.scope = state.scope.filter(s => s.variable.length > 0);
-            for (let i in state.scope) {
-              state.scope[i].name = state.callstackItem[i];
+            const scope: protocol.Scope[] = [{name: state.callstackItem[0], variable: []}];
+            for (let i = 0; i < state.scope.length - 1; ++i) {
+              scope[0].variable.push(...state.scope[i].variable);
             }
-            // Global keeps global
-            const lastScope = state.scope.length - 1;
-            const lastStack = state.callstackItem.length - 1;
-            state.scope[lastScope].name = state.callstackItem[lastStack];
 
+            // Global keeps global
+            // Last scope is global scope the scopes before belong to the last function on the stack
+            const lastScope = state.scope.length - 1;
+            state.scope[lastScope].name = 'global';
+
+            scope.push({name: 'global', variable: state.scope[lastScope].variable});
+            state.scope = scope;
 
             switch (this.last_state_.reason) {
               case protocol.EventReason.ON_ENTRY:
@@ -109,13 +111,13 @@ export class MockRuntime extends EventEmitter {
 
 
     this.loadSource(program);
-    this._currentLine = -1;
+    // this._currentLine = -1;
 
     this.verifyBreakpoints(this._sourceFile);
 
     if (stopOnEntry) {
       // we step once
-      this.step(false, 'stopOnEntry');
+      this.step();
     } else {
       // we just start to run until we hit a breakpoint or an exception
       this.continue();
@@ -125,15 +127,12 @@ export class MockRuntime extends EventEmitter {
   /**
    * Continue execution to the end/beginning.
    */
-  public continue(reverse = false) {
-    this.run(reverse, undefined);
-  }
+  public continue() {}
 
   /**
    * Step to the next/previous non empty line.
    */
-  public step(reverse = false, event = 'stopOnStep') {
-    // this.run(reverse, event);
+  public step() {
     this.send_command({type: protocol.Type.NEXT_STEP});
     this.sendEvent('stopOnBreakpoint');
 
@@ -203,32 +202,6 @@ export class MockRuntime extends EventEmitter {
     }
   }
 
-  /**
-   * Run through the file.
-   * If stepEvent is specified only run a single step and emit the stepEvent.
-   */
-  private run(reverse = false, stepEvent?: string) {
-    if (reverse) {
-      for (let ln = this._currentLine - 1; ln >= 0; ln--) {
-        if (this.fireEventsForLine(ln, stepEvent)) {
-          this._currentLine = ln;
-          return;
-        }
-      }
-      // no more lines: stop at first line
-      this._currentLine = 0;
-      this.sendEvent('stopOnEntry');
-    } else {
-      for (let ln = this._currentLine + 1; ln < this._sourceLines.length; ln++) {
-        if (this.fireEventsForLine(ln, stepEvent)) {
-          this._currentLine = ln;
-          return true;
-        }
-      }
-      // no more lines: run to end
-      this.sendEvent('end');
-    }
-  }
 
   private verifyBreakpoints(path: string): void {
     let bps = this._breakPoints.get(path);
@@ -255,53 +228,6 @@ export class MockRuntime extends EventEmitter {
         }
       });
     }
-  }
-
-  /**
-   * Fire events if line has a breakpoint or the word 'exception' is found.
-   * Returns true is execution needs to stop.
-   */
-  private fireEventsForLine(ln: number, stepEvent?: string): boolean {
-    const line = this._sourceLines[ln].trim();
-
-    // if 'log(...)' found in source -> send argument to debug console
-    const matches = /log\((.*)\)/.exec(line);
-    if (matches && matches.length === 2) {
-      this.sendEvent('output', matches[1], this._sourceFile, ln, matches.index);
-    }
-
-    // if word 'exception' found in source -> throw exception
-    if (line.indexOf('exception') >= 0) {
-      this.sendEvent('stopOnException');
-      return true;
-    }
-
-    // is there a breakpoint?
-    const breakpoints = this._breakPoints.get(this._sourceFile);
-    if (breakpoints) {
-      const bps = breakpoints.filter(bp => bp.line === ln);
-      if (bps.length > 0) {
-        // send 'stopped' event
-        this.sendEvent('stopOnBreakpoint');
-
-        // the following shows the use of 'breakpoint' events to update properties of a breakpoint in the UI
-        // if breakpoint is not yet verified, verify it now and send a 'breakpoint' update event
-        if (!bps[0].verified) {
-          bps[0].verified = true;
-          this.sendEvent('breakpointValidated', bps[0]);
-        }
-        return true;
-      }
-    }
-
-    // non-empty line
-    if (stepEvent && line.length > 0) {
-      this.sendEvent(stepEvent);
-      return true;
-    }
-
-    // nothing interesting found -> continue
-    return false;
   }
 
   private sendEvent(event: string, ...args: any[]) {
