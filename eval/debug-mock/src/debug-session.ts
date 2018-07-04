@@ -6,7 +6,7 @@ import {basename} from 'path';
 import {Breakpoint, BreakpointEvent, InitializedEvent, Logger, logger, LoggingDebugSession, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread} from 'vscode-debugadapter/lib/main';
 import {DebugProtocol} from 'vscode-debugprotocol/lib/debugProtocol';
 
-import {MockBreakpoint, MockRuntime} from './debug-client';
+import {CharlieBreakpoint, CharlieRuntime} from './debug-client';
 
 const {Subject} = require('await-notify');
 
@@ -30,12 +30,12 @@ interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
   port: number;
 }
 
-export class MockDebugSession extends LoggingDebugSession {
+export class CharlieDebugSession extends LoggingDebugSession {
   // we don't support multiple threads, so we can use a hardcoded ID for the default thread
   private static THREAD_ID = 1;
 
-  // a Mock runtime (or debugger)
-  private _runtime: MockRuntime;
+  // a Charlie runtime (or debugger)
+  private _runtime: CharlieRuntime;
 
   // private _variableHandles = new Handles<string>();
 
@@ -52,22 +52,22 @@ export class MockDebugSession extends LoggingDebugSession {
     this.setDebuggerLinesStartAt1(false);
     this.setDebuggerColumnsStartAt1(false);
 
-    this._runtime = new MockRuntime();
+    this._runtime = new CharlieRuntime();
 
     // setup event handlers
     this._runtime.on('stopOnEntry', () => {
-      this.sendEvent(new StoppedEvent('entry', MockDebugSession.THREAD_ID));
+      this.sendEvent(new StoppedEvent('entry', CharlieDebugSession.THREAD_ID));
     });
     this._runtime.on('stopOnStep', () => {
-      this.sendEvent(new StoppedEvent('step', MockDebugSession.THREAD_ID));
+      this.sendEvent(new StoppedEvent('step', CharlieDebugSession.THREAD_ID));
     });
     this._runtime.on('stopOnBreakpoint', () => {
-      this.sendEvent(new StoppedEvent('breakpoint', MockDebugSession.THREAD_ID));
+      this.sendEvent(new StoppedEvent('breakpoint', CharlieDebugSession.THREAD_ID));
     });
     this._runtime.on('stopOnException', () => {
-      this.sendEvent(new StoppedEvent('exception', MockDebugSession.THREAD_ID));
+      this.sendEvent(new StoppedEvent('exception', CharlieDebugSession.THREAD_ID));
     });
-    this._runtime.on('breakpointValidated', (bp: MockBreakpoint) => {
+    this._runtime.on('breakpointValidated', (bp: CharlieBreakpoint) => {
       this.sendEvent(new BreakpointEvent('changed', <DebugProtocol.Breakpoint>{verified: bp.verified, id: bp.id}));
     });
     this._runtime.on('output', (text, filePath, line, column) => {
@@ -156,7 +156,7 @@ export class MockDebugSession extends LoggingDebugSession {
 
   protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
     // runtime supports now threads so just return a default thread.
-    response.body = {threads: [new Thread(MockDebugSession.THREAD_ID, 'thread 1')]};
+    response.body = {threads: [new Thread(CharlieDebugSession.THREAD_ID, 'thread 1')]};
     this.sendResponse(response);
   }
 

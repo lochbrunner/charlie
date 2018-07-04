@@ -11,14 +11,14 @@ import * as Net from 'net';
 
 
 export function activate(context: vscode.ExtensionContext) {
-  context.subscriptions.push(vscode.commands.registerCommand('extension.mock-debug.getProgramName', config => {
+  context.subscriptions.push(vscode.commands.registerCommand('extension.charlie-debug.getProgramName', config => {
     return vscode.window.showInputBox(
         {placeHolder: 'Please enter the name of a markdown file in the workspace folder', value: 'readme.md'});
   }));
 
-  // register a configuration provider for 'mock' debug type
-  const provider = new MockConfigurationProvider();
-  context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('mock', provider));
+  // register a configuration provider for 'charlie' debug type
+  const provider = new CharlieConfigurationProvider();
+  context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('charlie', provider));
   context.subscriptions.push(provider);
 }
 
@@ -26,7 +26,7 @@ export function deactivate() {
   // nothing to do
 }
 
-class MockConfigurationProvider implements vscode.DebugConfigurationProvider {
+class CharlieConfigurationProvider implements vscode.DebugConfigurationProvider {
   private _server?: Net.Server;
 
   /**
@@ -39,8 +39,8 @@ class MockConfigurationProvider implements vscode.DebugConfigurationProvider {
     // if launch.json is missing or empty
     if (!config.type && !config.request && !config.name) {
       const editor = vscode.window.activeTextEditor;
-      if (editor && editor.document.languageId === 'markdown') {
-        config.type = 'mock';
+      if (editor && editor.document.languageId === 'charlie') {
+        config.type = 'charlie';
         config.name = 'Launch';
         config.request = 'launch';
         config.program = '${file}';

@@ -1,32 +1,31 @@
 {
-	"name": "mock-debug",
+	"name": "vscode-charlie-adapter",
+	"version": "0.0.1",
 	"displayName": "Charlie Debug",
-	"version": "0.27.0",
 	"publisher": "andreweinand",
 	"description": "Starter extension for developing debug adapters for VS Code.",
 	"author": {
-		"name": "Microsoft Corporation",
-		"email": "aweinand@microsoft.com"
+		"name": "Matthias Lochbrunner",
+		"url": "https://www.github.com/lochbrunner"
 	},
 	"license": "MIT",
 	"keywords": [
 		"multi-root ready"
 	],
-	"engines": {
-		"vscode": "^1.18.0",
-		"node": "^7.9.0"
-	},
-	"icon": "images/mock-debug-icon.png",
 	"categories": [
+		"Programming Languages",
 		"Debuggers"
 	],
-	"private": true,
+	"galleryBanner": {
+		"color": "#CFB69A",
+		"theme": "light"
+	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/Microsoft/vscode-mock-debug.git"
+		"url": "https://github.com/lochbrunner/charlie.git"
 	},
 	"bugs": {
-		"url": "https://github.com/Microsoft/vscode-mock-debug/issues"
+		"url": "https://github.com/lochbrunner/charlie/issues"
 	},
 	"scripts": {
 		"prepublish": "tsc -p ./src",
@@ -36,6 +35,10 @@
 		"postinstall": "node ./node_modules/vscode/bin/install",
 		"package": "vsce package",
 		"publish": "vsce publish"
+	},
+	"engines": {
+		"vscode": "^1.22.0",
+		"node": "^7.9.0"
 	},
 	"dependencies": {
 		"await-notify": "1.0.1",
@@ -55,7 +58,7 @@
 	"main": "./out/extension",
 	"activationEvents": [
 		"onDebug",
-		"onCommand:extension.mock-debug.getProgramName"
+		"onCommand:extension.charlie-debug.getProgramName"
 	],
 	"contributes": {
 		"languages": [
@@ -105,7 +108,7 @@
 							},
 							"port": {
 								"type": "number",
-								"description": "Port to the server.",
+								"description": "Port of the server.",
 								"default": 3232
 							},
 							"trace": {
@@ -118,7 +121,7 @@
 				},
 				"initialConfigurations": [
 					{
-						"type": "mock",
+						"type": "charlie",
 						"request": "launch",
 						"name": "Ask for file name",
 						"program": "${workspaceFolder}/${command:AskForProgramName}",
@@ -130,7 +133,7 @@
 						"label": "Charlie Debug: Launch",
 						"description": "A new configuration for 'debugging' a user selected markdown file.",
 						"body": {
-							"type": "mock",
+							"type": "charlie",
 							"request": "launch",
 							"name": "Ask for file name",
 							"program": "^\"\\${workspaceFolder}/\\${command:AskForProgramName}\"",
@@ -139,7 +142,7 @@
 					}
 				],
 				"variables": {
-					"AskForProgramName": "extension.mock-debug.getProgramName"
+					"AskForProgramName": "extension.charlie-debug.getProgramName"
 				}
 			}
 		]
