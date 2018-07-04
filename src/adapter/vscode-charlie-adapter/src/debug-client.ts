@@ -1,181 +1,204 @@
-import { Breakpoint, BreakpointEvent, Handles, InitializedEvent, Logger, logger, LoggingDebugSession, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread } from 'vscode-debugadapter';
-import { DebugProtocol } from 'vscode-debugprotocol';
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 
-import { ConnectorRuntime } from './connector-runtime';
-const { Subject } = require('await-notify');
+// import {throws} from 'assert';
+import {EventEmitter} from 'events';
+// import {readFileSync} from 'fs';
+import * as net from 'net';
 
-declare function basename(p: string, ext?: string): string;
+import * as protocol from './common/protocol';
 
-/**
- * This interface describes the mock-debug specific launch attributes
- * (which are not part of the Debug Adapter Protocol).
- * The schema for these attributes lives in the package.json of the mock-debug extension.
- * The interface should always match this schema.
- */
-interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
-  /** An absolute path to the "program" to debug. */
-  program: string;
-  hostname: string;
-  port: number;
-  trace: boolean;
+export interface CharlieBreakpoint {
+  id: number;
+  line: number;
+  verified: boolean;
 }
 
-export class DebugSession extends LoggingDebugSession {
-  private static THREAD_ID = 1;
+/**
+ * A Mock runtime with minimal debugger functionality.
+ */
+export class CharlieRuntime extends EventEmitter {
+  // the initial (and one and only) file we are 'debugging'
+  private _sourceFile: string;
+  private remaining_socket_code_ = '';
+  private readonly client_ = new net.Socket();
 
-  private _runtime: ConnectorRuntime;
-  private _configurationDone = new Subject();
-  private _variableHandles = new Handles<string>();
+  private last_state_: protocol.Event = {
+    bytecode: -1,
+    position: {column: -1, filename: '', line: -1},
+    reason: protocol.EventReason.ON_ENTRY,
+    state: {callstackItem: [], scope: []}
+  };
 
-  public constructor() {
-    super('charlie-debug');
-    console.log('DebugSession.constructor()');
-
-    // this debugger uses zero-based lines and columns
-    this.setDebuggerLinesStartAt1(false);
-    this.setDebuggerColumnsStartAt1(false);
-
-    // this._runtime = new ConnectorRuntime();
-
-    // this._runtime.on('stopOnEntry', () => {
-    //   this.sendEvent(new StoppedEvent('entry', DebugSession.THREAD_ID));
-    // });
-    // this._runtime.on('stopOnStep', () => {
-    //   this.sendEvent(new StoppedEvent('step', DebugSession.THREAD_ID));
-    // });
-    // this._runtime.on('stopOnBreakpoint', () => {
-    //   this.sendEvent(new StoppedEvent('breakpoint', DebugSession.THREAD_ID));
-    // });
-    // this._runtime.on('stopOnException', () => {
-    //   this.sendEvent(new StoppedEvent('exception', DebugSession.THREAD_ID));
-    // });
+  public get sourceFile() {
+    return this._sourceFile;
   }
-  /**
-   * The 'initialize' request is the first request called by the frontend
-   * to interrogate the features the debug adapter provides.
-   */
-  protected initializeRequest(
-    response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
-    // build and return the capabilities of this debug adapter:
-    response.body = response.body || {};
 
-    // the adapter implements the configurationDoneRequest.
-    response.body.supportsConfigurationDoneRequest = true;
+  // This is the next line that will be 'executed'
+  // private _currentLine = 0;
 
-    // make VS Code to use 'evaluate' when hovering over source
-    response.body.supportsEvaluateForHovers = false;
+  // maps from sourceFile to array of Mock breakpoints
+  private _breakPoints = new Map<string, CharlieBreakpoint[]>();
 
-    // make VS Code to show a 'step back' button
-    response.body.supportsStepBack = false;
+  // since we want to send breakpoint events, we will assign an id to every event
+  // so that the frontend can match events with breakpoints.
+  private _breakpointId = 1;
 
-    this.sendResponse(response);
 
-    // since this debug adapter can accept configuration requests like 'setBreakpoint' at any time,
-    // we request them early by sending an 'initializeRequest' to the frontend.
-    // The frontend will end the configuration sequence by calling 'configurationDone' request.
-    this.sendEvent(new InitializedEvent());
+  constructor() {
+    super();
   }
 
   /**
-   * Called at the end of the configuration sequence.
-   * Indicates that all breakpoints etc. have been sent to the DA and that the 'launch' can start.
+   * Start executing the given program.
    */
-  protected configurationDoneRequest(
-    response: DebugProtocol.ConfigurationDoneResponse, args: DebugProtocol.ConfigurationDoneArguments): void {
-    super.configurationDoneRequest(response, args);
+  public start(program: string, stopOnEntry: boolean, hostname: string, port: number) {
+    this._sourceFile = program;
+    this.client_.connect(port, hostname, () => {});
+    this.client_.on('data', (data: string) => {
+      data = this.remaining_socket_code_ + data;
+      const length = data.length;
+      while (true) {
+        const chunkLength = parseInt(data.substr(0, 4));
+        if (isNaN(chunkLength) || chunkLength > length + 4) {
+          this.remaining_socket_code_ = data;
+          break;
+        }
+        const chunk = data.substr(4, chunkLength);
+        data = data.substr(4 + chunkLength);
+        if (chunk.length > 0) {
+          try {
+            const last_line = this.last_state_.position.line;
+            this.last_state_ = JSON.parse(chunk) as protocol.Event;
+            if (this.last_state_.position.line > 1000) {
+              this.last_state_.position.line = last_line;
+            }
 
-    // notify the launchRequest that configuration has finished
-    this._configurationDone.notify();
-  }
+            // Assign the scopes with the stack name
+            const {state} = this.last_state_;
+            const scope: protocol.Scope[] = [{name: state.callstackItem[0], variable: []}];
+            for (let i = 0; i < state.scope.length - 1; ++i) {
+              scope[0].variable.push(...state.scope[i].variable);
+            }
 
-  protected async launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments) {
-    // make sure to 'Stop' the buffered logging if 'trace' is not set
-    logger.setup(args.trace ? Logger.LogLevel.Verbose : Logger.LogLevel.Stop, false);
+            // Global keeps global
+            // Last scope is global scope the scopes before belong to the last function on the stack
+            const lastScope = state.scope.length - 1;
+            state.scope[lastScope].name = 'global';
 
-    // wait until configuration has finished (and configurationDoneRequest has been called)
-    await this._configurationDone.wait(1000);
+            scope.push({name: 'global', variable: state.scope[lastScope].variable});
+            state.scope = scope;
 
-    // start the program in the runtime
-    this._runtime.start(args.program, args.hostname, args.port);
+            // this.sendEvent('output', this.last_state_.reason, '', 1, 1);
 
-    this.sendResponse(response);
-  }
-
-  protected setBreakPointsRequest(
-    response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments): void {
-    const path = <string>args.source.path;
-    const clientLines = args.lines || [];
-
-    // clear all breakpoints for this file
-    this._runtime.clearBreakpoints(path);
-
-    // set and verify breakpoint locations
-    const actualBreakpoints = clientLines.map(l => {
-      let { verified, line, id } = this._runtime.setBreakPoint(path, this.convertClientLineToDebugger(l));
-      const bp = <DebugProtocol.Breakpoint>new Breakpoint(verified, this.convertDebuggerLineToClient(line));
-      bp.id = id;
-      return bp;
+            switch (this.last_state_.reason) {
+              case protocol.EventReason.ON_ENTRY:
+                this.sendEvent('stopOnEntry', this.last_state_);
+                break;
+              case protocol.EventReason.ON_STEP:
+                this.sendEvent('stopOnStep', this.last_state_);
+                break;
+              case protocol.EventReason.ON_BREAKPOINT:
+                this.sendEvent('stopOnBreakpoint', this.last_state_);
+                break;
+              case protocol.EventReason.ON_EXCEPTION:
+                this.sendEvent('stopOnException', this.last_state_);
+                break;
+            }
+          } catch (e) {
+            this.sendEvent('error', `Could not parse event Json '${chunk}': ${e}`);
+          }
+        }
+      }
     });
 
-    // send back the actual breakpoint positions
-    response.body = { breakpoints: actualBreakpoints };
-    this.sendResponse(response);
+
+    if (stopOnEntry) {
+      // we step once
+      this.step();
+    } else {
+      // we just start to run until we hit a breakpoint or an exception
+      this.continue();
+    }
   }
 
-  protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
-    // runtime supports now threads so just return a default thread.
-    response.body = { threads: [new Thread(DebugSession.THREAD_ID, 'thread 1')] };
-    this.sendResponse(response);
+  /**
+   * Continue execution to the end/beginning.
+   */
+  public continue() {
+    this.send_command({type: protocol.Type.RUN});
   }
 
-  protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments):
-    void {
-    const startFrame = typeof args.startFrame === 'number' ? args.startFrame : 0;
-    const maxLevels = typeof args.levels === 'number' ? args.levels : 1000;
-    const endFrame = startFrame + maxLevels;
-
-    const stk = this._runtime.stack(startFrame, endFrame);
-
-    response.body = {
-      stackFrames: stk.frames.map(
-        f => new StackFrame(f.index, f.name, this.createSource(f.file), this.convertDebuggerLineToClient(f.line))),
-      totalFrames: stk.count
-    };
-    this.sendResponse(response);
+  /**
+   * Step to the next/previous non empty line.
+   */
+  public step() {
+    this.send_command({type: protocol.Type.NEXT_STEP});
   }
 
-  protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
-    const scopes = this._runtime.scope().map(scope => (new Scope(scope.name, scope.id)));
-    response.body = { scopes };
-    this.sendResponse(response);
+  public stack(startFrame: number, endFrame: number): any {
+    const line = this.last_state_.position.line - 1;
+    const frames =
+        this.last_state_.state.callstackItem.map((c, i) => ({index: i, name: c, file: this._sourceFile, line}));
+    return {frames, count: frames.length};
   }
 
-  protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): void {
-    const id = this._variableHandles.get(args.variablesReference);
-    const variables: Array<DebugProtocol.Variable> =
-      this._runtime.variables(parseInt(id)).map(variable => ({
-        name: variable.name,
-        value: variable.value.toString(),
-        type: variable.type,
-        variablesReference: 0
-      }));
-
-    response.body = { variables };
-    this.sendResponse(response);
+  /*
+   * Set breakpoint in file with given line.
+   */
+  public setBreakPoint(path: string, line: number): CharlieBreakpoint {
+    const bp = <CharlieBreakpoint>{verified: true, line, id: this._breakpointId++};
+    ++line;
+    const column = 0;
+    this.send_command({type: protocol.Type.SET_BREAKPOINT, position: {filename: path, line, column}});
+    return bp;
   }
 
-  protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {
-    this._runtime.continue();
-    this.sendResponse(response);
+  /*
+   * Clear breakpoint in file with given line.
+   */
+  public clearBreakPoint(path: string, line: number): CharlieBreakpoint|undefined {
+    let bps = this._breakPoints.get(path);
+    if (bps) {
+      const index = bps.findIndex(bp => bp.line === line);
+      if (index >= 0) {
+        const bp = bps[index];
+        bps.splice(index, 1);
+        const column = 0;
+        this.send_command({type: protocol.Type.CLEAR_BREAKPOINT, position: {filename: path, line, column}});
+
+        return bp;
+      }
+    }
+    return undefined;
   }
 
-  protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
-    this._runtime.step();
-    this.sendResponse(response);
+  /*
+   * Clear all breakpoints for file.
+   */
+  public clearBreakpoints(path: string): void {
+    this._breakPoints.delete(path);
+    this.send_command({type: protocol.Type.LIST_BREAKPOINTS});
   }
 
-  private createSource(filePath: string): Source {
-    return new Source(
-      basename(filePath), this.convertDebuggerPathToClient(filePath), undefined, undefined, 'mock-adapter-data');
+  public get scopes(): protocol.Scope[] {
+    return this.last_state_.state.scope;
+  }
+
+  // private methods
+
+  private sendEvent(event: string, ...args: any[]) {
+    setImmediate(_ => {
+      this.emit(event, ...args);
+    });
+  }
+
+  private send_command(command: protocol.Command) {
+    const buffer = JSON.stringify(command);
+    const send_command = buffer + '\0';
+    this.client_.write(send_command, 'utf8', obj => {
+      console.log(`Send command: '${send_command}'`);
+    });
   }
 }

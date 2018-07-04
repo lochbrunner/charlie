@@ -1,5 +1,7 @@
-import {DebugSession} from './debug-client';
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 
-console.log('DebugSession.run(DebugSession);');
+import {CharlieDebugSession} from './debug-session';
 
-DebugSession.run(DebugSession);
+CharlieDebugSession.run(CharlieDebugSession);
