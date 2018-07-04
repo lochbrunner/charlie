@@ -82,7 +82,7 @@
             "request": "launch",
             "name": "Server Mock",
             "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/eval/debug-mock/src/debugAdapter.ts",
+            "program": "${workspaceFolder}/eval/debug-mock/src/debug-adapter.ts",
             "args": [
                 "--server=4711"
             ],

@@ -6,7 +6,7 @@ import {basename} from 'path';
 import {Breakpoint, BreakpointEvent, InitializedEvent, Logger, logger, LoggingDebugSession, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread} from 'vscode-debugadapter/lib/main';
 import {DebugProtocol} from 'vscode-debugprotocol/lib/debugProtocol';
 
-import {MockBreakpoint, MockRuntime} from './mockRuntime';
+import {MockBreakpoint, MockRuntime} from './debug-client';
 
 const {Subject} = require('await-notify');
 

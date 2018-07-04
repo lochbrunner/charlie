@@ -6,15 +6,9 @@
 
 import * as vscode from 'vscode';
 import {WorkspaceFolder, DebugConfiguration, ProviderResult, CancellationToken} from 'vscode';
-import {MockDebugSession} from './mockDebug';
+// import {MockDebugSession} from './mockDebug';
 import * as Net from 'net';
 
-/*
- * Set the following compile time flag to true if the
- * debug adapter should run inside the extension host.
- * Please note: the test suite does no longer work in this mode.
- */
-const EMBED_DEBUG_ADAPTER = false;
 
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand('extension.mock-debug.getProgramName', config => {
@@ -58,22 +52,6 @@ class MockConfigurationProvider implements vscode.DebugConfigurationProvider {
       return vscode.window.showInformationMessage('Cannot find a program to debug').then(_ => {
         return undefined;  // abort launch
       });
-    }
-
-    if (EMBED_DEBUG_ADAPTER) {
-      // start port listener on launch of first debug session
-      if (!this._server) {
-        // start listening on a random port
-        this._server = Net.createServer(socket => {
-                            const session = new MockDebugSession();
-                            session.setRunAsServer(true);
-                            session.start(<NodeJS.ReadableStream>socket, socket);
-                          })
-                           .listen(0);
-      }
-
-      // make VS Code connect to debug server instead of launching debug adapter
-      config.debugServer = this._server.address().port;
     }
 
     return config;
