@@ -61,5 +61,8 @@
         "numeric": "cpp",
         "cinttypes": "cpp",
         "typeindex": "cpp"
-    }
+    },
+    "cSpell.words": [
+        "println"
+    ]
 }

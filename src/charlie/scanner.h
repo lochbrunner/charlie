@@ -79,10 +79,10 @@ class Scanner : public common::LoggingComponent {
   // Scans the beginning expression and adds it into the current scope.
   // Returns true if succeeded.
   bool getExpression(program::Scope *prog, bool inBracket = false);
-  // Copies all tokens into the corresponding statement list untill either a semikolon or closing round bracket is
-  // found. Depending on the parameter "inBracket" Returns the number of tokens. Returns -1 iff an error occured.
+  // Copies all tokens into the corresponding statement list until either a semikolon or closing round bracket is
+  // found. Depending on the parameter "inBracket" Returns the number of tokens. Returns -1 iff an error occurred.
   int getStatemantTokens(program::Statement *linearStatements, bool inBracket = false);
-  // Tries to make syntax tree out of the "linearStatements" satement or expression and saves it into "statement"
+  // Tries to make syntax tree out of the "linearStatements" statement or expression and saves it into "statement"
   // Returns true if succeeded.
   bool treeifyStatement(program::Scope const &scope, std::list<program::Statement> *linearStatements,
                         program::Statement *statement);
@@ -94,16 +94,16 @@ class Scanner : public common::LoggingComponent {
   //  "scope": the current scope where this variable was found.
   // Returns true if succeeded.
   inline bool try_get_type_of_variable(program::Scope const &scope, token::Base *token);
-  // Checks wheter the specified character could be the beginning of a labe. E.g. '_' in "_foo124".
-  inline bool is_beginnging_of_label(char c);
-  // Checks wheter the specified character could be part of an operator.
+  // Checks whether the specified character could be the beginning of a labe. E.g. '_' in "_foo124".
+  inline bool is_beginning_of_label(char c);
+  // Checks whether the specified character could be part of an operator.
   inline bool is_operator(char c);
-  // Checks wheter the specified character could be part of a number.
+  // Checks whether the specified character could be part of a number.
   inline bool is_numerical(char c);
-  // Checks wheter the specified character could be a bracket.
+  // Checks whether the specified character could be a bracket.
   inline bool is_bracket(char c);
-  // Processes the controll sequences of the speciefied string. E.g. "\\" -> "\"
-  void proceess_controlsequences(std::string *text);
+  // Processes the controll sequences of the specified string. E.g. "\\" -> "\"
+  void process_controlsequences(std::string *text);
 
   // Updates the word reference only if the result is longer than 1 char. If not, use code.current_char() instead.
   FRIEND_TEST(ScannerTest, getNextWord);

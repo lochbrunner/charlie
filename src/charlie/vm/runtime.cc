@@ -229,12 +229,12 @@ void Runtime::send_event(int code, DebugConnection* connection, int reason) {
 }
 
 void send_breakpoints_list(const std::set<int>& breakpoints, DebugConnection* connection) {
-  charlie::debug::BreakpointsList breakoints_list;
-  for (auto& breakoint : breakpoints) {
-    auto protp_pos = breakoints_list.add_position();
-    protp_pos->set_line(breakoint);
+  charlie::debug::BreakpointsList breakpoints_list;
+  for (auto& breakpoint : breakpoints) {
+    auto protp_pos = breakpoints_list.add_position();
+    protp_pos->set_line(breakpoint);
   }
-  connection->send_message(breakoints_list);
+  connection->send_message(breakpoints_list);
 }
 
 enum class DebugState { ENTRY, RUNNING, PAUSED, TO_NEXT_LINE };

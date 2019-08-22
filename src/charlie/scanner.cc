@@ -205,7 +205,7 @@ bool Scanner::Scan(string const &code) {
   return true;
 }
 
-bool Scanner::is_beginnging_of_label(char c) {
+bool Scanner::is_beginning_of_label(char c) {
   if (c <= 'z' && c >= 'a') return true;
   if (c <= 'Z' && c >= 'A') return true;
   if (c == '_') return true;
@@ -262,7 +262,7 @@ void Scanner::getNextWord(std::string *word, WordType *type) {
         break;
       } else
         break;
-    } else if (is_beginnging_of_label(c)) {
+    } else if (is_beginning_of_label(c)) {
       if (*type == WordType::None) {
         begin = codeInfo_.pos;
         *type = WordType::Name;
@@ -354,7 +354,7 @@ void Scanner::getNextWord(std::string *word, WordType *type) {
               begin = codeInfo_.pos + 1;
               codeInfo_.pos += 3;
             } else {
-              ERROR_MESSAGE_MAKE_CODE_AND_POS("A String must be embeddend in \" and not in \'");
+              ERROR_MESSAGE_MAKE_CODE_AND_POS("A String must be embedded in \" and not in \'");
               codeInfo_.pos = -1;
               return;
             }
@@ -368,7 +368,7 @@ void Scanner::getNextWord(std::string *word, WordType *type) {
             begin = codeInfo_.pos + 1;
             codeInfo_.pos += 2;
           } else {
-            ERROR_MESSAGE_MAKE_CODE_AND_POS("A String must be embeddend in \" and not in \'");
+            ERROR_MESSAGE_MAKE_CODE_AND_POS("A String must be embedded in \" and not in \'");
             codeInfo_.pos = -1;
             return;
           }
@@ -491,7 +491,7 @@ bool Scanner::getFunctionDecArguments(std::list<VariableDeclaration> *args) {
   return true;
 }
 
-void Scanner::proceess_controlsequences(std::string *text) {
+void Scanner::process_controlsequences(std::string *text) {
   text->replace(text->begin(), text->end(), "\\\\", "\\");
   text->replace(text->begin(), text->end(), "\\n", "\n");
   text->replace(text->begin(), text->end(), "\\t", "\t");
@@ -763,7 +763,7 @@ bool Scanner::treeifyStatement(program::Scope const &scope, list<Statement> *lin
         }
         break;
       case Base::TokenTypeEnum::Operator:
-        if (itMax->value->token_chidren_position == Base::TokenChidrenPosEnum::LeftAndRight) {
+        if (itMax->value->token_children_position == Base::TokenChildrenPosEnum::LeftAndRight) {
           std::list<Statement>::const_iterator prev = itMax;
           --prev;
           std::list<Statement>::const_iterator post = itMax;
@@ -803,7 +803,7 @@ bool Scanner::treeifyStatement(program::Scope const &scope, list<Statement> *lin
             ERROR_MESSAGE_MAKE_CODE_AND_POS("Unspecified error");
             return false;
           }
-        } else if (itMax->value->token_chidren_position == Base::TokenChidrenPosEnum::LeftOrRight) {
+        } else if (itMax->value->token_children_position == Base::TokenChildrenPosEnum::LeftOrRight) {
           std::list<Statement>::const_iterator prev = itMax;
           --prev;
           std::list<Statement>::const_iterator post = itMax;
@@ -949,7 +949,7 @@ int Scanner::getStatemantTokens(Statement *linearStatements, bool inBracket) {
               break;
             case '*':
               linearStatements->arguments.push_back(
-                  new Operator(Operator::KindEnum::Multipply, CodePostion(codeInfo_.pos)));
+                  new Operator(Operator::KindEnum::Multiply, CodePostion(codeInfo_.pos)));
               break;
             case '/':
               linearStatements->arguments.push_back(
@@ -1051,7 +1051,7 @@ int Scanner::getStatemantTokens(Statement *linearStatements, bool inBracket) {
         ++codeInfo_.pos;
         break;
       case WordType::String:
-        proceess_controlsequences(&word);
+        process_controlsequences(&word);
         linearStatements->arguments.push_back(
             new Constant(Constant::KindEnum::String, new string(word), CodePostion(codeInfo_.pos)));
         break;

@@ -59,7 +59,7 @@ class Base {
     Comma
   };
   // Indicates where children or arguments are corresponding to this token.
-  enum class TokenChidrenPosEnum {
+  enum class TokenChildrenPosEnum {
     None = 0,
     Left = 1,
     Right = 2,
@@ -69,10 +69,10 @@ class Base {
   // Creates an object.
   //    tokentype:  Should be set by the inherited class constructor.
   //    position:   Position where the token appears in the source or header code.
-  //    priorty:    (optional) the priority of this token.
-  //    finished:   (optional) indicates wheter this token is finished parsed or not.
+  //    priority:    (optional) the priority of this token.
+  //    finished:   (optional) indicates whether this token is finished parsed or not.
   //    type:       (optional) image type of this token.
-  Base(TokenTypeEnum tokentype, CodePostion const& position, int priorty = 0, bool finished = false,
+  Base(TokenTypeEnum tokentype, CodePostion const& position, int priority = 0, bool finished = false,
     program::VariableDeclaration::TypeEnum type = program::VariableDeclaration::Length);
   // Returns the bytecode of this token, if possible.
   // If not possible it returns -1;
@@ -86,10 +86,10 @@ class Base {
   // in-/de-crease: 7 mul/div: 6, add/sub: 5,
   // comparer: 4, logic ops: 3, copy: 2 others: 1
   int priority;
-  // Indicates wheter this token is finished parsed or not.
+  // Indicates whether this token is finished parsed or not.
   bool finished;
   // Position of the children or arguments of the current token.
-  TokenChidrenPosEnum token_chidren_position;
+  TokenChildrenPosEnum token_children_position;
   // Caret position where the token appears in the source or header code.
   CodePostion position;
   // The image type of this token. E.g. int, float, ...
@@ -170,7 +170,7 @@ class Constant : public Base {
   //    position: The caret position where this token appears in the code.
   Constant(KindEnum kind, void* pointer, CodePostion const& position);
   // Deletes the stored value.
-  // Destrcutor must be virtual because the base class needs also an desctructor.
+  // Destructor must be virtual because the base class needs also an desctructor.
   virtual ~Constant();
   // Returns a string that represents the current object.
   virtual std::string ToString() const;
@@ -207,7 +207,7 @@ class Operator : public Base {
   enum class KindEnum {   // TODO(lochbrunner): Not complete!
     Add,            // +
     Substract,      // -    // Could be also uniary
-    Multipply,      // *    // Or dereference
+    Multiply,      // *    // Or dereference
     Divide,         // /
     Modulo,         // %
     Copy,           // =

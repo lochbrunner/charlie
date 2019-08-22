@@ -52,7 +52,7 @@ class FunctionDeclaration {
   FunctionDeclaration(std::string const& label, VariableDeclaration::TypeEnum image_type,
     std::list<VariableDeclaration> const& argument_type, Scope* parent = nullptr);
   FunctionDeclaration(std::string const& label, VariableDeclaration::TypeEnum image_type, Scope* parent = nullptr);
-  // Disposes all elements and child elments of this instance.
+  // Disposes all elements and child elements of this instance.
   void Dispose();
   // Prints a the signature of the specified function into the specified declaration.
   friend std::ostream& operator<<(std::ostream &stream, const FunctionDeclaration &dec);

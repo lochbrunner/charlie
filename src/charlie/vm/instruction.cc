@@ -356,10 +356,10 @@ void InstructionManager::GetLegend(int instruction, queue<const char*>* comments
       comments->push("... at address");
       break;
     case InstructionEnums::IntEqual:
-      comments->push("Compares to integers on equility");
+      comments->push("Compares to integers on equality");
       break;
     case InstructionEnums::IntNotEqual:
-      comments->push("Compares to integers on non-equility");
+      comments->push("Compares to integers on non-equality");
       break;
     case InstructionEnums::IntGreater:
       comments->push("Compares if the first integer is greater than the second");

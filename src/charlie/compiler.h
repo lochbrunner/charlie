@@ -61,7 +61,7 @@ class Compiler : public common::LoggingComponent {
   xprt Compiler(std::function<void(std::string const &message)> messageDelegate);
   // Compiles the speciefed C source file to bytecode. Returns true if succeeded.
   xprt bool Build(std::string const &filename, bool sourcemaps);
-  // Saves the current porgram to the file. Optional binary or as readable textfile.
+  // Saves the current program to the file. Optional binary or as readable textfile.
   // Returns true if succeeded.
   xprt bool SaveProgram(std::string const &filename, bool binary = true, bool mapping = false) const;
   // Returns the state containing the current program.
@@ -74,12 +74,12 @@ class Compiler : public common::LoggingComponent {
  private:
   // Compiles the syntax tree to bytecode.
   bool compile(bool sourcemaps);
-  // Enroles a block of the syntax tree to bytecode.
-  bool enroleBlock(
+  // Enrolls a block of the syntax tree to bytecode.
+  bool enrollBlock(
       std::map<program::FunctionDeclaration, int, program::FunctionDeclaration::comparer> const &functionDict,
       program::Scope const &block, bool sourcemaps);
-  // Enroles a statement of the syntax tree to bytecode.
-  bool enroleStatement(
+  // Enrolls a statement of the syntax tree to bytecode.
+  bool enrollStatement(
       std::map<program::FunctionDeclaration, int, program::FunctionDeclaration::comparer> const &functionDict,
       program::Statement const &statement, bool sourcemaps);
   // The current program data.

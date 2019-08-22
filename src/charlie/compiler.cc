@@ -113,7 +113,7 @@ bool Compiler::Build(string const& filename, bool sourcemaps) {
     return false;
   }
 
-  error_message("Building succeded!");
+  error_message("Building succeeded!");
   return true;
 }
 
@@ -130,13 +130,13 @@ bool Compiler::compile(bool sourcemaps) {
   auto funcPositions = map<FunctionDeclaration, int, FunctionDeclaration::comparer>();
 
   program_.instructions.push_back(BYTECODE_VERSION);
-  // Junp address will be inserted at the end
+  // Jump address will be inserted at the end
   // Global variables
   program_.instructions.push_back(InstructionEnums::IncreaseRegister);
   program_.instructions.push_back(program_.root.num_variable_declarations);
 
   for (auto itI = program_.root.statements.begin(); itI != program_.root.statements.end(); ++itI) {
-    if (!enroleStatement(funcPositions, *itI, sourcemaps)) return false;
+    if (!enrollStatement(funcPositions, *itI, sourcemaps)) return false;
   }
 
   program_.instructions.push_back(InstructionEnums::Call);
@@ -153,7 +153,7 @@ bool Compiler::compile(bool sourcemaps) {
       return false;
     }
     funcPositions.insert(make_pair((*itF), program_.instructions.size() - 1));
-    if (!enroleBlock(funcPositions, itF->definition, sourcemaps)) return false;
+    if (!enrollBlock(funcPositions, itF->definition, sourcemaps)) return false;
 
     program_.instructions.push_back(InstructionEnums::Return);
     if (sourcemaps) {
@@ -184,7 +184,7 @@ bool Compiler::compile(bool sourcemaps) {
   return true;
 }
 
-bool Compiler::enroleBlock(
+bool Compiler::enrollBlock(
     std::map<program::FunctionDeclaration, int, program::FunctionDeclaration::comparer> const& functionDict,
     program::Scope const& block, bool sourcemaps) {
   int begin = program_.instructions.size() - 1;
@@ -193,7 +193,7 @@ bool Compiler::enroleBlock(
 
   // Insert variable declaration and defintion of the argument list
   for (auto itI = block.statements.cbegin(); itI != block.statements.cend(); ++itI) {
-    if (!enroleStatement(functionDict, *itI, sourcemaps)) return false;
+    if (!enrollStatement(functionDict, *itI, sourcemaps)) return false;
   }
 
   if (sourcemaps) {
@@ -203,7 +203,7 @@ bool Compiler::enroleBlock(
   return true;
 }
 
-bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration::comparer> const& functionDict,
+bool Compiler::enrollStatement(map<FunctionDeclaration, int, FunctionDeclaration::comparer> const& functionDict,
                                Statement const& statement, bool sourcemaps) {
   auto tokenType = statement.value->token_type;
   if (sourcemaps) {
@@ -218,7 +218,7 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
 
       std::list<VariableDeclaration> argTypes;
       for (auto it = statement.arguments.begin(); it != statement.arguments.end(); ++it) {
-        if (!enroleStatement(functionDict, *it, sourcemaps)) return false;
+        if (!enrollStatement(functionDict, *it, sourcemaps)) return false;
         argTypes.push_back(it->value->type);
       }
       FunctionDeclaration dec(label->label_string, VariableDeclaration::Length, argTypes);
@@ -257,9 +257,9 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
       assert(itAddress->value->token_type == Base::TokenTypeEnum::Label);
       int address = dynamic_cast<Label*>(itAddress->value)->register_address();
 
-      // TODO(lochbrunner): asign operators can also be used to push values: e.g. i = j++;
-      if (op->token_chidren_position == Base::TokenChidrenPosEnum::LeftAndRight) {
-        if (!enroleStatement(functionDict, *++itAddress, sourcemaps)) return false;
+      // TODO(lochbrunner): assign operators can also be used to push values: e.g. i = j++;
+      if (op->token_children_position == Base::TokenChildrenPosEnum::LeftAndRight) {
+        if (!enrollStatement(functionDict, *++itAddress, sourcemaps)) return false;
       }
       program_.instructions.push_back(op->ByteCode());
       program_.instructions.push_back(address);
@@ -268,7 +268,7 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
       program_.instructions.push_back(dynamic_cast<Label*>(statement.arguments.begin()->value)->register_address());
     } else {
       for (auto it = statement.arguments.begin(); it != statement.arguments.end(); ++it) {
-        if (!enroleStatement(functionDict, *it, sourcemaps)) return false;
+        if (!enrollStatement(functionDict, *it, sourcemaps)) return false;
       }
       program_.instructions.push_back(statement.value->ByteCode());
     }
@@ -282,7 +282,7 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
       assert((++statement.arguments.begin())->value == nullptr);
       assert((++statement.arguments.begin())->block != nullptr);
 
-      enroleStatement(functionDict, *statement.arguments.begin(), sourcemaps);
+      enrollStatement(functionDict, *statement.arguments.begin(), sourcemaps);
 
       program_.instructions.push_back(InstructionEnums::PushConst);
       program_.instructions.push_back(-1);
@@ -290,7 +290,7 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
       auto itAlt = --program_.instructions.end();
       program_.instructions.push_back(InstructionEnums::JumpIf);
       auto block = (++statement.arguments.begin())->block;
-      enroleBlock(functionDict, *block, sourcemaps);
+      enrollBlock(functionDict, *block, sourcemaps);
       *itAlt = program_.instructions.size() - 1;
 
     } else if (dynamic_cast<const ControlFlow*>(statement.value)->kind == ControlFlow::KindEnum::While) {
@@ -303,7 +303,7 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
       assert((++statement.arguments.begin())->block != nullptr);
 
       int begin = program_.instructions.size() - 1;
-      enroleStatement(functionDict, *statement.arguments.begin(), sourcemaps);
+      enrollStatement(functionDict, *statement.arguments.begin(), sourcemaps);
 
       program_.instructions.push_back(InstructionEnums::PushConst);
       program_.instructions.push_back(-1);
@@ -312,7 +312,7 @@ bool Compiler::enroleStatement(map<FunctionDeclaration, int, FunctionDeclaration
       program_.instructions.push_back(InstructionEnums::JumpIf);
 
       auto block = (++statement.arguments.begin())->block;
-      enroleBlock(functionDict, *block, sourcemaps);
+      enrollBlock(functionDict, *block, sourcemaps);
 
       program_.instructions.push_back(InstructionEnums::Jump);
       program_.instructions.push_back(begin);

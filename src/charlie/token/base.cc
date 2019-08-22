@@ -36,9 +36,9 @@ using program::VariableDeclaration;
 
 CodePostion::CodePostion(int character_position) : character_position(character_position) {}
 
-Base::Base(TokenTypeEnum tokentype, CodePostion const& position, int priorty, bool finished, VariableDeclaration::TypeEnum type) :
-  token_type(tokentype), position(position), priority(priorty), finished(finished),
-  type(type), token_chidren_position(TokenChidrenPosEnum::None) {
+Base::Base(TokenTypeEnum tokentype, CodePostion const& position, int priority, bool finished, VariableDeclaration::TypeEnum type) :
+  token_type(tokentype), position(position), priority(priority), finished(finished),
+  type(type), token_children_position(TokenChildrenPosEnum::None) {
 }
 
 Bracket::Bracket(KindEnum kind, DirectionEnum direction, CodePostion const& position) :
@@ -104,18 +104,18 @@ Operator::Operator(KindEnum kind, CodePostion const& postion) : Base(TokenTypeEn
   case Operator::KindEnum::Add:
   case Operator::KindEnum::Substract:
     priority = 5;
-    token_chidren_position = TokenChidrenPosEnum::LeftAndRight;
+    token_children_position = TokenChildrenPosEnum::LeftAndRight;
     break;
-  case Operator::KindEnum::Multipply:
+  case Operator::KindEnum::Multiply:
   case Operator::KindEnum::Divide:
   case Operator::KindEnum::Modulo:
     priority = 6;
-    token_chidren_position = TokenChidrenPosEnum::LeftAndRight;
+    token_children_position = TokenChildrenPosEnum::LeftAndRight;
     break;
   case Operator::KindEnum::Copy:
     priority = 2;
     assigner = true;
-    token_chidren_position = TokenChidrenPosEnum::LeftAndRight;
+    token_children_position = TokenChildrenPosEnum::LeftAndRight;
     break;
   case Operator::KindEnum::Equal:
   case Operator::KindEnum::NotEqual:
@@ -124,18 +124,18 @@ Operator::Operator(KindEnum kind, CodePostion const& postion) : Base(TokenTypeEn
   case Operator::KindEnum::Less:
   case Operator::KindEnum::LessEqual:
     priority = 4;
-    token_chidren_position = TokenChidrenPosEnum::LeftAndRight;
+    token_children_position = TokenChildrenPosEnum::LeftAndRight;
     break;
   case Operator::KindEnum::LogicAnd:
   case Operator::KindEnum::LogicOr:
     priority = 3;
-    token_chidren_position = TokenChidrenPosEnum::LeftAndRight;
+    token_children_position = TokenChildrenPosEnum::LeftAndRight;
     break;
   case Operator::KindEnum::BitAnd:
   case Operator::KindEnum::BitOr:
   case Operator::KindEnum::BitXor:
     priority = 6;
-    token_chidren_position = TokenChidrenPosEnum::LeftAndRight;
+    token_children_position = TokenChildrenPosEnum::LeftAndRight;
     break;
   case Operator::KindEnum::AddTo:
   case Operator::KindEnum::SubstractTo:
@@ -147,13 +147,13 @@ Operator::Operator(KindEnum kind, CodePostion const& postion) : Base(TokenTypeEn
   case Operator::KindEnum::XorTo:
     assigner = true;
     priority = 2;
-    token_chidren_position = TokenChidrenPosEnum::LeftAndRight;
+    token_children_position = TokenChildrenPosEnum::LeftAndRight;
     break;
   case Operator::KindEnum::Increase:
   case Operator::KindEnum::Decrease:
     assigner = true;
     priority = 7;
-    token_chidren_position = TokenChidrenPosEnum::LeftOrRight;
+    token_children_position = TokenChildrenPosEnum::LeftOrRight;
     break;
   default:
     break;
@@ -166,7 +166,7 @@ std::string Operator::ToString() const {
     return "+";
   case Operator::KindEnum::Substract:
     return "-";
-  case Operator::KindEnum::Multipply:
+  case Operator::KindEnum::Multiply:
     return "*";
   case Operator::KindEnum::Divide:
     return "/";
@@ -231,7 +231,7 @@ int Operator::ByteCode() const {
     if (type == VariableDeclaration::Int)
       return vm::IntSubstract;
     return -1;
-  case Operator::KindEnum::Multipply:
+  case Operator::KindEnum::Multiply:
     if (type == VariableDeclaration::Int)
       return vm::IntMultiply;
     return -1;
